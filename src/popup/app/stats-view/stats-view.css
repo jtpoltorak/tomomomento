@@ -1,5 +1,7 @@
 :host {
   display: block;
+  /* Stats keep the Focus orange instead of following the phase into green or blue. */
+  --accent: var(--focus-accent);
 }
 
 section {

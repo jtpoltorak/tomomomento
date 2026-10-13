@@ -34,6 +34,8 @@
   /* Edges of controls (inputs, switches, empty cycle dots): at least 3:1 on --bg. */
   --control: #868e96;
   --accent: #c2410c;
+  /* The Focus orange, for screens that keep one color whatever the phase (Stats). */
+  --focus-accent: #c2410c;
   --on-accent: #ffffff;
   --error: #c92a2a;
 }
@@ -50,6 +52,7 @@
     --border: #3d444d;
     --control: #7d8590;
     --accent: #ff7a45;
+    --focus-accent: #ff7a45;
     --on-accent: #1c1f24;
     --error: #ff8787;
   }
@@ -64,6 +67,7 @@
   --border: #3d444d;
   --control: #7d8590;
   --accent: #ff7a45;
+  --focus-accent: #ff7a45;
   --on-accent: #1c1f24;
   --error: #ff8787;
 }

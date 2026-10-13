@@ -42,6 +42,15 @@ describe('StatsView', () => {
 
     const map = el.querySelector('.heatmap')!;
     expect(map.getAttribute('role')).toBe('img');
+    expect(Array.from(map.querySelectorAll('.weekday'), (d) => d.textContent?.trim())).toEqual([
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun',
+    ]);
     expect(map.getAttribute('aria-label')).toMatch(
       /^2 days with focus in the last 16 weeks\. Best day: .+, 6 pomodoros\.$/,
     );

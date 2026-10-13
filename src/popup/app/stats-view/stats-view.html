@@ -37,9 +37,9 @@
     @for (week of weeks(); track $index) {
       <span class="month">{{ week.month }}</span>
     }
-    <span class="weekday" style="grid-row: 2">Mon</span>
-    <span class="weekday" style="grid-row: 4">Wed</span>
-    <span class="weekday" style="grid-row: 6">Fri</span>
+    @for (name of weekdays; track name; let i = $index) {
+      <span class="weekday" [style.grid-row]="i + 2">{{ name }}</span>
+    }
     @for (week of weeks(); track $index; let w = $index) {
       @for (day of week.days; track $index; let d = $index) {
         @if (day) {

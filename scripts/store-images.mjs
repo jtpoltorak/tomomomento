@@ -66,28 +66,76 @@ await page.evaluate(async () => {
   });
 });
 
-const focus = await popup('', async () => {
-  await send({ command: 'start' });
-  await page.waitForTimeout(61_000); // let a minute pass so the bar shows progress
-});
-await send({ command: 'reset' });
 /** Merges `patch` into the stored settings. */
 const setSettings = (patch) =>
   page.evaluate(async (p) => {
     const { settings } = await chrome.storage.sync.get('settings');
     await chrome.storage.sync.set({ settings: { ...settings, ...p } });
   }, patch);
-// Settings in the dark theme, to show it off.
-await setSettings({ theme: 'dark' });
-const settings = await popup('#settings');
-await setSettings({ theme: 'system' });
-const help = await popup('', async () => {
-  await page.getByRole('button', { name: 'Help' }).click();
-  await page.waitForSelector('app-help-view');
-  await page.getByRole('tab', { name: 'Technique' }).click();
+
+// A believable few months of history for Stats, and a plan for today with two
+// pomodoros done, so the plan strip and "Now:" label show on the focus shot.
+await page.evaluate(async () => {
+  const key = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  let seed = 7;
+  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const history = {};
+  const today = new Date();
+  for (let i = 1; i < 112; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    const weekend = d.getDay() === 0 || d.getDay() === 6;
+    const n = weekend
+      ? rand() < 0.7
+        ? 0
+        : 1 + Math.floor(rand() * 3)
+      : rand() < 0.15
+        ? 0
+        : 2 + Math.floor(rand() * 7);
+    if (n) history[key(d)] = { pomodoros: n, focusMinutes: n * 25 };
+  }
+  // The last week, oldest first, ending with today.
+  [6, 4, 7, 5, 0, 1, 2].forEach((n, i) => {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6 + i);
+    if (n) history[key(d)] = { pomodoros: n, focusMinutes: n * 25 };
+    else delete history[key(d)];
+  });
+  const { state } = await chrome.storage.local.get('state');
+  await chrome.storage.local.set({
+    history,
+    state: { ...state, completedToday: 2, completedInCycle: 2, todayKey: key(today) },
+    plan: {
+      plan: {
+        date: key(today),
+        pomodoros: 6,
+        labels: ['Clear inbox', 'Email replies', 'Draft report', 'Draft report', '', ''],
+      },
+      lastCount: 6,
+      skippedOn: null,
+    },
+  });
 });
-// The break, with the optional quote turned on.
-await setSettings({ showQuotes: true });
+await setSettings({ planEnabled: true });
+
+const plan = await popup('', async () => {
+  await page.locator('[data-view="plan"]').first().click();
+  await page.waitForSelector('app-plan-view');
+});
+
+const focus = await popup('', async () => {
+  await send({ command: 'start' });
+  await page.waitForTimeout(61_000); // let a minute pass so the bar shows progress
+});
+await send({ command: 'reset' });
+// Stats in the dark theme, to show it off.
+await setSettings({ theme: 'dark' });
+const stats = await popup('', async () => {
+  await page.getByRole('button', { name: 'Stats' }).click();
+  await page.waitForSelector('app-stats-view');
+});
+await setSettings({ theme: 'system' });
+// The break, with the optional quote turned on and no plan, to keep it calm.
+await setSettings({ showQuotes: true, planEnabled: false });
 const brk = await popup('', async () => {
   await send({ command: 'setPhase', phase: 'shortBreak' });
   await send({ command: 'start' });
@@ -113,7 +161,7 @@ const css = `
   * { box-sizing: border-box; }
   body { margin: 0; font-family: Rubik, sans-serif; color: #1f2328; }
   .frame { position: relative; overflow: hidden; display: flex; align-items: center; }
-  .shot { width: 480px; max-height: 700px; object-fit: cover; object-position: top; border-radius: 14px; box-shadow: 0 18px 50px rgb(0 0 0 / 0.18), 0 2px 8px rgb(0 0 0 / 0.08); background: #fff; }
+  .shot { width: 480px; max-height: 720px; object-fit: cover; object-position: top; border-radius: 14px; box-shadow: 0 18px 50px rgb(0 0 0 / 0.18), 0 2px 8px rgb(0 0 0 / 0.08); background: #fff; }
   h1 { margin: 0 0 16px; font-size: 52px; line-height: 1.1; font-weight: 700; letter-spacing: -0.01em; }
   .badge { display: grid; place-items: center; flex: none; border-radius: 28%; background: #fff; box-shadow: 0 8px 24px rgb(0 0 0 / 0.2); }
   p { margin: 0; font-size: 26px; line-height: 1.4; color: #57606a; }
@@ -124,9 +172,9 @@ async function render(path, width, height, html) {
   await canvas.evaluate(() => document.fonts.ready);
   await canvas.screenshot({ path, scale: 'css' });
 }
-const shot = (title, text, img, tint) =>
+const shot = (title, text, img, tint, width = 440) =>
   `<div class="frame" style="width:1280px;height:800px;background:linear-gradient(135deg,${tint} 0%,#ffffff 70%);padding:0 90px;gap:80px">
-    <img class="shot" src="${img}" style="width:440px">
+    <img class="shot" src="${img}" style="width:${width}px">
     <div style="max-width:560px"><h1>${title}</h1><p>${text}</p></div>
   </div>`;
 
@@ -142,7 +190,31 @@ await render(
   ),
 );
 await render(
-  `${out}/screenshot-2-break.png`,
+  `${out}/screenshot-2-plan.png`,
+  1280,
+  800,
+  shot(
+    'Plan your day',
+    'Pick how many pomodoros to aim for and see roughly when you’d be done. Name them if it helps. Plans start fresh each day, and whatever you finish counts.',
+    plan,
+    '#ffe8dc',
+    380,
+  ),
+);
+await render(
+  `${out}/screenshot-3-stats.png`,
+  1280,
+  800,
+  shot(
+    'See your progress',
+    'Your totals for today, the week, the month, and all time, with a calendar of the last 16 weeks. It all stays on your device: no account, no tracking.',
+    stats,
+    '#e4e6f0',
+    340,
+  ),
+);
+await render(
+  `${out}/screenshot-4-break.png`,
   1280,
   800,
   shot(
@@ -153,18 +225,7 @@ await render(
   ),
 );
 await render(
-  `${out}/screenshot-3-settings.png`,
-  1280,
-  800,
-  shot(
-    'Make it yours',
-    'Change the timer lengths, pick a light or dark theme, and choose how you hear that time’s up. Sounds, notifications, and the site blocker stay off until you turn them on.',
-    settings,
-    '#ffe8dc',
-  ),
-);
-await render(
-  `${out}/screenshot-4-blocker.png`,
+  `${out}/screenshot-5-blocker.png`,
   1280,
   800,
   `<div class="frame" style="width:1280px;height:800px;background:linear-gradient(135deg,#ffe8dc 0%,#ffffff 70%);padding:0 90px;gap:72px">
@@ -179,17 +240,6 @@ await render(
       <img src="${blocked}" style="display:block;width:640px">
     </div>
   </div>`,
-);
-await render(
-  `${out}/screenshot-5-help.png`,
-  1280,
-  800,
-  shot(
-    'Simple, private, free',
-    'A built-in guide to the technique. No account, no ads, no tracking, and no network requests. Open source under the MIT License.',
-    help,
-    '#dcebfa',
-  ),
 );
 await render(
   `${out}/promo-small.png`,

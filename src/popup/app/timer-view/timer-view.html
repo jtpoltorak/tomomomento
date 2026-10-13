@@ -29,6 +29,11 @@
     <div class="bar-fill" [style.transform]="'scaleX(' + (1 - store.progress()) + ')'"></div>
   </div>
   <div class="status" aria-live="polite">{{ status() }}</div>
+  @if (planLabelNow(); as now) {
+    <p class="plan-now">
+      {{ now.prefix }}: <strong>{{ now.label }}</strong>
+    </p>
+  }
 </section>
 
 <div class="controls">
@@ -53,6 +58,44 @@
   </button>
 </div>
 
+@if (store.showPlanPrompt()) {
+  <aside class="plan-card" aria-labelledby="plan-card-title">
+    <p id="plan-card-title">Plan today?</p>
+    <div class="plan-card-actions">
+      <button type="button" class="pill-btn solid" data-view="plan" (click)="openPlan.emit()">
+        Plan my day
+      </button>
+      <button type="button" class="pill-btn" (click)="skipPlan()">Not today</button>
+    </div>
+  </aside>
+} @else if (plan(); as p) {
+  <button
+    type="button"
+    class="plan-strip"
+    data-view="plan"
+    (click)="openPlan.emit()"
+    [attr.aria-label]="planLabel()"
+  >
+    @if (planDone() === p.pomodoros) {
+      <span class="plan-row cheer"><strong>Plan done!</strong> Anything more is a bonus.</span>
+    } @else {
+      <span class="plan-row">
+        <strong>{{ planShown() }} of {{ p.pomodoros }} planned</strong>
+        <span>{{ planNote() }}</span>
+      </span>
+    }
+    <span class="segments" aria-hidden="true">
+      @for (s of planSegments(); track $index) {
+        <span class="seg" [class]="s"></span>
+      }
+    </span>
+  </button>
+} @else if (store.settings().planEnabled) {
+  <button type="button" class="plan-add" data-view="plan" (click)="openPlan.emit()">
+    + Plan today
+  </button>
+}
+
 @if (quote(); as q) {
   <figure class="quote">
     <blockquote>
@@ -71,7 +114,7 @@
   <div class="today">{{ store.state().completedToday }} done today</div>
 </footer>
 
-@if (store.alertsOff() && !store.alertHintDismissed() && !quote()) {
+@if (showAlertHint()) {
   <aside class="hint">
     <span>Get an alert when time's up?</span>
     <button class="link" (click)="openSettings.emit()">Turn on</button>

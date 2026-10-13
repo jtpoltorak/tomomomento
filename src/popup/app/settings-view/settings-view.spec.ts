@@ -146,4 +146,17 @@ describe('SettingsView', () => {
     expect(el.querySelector('input[role=switch]:not([formcontrolname])')).toBeNull();
     expect(el.textContent).toContain('needs the Tomomomento Chrome extension');
   });
+
+  it('turns on planning, with the daily card on by default', async () => {
+    const { store, el, fixture } = await setup();
+    expect(el.querySelector('input[formcontrolname=planPrompt]')).toBeNull();
+    el.querySelector<HTMLInputElement>('input[formcontrolname=planEnabled]')!.click();
+    fixture.detectChanges();
+    const prompt = el.querySelector<HTMLInputElement>('input[formcontrolname=planPrompt]')!;
+    expect(prompt.checked).toBe(true);
+    vi.advanceTimersByTime(400);
+    await fixture.whenStable();
+    expect(store.settings().planEnabled).toBe(true);
+    expect(store.settings().planPrompt).toBe(true);
+  });
 });

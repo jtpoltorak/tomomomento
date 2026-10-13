@@ -1,3 +1,4 @@
+import { sanitizePlanData, type PlanData } from './plan';
 import { sanitizeHistory, seedHistory, type History } from './stats';
 import {
   DEFAULT_SETTINGS,
@@ -39,4 +40,14 @@ export async function loadHistory(): Promise<History> {
 
 export async function saveHistory(history: History): Promise<void> {
   await chrome.storage.local.set({ history });
+}
+
+/** Today's plan, if any, for "Plan my day". Never leaves the device. */
+export async function loadPlan(): Promise<PlanData> {
+  const { plan } = await chrome.storage.local.get('plan');
+  return sanitizePlanData(plan);
+}
+
+export async function savePlanData(plan: PlanData): Promise<void> {
+  await chrome.storage.local.set({ plan });
 }

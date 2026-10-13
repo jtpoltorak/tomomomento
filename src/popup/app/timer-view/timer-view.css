@@ -192,3 +192,150 @@
     font-size: 1.125rem;
   }
 }
+
+/* ---- Plan my day ---- */
+
+.plan-now {
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.25rem;
+}
+.plan-now strong {
+  font-weight: 600;
+}
+
+/* Planning adds a row, so everything tightens up a little to stay inside Chrome's 600px popup. */
+:host:has(.plan-strip, .plan-card, .plan-add) {
+  gap: 1rem;
+}
+:host:has(.plan-strip, .plan-card, .plan-add) .dial {
+  padding: 0;
+  gap: 0.5rem;
+}
+/* A plan and a quote together need a little more room: the clock gives some up. */
+:host:has(.plan-strip):has(.quote) {
+  gap: 0.625rem;
+}
+:host:has(.plan-strip):has(.quote) .clock {
+  font-size: 4.25rem;
+}
+:host:has(.quote) .plan-strip {
+  gap: 0.25rem;
+  padding-block: 0.375rem 0.5rem;
+}
+
+/* The once-a-day card sits where the alert hint would, and never blocks the timer. */
+.plan-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  font-size: 1.25rem;
+}
+.plan-card p {
+  margin: 0;
+  font-weight: 600;
+}
+.plan-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pill-btn {
+  padding: 0.375rem 1rem;
+  border: 1px solid var(--control);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 1.25rem;
+}
+.pill-btn:hover {
+  background: var(--surface);
+}
+.pill-btn.solid {
+  border-color: var(--focus-accent);
+  background: var(--focus-accent);
+  color: var(--on-accent);
+  font-weight: 500;
+}
+.pill-btn.solid:hover {
+  filter: brightness(1.08);
+}
+
+/* Segments, not dots, so the plan never reads as the cycle dots in the footer.
+   It counts focus sessions, so it keeps the Focus orange in every phase. */
+.plan-strip {
+  display: grid;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.5rem 0.875rem 0.625rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--surface);
+  text-align: left;
+  font-size: 1.25rem;
+}
+.plan-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  color: var(--muted);
+}
+.plan-row strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.segments {
+  display: flex;
+  gap: 0.1875rem;
+}
+.seg {
+  flex: 1;
+  height: 0.625rem;
+  border: 1px solid var(--control);
+  border-radius: 0.1875rem;
+  background: var(--bg);
+}
+.seg.done {
+  border-color: var(--focus-accent);
+  background: var(--focus-accent);
+}
+.seg.bonus {
+  border: 1.5px dashed var(--focus-accent);
+  background: color-mix(in srgb, var(--focus-accent) 35%, var(--bg));
+}
+.plan-row.cheer {
+  justify-content: flex-start;
+  gap: 0.375rem;
+}
+.plan-add {
+  align-self: center;
+  padding: 0.25rem 1rem;
+  border: 1px dashed var(--control);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.25rem;
+}
+.plan-add:hover {
+  color: var(--fg);
+}
+
+@media (forced-colors: active) {
+  .plan-strip,
+  .plan-card {
+    border: 1px solid CanvasText;
+  }
+  .seg.done,
+  .seg.bonus {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+}

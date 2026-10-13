@@ -36,6 +36,9 @@
   --accent: #c2410c;
   /* The Focus orange, for screens that keep one color whatever the phase (Stats). */
   --focus-accent: #c2410c;
+  /* Break colors that don't follow the phase, for the plan's timeline. */
+  --short-accent: #2b7a3b;
+  --long-accent: #1971c2;
   --on-accent: #ffffff;
   --error: #c92a2a;
 }
@@ -53,6 +56,8 @@
     --control: #7d8590;
     --accent: #ff7a45;
     --focus-accent: #ff7a45;
+    --short-accent: #51cf66;
+    --long-accent: #4dabf7;
     --on-accent: #1c1f24;
     --error: #ff8787;
   }
@@ -68,6 +73,8 @@
   --control: #7d8590;
   --accent: #ff7a45;
   --focus-accent: #ff7a45;
+  --short-accent: #51cf66;
+  --long-accent: #4dabf7;
   --on-accent: #1c1f24;
   --error: #ff8787;
 }

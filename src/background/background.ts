@@ -11,9 +11,11 @@ import type {
   PlaySoundMessage,
 } from '../shared/messages';
 import { BLOCKER_PERMISSIONS, hostMatches, shouldBlock, SUGGESTED_SITES } from '../shared/blocker';
+import { planDoneMessage } from '../shared/plan';
 import { recordPomodoro } from '../shared/stats';
 import {
   loadHistory,
+  loadPlan,
   loadSettings,
   loadState,
   saveHistory,
@@ -175,17 +177,25 @@ async function alertPhaseComplete(
 ): Promise<void> {
   const tasks: Promise<void>[] = [];
   if (settings.soundEnabled) tasks.push(playAlertSound(settings));
-  if (settings.notificationsEnabled) tasks.push(showNotification(finished, next));
+  if (settings.notificationsEnabled) {
+    const planLine = finished === 'work' ? planDoneMessage(await loadPlan(), settings, next) : null;
+    tasks.push(showNotification(finished, next, planLine));
+  }
   const results = await Promise.allSettled(tasks);
   for (const r of results) if (r.status === 'rejected') console.error('Alert failed', r.reason);
 }
 
-async function showNotification(finished: Phase, next: TimerState): Promise<void> {
+async function showNotification(
+  finished: Phase,
+  next: TimerState,
+  planLine: string | null,
+): Promise<void> {
   const title = finished === 'work' ? 'Focus session complete' : 'Break is over';
-  const message =
+  const nextLine =
     next.status === 'running'
       ? `${PHASE_LABELS[next.phase]} started.`
       : `Ready for your ${PHASE_LABELS[next.phase].toLowerCase()}.`;
+  const message = planLine ? `${planLine} ${nextLine}` : nextLine;
   await chrome.notifications.clear(NOTIFICATION_ID);
   await chrome.notifications.create(NOTIFICATION_ID, {
     type: 'basic',

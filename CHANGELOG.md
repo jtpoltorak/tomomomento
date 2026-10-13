@@ -12,6 +12,12 @@ these first.
   the last 7 days, this month, and all time, a bar chart of the last 7 days, and
   a 16-week calendar heat map. History starts with this update (today's count
   carries over), stays on your device, and can be cleared with Reset stats.
+- **Plan my day (optional):** choose how many pomodoros you'd like to do today,
+  see your focus and break time laid out with an estimated finish time, and
+  optionally name each pomodoro. A strip under the timer fills in as you go,
+  and extra pomodoros count as a bonus. Off by default; turn it on in
+  Settings > Planning. Only today's plan is kept, on your device.
+- **Help:** the Basics tab now explains Stats and Plan my day.
 
 ## 1.1.0 (2026-10-09)
 

@@ -29,6 +29,10 @@ export interface Settings {
   theme: ThemeId;
   /** Show a short quote under the timer, one per phase. */
   showQuotes: boolean;
+  /** "Plan my day": pick how many pomodoros to do today and track them under the timer. */
+  planEnabled: boolean;
+  /** With planning on, offer a card on the first open of each day. */
+  planPrompt: boolean;
 }
 
 export interface TimerState {
@@ -63,6 +67,9 @@ export const DEFAULT_SETTINGS: Settings = {
   blockedSites: [],
   theme: 'system',
   showQuotes: false,
+  // Planning is opt-in. Once someone turns it on, they've asked to be asked.
+  planEnabled: false,
+  planPrompt: true,
 };
 
 export const THEME_LABELS: Record<ThemeId, string> = {
@@ -235,5 +242,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
       input.blockedSites === undefined ? d.blockedSites : sanitizeSites(input.blockedSites),
     theme: input.theme && input.theme in THEME_LABELS ? input.theme : d.theme,
     showQuotes: input.showQuotes ?? d.showQuotes,
+    planEnabled: input.planEnabled ?? d.planEnabled,
+    planPrompt: input.planPrompt ?? d.planPrompt,
   };
 }

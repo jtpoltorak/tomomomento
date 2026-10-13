@@ -5,7 +5,7 @@
         <path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z" />
       </svg>
     </button>
-    <h1 tabindex="-1">{{ view() === 'settings' ? 'Settings' : 'Help' }}</h1>
+    <h1 tabindex="-1">{{ title() }}</h1>
   } @else {
     <img src="icons/icon-32.png" class="logo" alt="" />
     <h1>Tomomomento</h1>
@@ -22,6 +22,17 @@
           </svg>
         </button>
       }
+      <button
+        class="icon-btn ghost"
+        data-view="stats"
+        (click)="show('stats')"
+        aria-label="Stats"
+        title="Stats"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 20V10h3.5v10zm6.25 0V4h3.5v16zm6.25 0v-7H20v7z" />
+        </svg>
+      </button>
       <button
         class="icon-btn ghost"
         data-view="help"
@@ -59,6 +70,8 @@
       <app-settings-view />
     } @else if (view() === 'help') {
       <app-help-view />
+    } @else if (view() === 'stats') {
+      <app-stats-view />
     } @else {
       <app-timer-view (openSettings)="show('settings')" />
     }

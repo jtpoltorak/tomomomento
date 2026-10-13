@@ -6,6 +6,7 @@
 
 import type { Command, CommandResponse } from '../shared/messages';
 import { playSound } from '../shared/sounds';
+import { recordPomodoro, sanitizeHistory, seedHistory, type History } from '../shared/stats';
 import {
   advance,
   DEFAULT_SETTINGS,
@@ -31,6 +32,7 @@ const KEYS = {
   settings: 'tomatick.settings',
   state: 'tomatick.state',
   hint: 'tomatick.alertHintDismissed',
+  history: 'tomomomento.history',
 };
 const LOCK_NAME = 'tomatick-timer';
 const NOTIFICATION_TAG = 'phase-complete';
@@ -60,6 +62,11 @@ function loadSettings(): Settings {
 
 function loadState(): TimerState {
   return read<TimerState>(KEYS.state) ?? initialState(loadSettings(), Date.now());
+}
+
+function loadHistory(): History {
+  const stored = read<unknown>(KEYS.history);
+  return stored === undefined ? seedHistory(loadState(), loadSettings()) : sanitizeHistory(stored);
 }
 
 /**
@@ -101,6 +108,7 @@ export class WebTimerHost implements TimerHost {
       settings: loadSettings(),
       alertHintDismissed: Boolean(read<boolean>(KEYS.hint)),
       blockerAccess: false,
+      history: loadHistory(),
     };
   }
 
@@ -160,6 +168,13 @@ export class WebTimerHost implements TimerHost {
     write(KEYS.hint, true);
   }
 
+  async resetStats(): Promise<void> {
+    await withLock(() => {
+      write(KEYS.history, {});
+      this.emit();
+    });
+  }
+
   private commit(state: TimerState): TimerState {
     write(KEYS.state, state);
     this.schedule(state);
@@ -205,6 +220,10 @@ export class WebTimerHost implements TimerHost {
       }
       const settings = loadSettings();
       const next = advance(state, settings, Date.now(), true, state.endTime);
+      if (state.phase === 'work') {
+        // Read before the state is saved, so a first history still sees today's old tally.
+        write(KEYS.history, recordPomodoro(loadHistory(), state.endTime, settings.workMinutes));
+      }
       this.justFinished = next.status === 'idle';
       this.commit(next);
       if (alert) void this.alertPhaseComplete(state.phase, next, settings);

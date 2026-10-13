@@ -8,10 +8,11 @@ import {
   type TimerState,
 } from '../../shared/timer';
 import type { Command } from '../../shared/messages';
+import type { History } from '../../shared/stats';
 import { PomodoroStore } from './pomodoro-store';
 
 /** A PomodoroStore stand-in with no chrome.* calls, for component tests. */
-export function createFakeStore(overrides: Partial<TimerState> = {}) {
+export function createFakeStore(overrides: Partial<TimerState> = {}, history: History = {}) {
   const now = Date.now();
   const state = signal<TimerState>({ ...initialState(DEFAULT_SETTINGS, now), ...overrides });
   const settings = signal<Settings>(DEFAULT_SETTINGS);
@@ -22,6 +23,7 @@ export function createFakeStore(overrides: Partial<TimerState> = {}) {
     loaded: signal(true),
     alertHintDismissed: signal(false),
     blockerAccess: signal(false),
+    history: signal<History>(history),
     remainingMs: computed(() => remainingMs(state(), now)),
     totalMs: computed(() => phaseDurationMs(state().phase, settings())),
     progress: computed(() => 0),
@@ -46,6 +48,9 @@ export function createFakeStore(overrides: Partial<TimerState> = {}) {
     },
     async dismissAlertHint() {
       fake.alertHintDismissed.set(true);
+    },
+    async resetStats() {
+      fake.history.set({});
     },
   };
   return fake;

@@ -1,0 +1,80 @@
+<section aria-labelledby="stats-totals">
+  <h2 id="stats-totals">Pomodoros</h2>
+  <ul class="tiles">
+    @for (tile of tiles(); track tile.label; let first = $first) {
+      <li class="tile" [class.today]="first">
+        <span class="label">{{ tile.label }}</span>
+        <span class="count">{{ tile.totals.pomodoros }}</span>
+        <span class="time">{{ formatMinutes(tile.totals.focusMinutes) }} focused</span>
+      </li>
+    }
+  </ul>
+  @if (empty()) {
+    <p class="note">Finish a focus session and it will show up here.</p>
+  }
+</section>
+
+<section aria-labelledby="stats-week">
+  <h2 id="stats-week">Last 7 days</h2>
+  <ol class="bars">
+    @for (day of week(); track day.key; let last = $last) {
+      <li [class.today]="last">
+        <span class="visually-hidden">{{ longDate(day) }}: {{ pomodoros(day.pomodoros) }}</span>
+        <span class="value" aria-hidden="true">{{ day.pomodoros }}</span>
+        <span class="track" aria-hidden="true">
+          <span class="bar" [style.height.%]="(day.pomodoros / weekMax()) * 100"></span>
+        </span>
+        <span class="day" aria-hidden="true">{{ shortDay(day, last) }}</span>
+      </li>
+    }
+  </ol>
+</section>
+
+<section aria-labelledby="stats-heatmap">
+  <h2 id="stats-heatmap">Last 16 weeks</h2>
+  <div class="heatmap" role="img" [attr.aria-label]="heatSummary()">
+    <span class="corner"></span>
+    @for (week of weeks(); track $index) {
+      <span class="month">{{ week.month }}</span>
+    }
+    <span class="weekday" style="grid-row: 2">Mon</span>
+    <span class="weekday" style="grid-row: 4">Wed</span>
+    <span class="weekday" style="grid-row: 6">Fri</span>
+    @for (week of weeks(); track $index; let w = $index) {
+      @for (day of week.days; track $index; let d = $index) {
+        @if (day) {
+          <span
+            class="cell"
+            [attr.data-level]="heatLevel(day.pomodoros)"
+            [class.today]="w === weeks().length - 1 && !week.days[d + 1]"
+            [style.grid-column]="w + 2"
+            [style.grid-row]="d + 2"
+            [title]="longDate(day) + ': ' + pomodoros(day.pomodoros)"
+          ></span>
+        }
+      }
+    }
+  </div>
+  <div class="legend" aria-hidden="true">
+    Less
+    @for (level of [0, 1, 2, 3, 4]; track level) {
+      <span class="cell" [attr.data-level]="level"></span>
+    }
+    More
+  </div>
+</section>
+
+<section class="reset-section">
+  @if (confirming()) {
+    <div class="confirm" role="group" aria-labelledby="reset-question">
+      <p id="reset-question">Clear all stats? This can't be undone.</p>
+      <div class="confirm-actions">
+        <button type="button" class="text-btn danger" (click)="confirmReset()">Clear stats</button>
+        <button type="button" class="text-btn cancel" (click)="cancelReset()">Cancel</button>
+      </div>
+    </div>
+  } @else {
+    <button type="button" class="text-btn reset" (click)="askReset()">Reset stats</button>
+  }
+  <p class="note">Stats stay on this device and are never sent anywhere.</p>
+</section>

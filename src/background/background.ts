@@ -11,7 +11,15 @@ import type {
   PlaySoundMessage,
 } from '../shared/messages';
 import { BLOCKER_PERMISSIONS, hostMatches, shouldBlock, SUGGESTED_SITES } from '../shared/blocker';
-import { loadSettings, loadState, saveSettings, saveState } from '../shared/storage';
+import { recordPomodoro } from '../shared/stats';
+import {
+  loadHistory,
+  loadSettings,
+  loadState,
+  saveHistory,
+  saveSettings,
+  saveState,
+} from '../shared/storage';
 import {
   advance,
   pause,
@@ -203,6 +211,11 @@ function completeIfDue(): Promise<TimerState> {
       return state;
     }
     const next = advance(state, settings, now, true, state.endTime);
+    if (state.phase === 'work') {
+      // Read before the state is saved, so a first history still sees today's old tally.
+      const history = await loadHistory();
+      await saveHistory(recordPomodoro(history, state.endTime, settings.workMinutes));
+    }
     await commit(next);
     await updateBadge(next, true);
     await alertPhaseComplete(state.phase, next, settings);

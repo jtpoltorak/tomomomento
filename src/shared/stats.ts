@@ -1,0 +1,176 @@
+// Focus history for the Stats screen. Pure functions only, like timer.ts.
+//
+// History is one small entry per local day, kept on the device. A day with no
+// finished focus sessions has no entry.
+
+import { localDateKey, type Settings, type TimerState } from './timer';
+
+export interface DayStats {
+  pomodoros: number;
+  focusMinutes: number;
+}
+
+/** Keyed by local date (YYYY-MM-DD). */
+export type History = Record<string, DayStats>;
+
+export interface Totals {
+  pomodoros: number;
+  focusMinutes: number;
+}
+
+export interface Summary {
+  today: Totals;
+  last7Days: Totals;
+  thisMonth: Totals;
+  allTime: Totals;
+}
+
+export interface Day {
+  key: string;
+  /** Local midnight. */
+  date: Date;
+  pomodoros: number;
+  focusMinutes: number;
+}
+
+export interface HeatmapWeek {
+  /** Short month name when this week starts a new month, for the label row. */
+  month: string | null;
+  /** Monday to Sunday. Days after today are null. */
+  days: (Day | null)[];
+}
+
+const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Adds one finished focus session to the day it finished on. */
+export function recordPomodoro(history: History, finishedAt: number, minutes: number): History {
+  const key = localDateKey(finishedAt);
+  const day = history[key] ?? { pomodoros: 0, focusMinutes: 0 };
+  return {
+    ...history,
+    [key]: { pomodoros: day.pomodoros + 1, focusMinutes: day.focusMinutes + minutes },
+  };
+}
+
+/**
+ * History before this feature existed is just today's tally on the timer
+ * state, so the first history carries that over instead of starting at zero.
+ */
+export function seedHistory(state: TimerState, settings: Settings): History {
+  if (state.completedToday <= 0) return {};
+  return {
+    [state.todayKey]: {
+      pomodoros: state.completedToday,
+      focusMinutes: state.completedToday * settings.workMinutes,
+    },
+  };
+}
+
+/** Drops anything malformed, since storage can hold whatever an older version wrote. */
+export function sanitizeHistory(input: unknown): History {
+  const out: History = {};
+  if (!input || typeof input !== 'object') return out;
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (!DATE_KEY.test(key) || !value || typeof value !== 'object') continue;
+    const { pomodoros, focusMinutes } = value as Partial<DayStats>;
+    const p = Math.floor(Number(pomodoros));
+    const m = Math.floor(Number(focusMinutes));
+    if (!Number.isFinite(p) || p <= 0) continue;
+    out[key] = { pomodoros: p, focusMinutes: Number.isFinite(m) && m > 0 ? m : 0 };
+  }
+  return out;
+}
+
+function startOfDay(now: number): Date {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Steps by calendar days, so a daylight saving change can't skip or repeat one. */
+function addDays(date: Date, days: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function dayAt(history: History, date: Date): Day {
+  const key = localDateKey(date.getTime());
+  const stats = history[key];
+  return {
+    key,
+    date,
+    pomodoros: stats?.pomodoros ?? 0,
+    focusMinutes: stats?.focusMinutes ?? 0,
+  };
+}
+
+function sum(history: History, keep: (key: string) => boolean): Totals {
+  let pomodoros = 0;
+  let focusMinutes = 0;
+  for (const [key, day] of Object.entries(history)) {
+    if (!keep(key)) continue;
+    pomodoros += day.pomodoros;
+    focusMinutes += day.focusMinutes;
+  }
+  return { pomodoros, focusMinutes };
+}
+
+export function summarize(history: History, now: number): Summary {
+  const today = localDateKey(now);
+  const weekStart = localDateKey(addDays(startOfDay(now), -6).getTime());
+  const month = today.slice(0, 7);
+  // Keys sort as dates, so plain string comparison picks the range.
+  return {
+    today: sum(history, (k) => k === today),
+    last7Days: sum(history, (k) => k >= weekStart && k <= today),
+    thisMonth: sum(history, (k) => k.startsWith(month) && k <= today),
+    allTime: sum(history, () => true),
+  };
+}
+
+/** The last `count` days, oldest first, ending today. */
+export function lastDays(history: History, now: number, count: number): Day[] {
+  const today = startOfDay(now);
+  return Array.from({ length: count }, (_, i) => dayAt(history, addDays(today, i - count + 1)));
+}
+
+/** `weeks` columns, Monday to Sunday, with this week last. */
+export function heatmap(history: History, now: number, weeks: number): HeatmapWeek[] {
+  const today = startOfDay(now);
+  const sinceMonday = (today.getDay() + 6) % 7;
+  const firstMonday = addDays(today, -sinceMonday - (weeks - 1) * 7);
+  const out: HeatmapWeek[] = [];
+  for (let w = 0; w < weeks; w++) {
+    const monday = addDays(firstMonday, w * 7);
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const date = addDays(monday, i);
+      return date > today ? null : dayAt(history, date);
+    });
+    // Label the first week that starts in a new month. The first column only
+    // gets a label when the next one doesn't, so two labels never collide.
+    const prev = addDays(monday, -7).getMonth();
+    const next = addDays(monday, 7).getMonth();
+    const starts = w === 0 ? next === monday.getMonth() : prev !== monday.getMonth();
+    const month = starts ? monday.toLocaleDateString('en-US', { month: 'short' }) : null;
+    out.push({ month, days });
+  }
+  return out;
+}
+
+/** 0 (none) to 4 (a big day), on a fixed scale so a color means the same thing every week. */
+export function heatLevel(pomodoros: number): 0 | 1 | 2 | 3 | 4 {
+  if (pomodoros <= 0) return 0;
+  if (pomodoros <= 2) return 1;
+  if (pomodoros <= 4) return 2;
+  if (pomodoros <= 7) return 3;
+  return 4;
+}
+
+/** "0m", "45m", "2h 5m", "3h". */
+export function formatMinutes(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}m`;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}

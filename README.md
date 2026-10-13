@@ -27,6 +27,7 @@ new in each release is in [CHANGELOG.md](CHANGELOG.md).
 - An optional site blocker: during focus sessions, sites on your list (YouTube, Reddit, and friends) show a "stay focused" page instead, with the time left. Breaks and pauses unblock them.
 - Light, dark, or system theme (Settings > Appearance; follows your system by default).
 - Optional quotes on the timer screen (Settings > Appearance, off by default): focus and effort quotes during focus, rest quotes on breaks.
+- Stats: pomodoro totals (today, last 7 days, this month, all time), a 7-day bar chart, and a 16-week heat map. Kept on the device only.
 - Large, easy-to-read text, built to meet WCAG 2.2 AA: strong contrast in both themes, full keyboard and screen reader support, and respect for reduced-motion settings.
 - A **Help** screen (the ? in the popup) with tabs for the basics, tips, the technique, and a contact address, and links to the privacy policy, terms of use, and credits.
 

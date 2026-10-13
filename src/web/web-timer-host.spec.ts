@@ -61,4 +61,25 @@ describe('WebTimerHost', () => {
     await host.dismissAlertHint();
     expect((await host.load()).alertHintDismissed).toBe(true);
   });
+
+  it('records finished focus sessions in the stats history, and resets it', async () => {
+    const host = new WebTimerHost();
+    await host.send({ command: 'start' });
+    await vi.advanceTimersByTimeAsync(25 * 60_000 + 100);
+    // A skipped session doesn't count.
+    await host.send({ command: 'skip' });
+    await host.send({ command: 'skip' });
+    const { history } = await host.load();
+    expect(Object.values(history)).toEqual([{ pomodoros: 1, focusMinutes: 25 }]);
+
+    await host.resetStats();
+    expect((await host.load()).history).toEqual({});
+  });
+
+  it("starts the history from today's tally saved before stats existed", async () => {
+    const { state } = await new WebTimerHost().load();
+    localStorage.setItem('tomatick.state', JSON.stringify({ ...state, completedToday: 2 }));
+    const { history } = await new WebTimerHost().load();
+    expect(history).toEqual({ [state.todayKey]: { pomodoros: 2, focusMinutes: 50 } });
+  });
 });

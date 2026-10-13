@@ -1,5 +1,6 @@
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import type { Command } from '../../shared/messages';
+import type { History } from '../../shared/stats';
 import {
   DEFAULT_SETTINGS,
   initialState,
@@ -26,6 +27,8 @@ export class PomodoroStore {
   readonly alertHintDismissed = signal(true);
   /** Whether the user has granted the site access the blocker needs. */
   readonly blockerAccess = signal(false);
+  /** Finished focus sessions per day, for the Stats screen. */
+  readonly history = signal<History>({});
 
   /** Ticks while the timer runs so the countdown re-renders. */
   private readonly now = signal(Date.now());
@@ -67,8 +70,9 @@ export class PomodoroStore {
   }
 
   async refresh(): Promise<void> {
-    const { state, settings, alertHintDismissed, blockerAccess } = await this.host.load();
+    const { state, settings, alertHintDismissed, blockerAccess, history } = await this.host.load();
     this.blockerAccess.set(blockerAccess);
+    this.history.set(history);
     this.state.set(rollDay(state, Date.now()));
     this.settings.set(settings);
     this.alertHintDismissed.set(alertHintDismissed);
@@ -106,6 +110,11 @@ export class PomodoroStore {
   async dismissAlertHint(): Promise<void> {
     this.alertHintDismissed.set(true);
     await this.host.dismissAlertHint();
+  }
+
+  async resetStats(): Promise<void> {
+    this.history.set({});
+    await this.host.resetStats();
   }
 }
 

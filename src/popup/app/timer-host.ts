@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import type { Command, CommandResponse } from '../../shared/messages';
+import type { History } from '../../shared/stats';
 import type { Settings, TimerState } from '../../shared/timer';
 
 /** Which build the UI is running in. A few labels and settings differ between them. */
@@ -16,6 +17,8 @@ export interface HostSnapshot {
   alertHintDismissed: boolean;
   /** Whether the user has granted the site access the blocker needs. */
   blockerAccess: boolean;
+  /** Finished focus sessions per day, for the Stats screen. */
+  history: History;
 }
 
 /**
@@ -35,6 +38,8 @@ export interface TimerHost {
   /** Must be called straight from a click, since browsers only prompt on a user gesture. */
   requestNotificationAccess(): Promise<boolean>;
   dismissAlertHint(): Promise<void>;
+  /** Clears the Stats history. The timer and today's tally on it are left alone. */
+  resetStats(): Promise<void>;
 }
 
 export const TIMER_HOST = new InjectionToken<TimerHost>('TimerHost');

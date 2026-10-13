@@ -1,3 +1,4 @@
+import { sanitizeHistory, seedHistory, type History } from './stats';
 import {
   DEFAULT_SETTINGS,
   initialState,
@@ -26,4 +27,16 @@ export async function loadState(): Promise<TimerState> {
 
 export async function saveState(state: TimerState): Promise<void> {
   await chrome.storage.local.set({ state });
+}
+
+/** Days of finished focus sessions, for the Stats screen. Never leaves the device. */
+export async function loadHistory(): Promise<History> {
+  const { history } = await chrome.storage.local.get('history');
+  if (history !== undefined) return sanitizeHistory(history);
+  const [state, settings] = await Promise.all([loadState(), loadSettings()]);
+  return seedHistory(state, settings);
+}
+
+export async function saveHistory(history: History): Promise<void> {
+  await chrome.storage.local.set({ history });
 }

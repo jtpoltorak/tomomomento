@@ -1,6 +1,7 @@
 import {
   afterNextRender,
   Component,
+  computed,
   effect,
   ElementRef,
   inject,
@@ -11,14 +12,21 @@ import { INSTALL_PROMPT } from './install-prompt';
 import { PomodoroStore } from './pomodoro-store';
 import { HelpView } from './help-view/help-view';
 import { SettingsView } from './settings-view/settings-view';
+import { StatsView } from './stats-view/stats-view';
 import { applyTheme } from './theme';
 import { TimerView } from './timer-view/timer-view';
 
-type View = 'timer' | 'settings' | 'help';
+type View = 'timer' | 'settings' | 'help' | 'stats';
+
+const TITLES: Record<Exclude<View, 'timer'>, string> = {
+  settings: 'Settings',
+  help: 'Help',
+  stats: 'Stats',
+};
 
 @Component({
   selector: 'app-root',
-  imports: [TimerView, SettingsView, HelpView],
+  imports: [TimerView, SettingsView, HelpView, StatsView],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -29,6 +37,10 @@ export class App {
   private readonly injector = inject(Injector);
   // The Options page links here with #settings.
   protected readonly view = signal<View>(location.hash === '#settings' ? 'settings' : 'timer');
+  protected readonly title = computed(() => {
+    const view = this.view();
+    return view === 'timer' ? '' : TITLES[view];
+  });
 
   constructor() {
     // Phase colors are CSS variables keyed off <html data-phase>.

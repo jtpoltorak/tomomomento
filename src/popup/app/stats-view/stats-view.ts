@@ -18,6 +18,7 @@ import {
 import { PomodoroStore } from '../pomodoro-store';
 
 const HEATMAP_WEEKS = 16;
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 @Component({
   selector: 'app-stats-view',
@@ -67,6 +68,7 @@ export class StatsView {
 
   protected readonly confirming = signal(false);
 
+  protected readonly weekdays = WEEKDAYS;
   protected readonly formatMinutes = formatMinutes;
   protected readonly heatLevel = heatLevel;
 

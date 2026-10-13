@@ -1,0 +1,94 @@
+<section aria-labelledby="plan-count">
+  <h2 id="plan-count">How many pomodoros?</h2>
+  <div class="counter">
+    <button
+      type="button"
+      class="round"
+      (click)="change(-1)"
+      [disabled]="count() <= min"
+      aria-label="One fewer"
+      title="One fewer"
+    >
+      −
+    </button>
+    <output class="count" aria-live="polite" [attr.aria-label]="pomodoros(count())">{{
+      count()
+    }}</output>
+    <button
+      type="button"
+      class="round"
+      (click)="change(1)"
+      [disabled]="count() >= max"
+      aria-label="One more"
+      title="One more"
+    >
+      +
+    </button>
+  </div>
+  <p class="unit" aria-hidden="true">{{ count() === 1 ? 'pomodoro' : 'pomodoros' }}</p>
+  <div class="picks" role="group" aria-label="Quick picks">
+    @for (n of picks; track n) {
+      <button type="button" class="pick" [attr.aria-pressed]="count() === n" (click)="count.set(n)">
+        {{ n }}
+      </button>
+    }
+  </div>
+</section>
+
+<section aria-labelledby="plan-day">
+  <h2 id="plan-day">Your day</h2>
+  @if (left() > 0) {
+    <div class="timeline" aria-hidden="true">
+      @for (block of schedule().blocks; track $index) {
+        <span class="block" [attr.data-phase]="block.phase" [style.flex-grow]="block.ms"></span>
+      }
+    </div>
+    <div class="ends" aria-hidden="true">
+      <span>Now · {{ startTime() }}</span>
+      <span>{{ pastMidnight() ? 'After midnight' : endTime() }}</span>
+    </div>
+    <div class="key" aria-hidden="true">
+      <span><span class="swatch" data-phase="work"></span>Focus</span>
+      <span><span class="swatch" data-phase="shortBreak"></span>Short break</span>
+      <span><span class="swatch" data-phase="longBreak"></span>Long break</span>
+    </div>
+  }
+  <p class="summary">{{ summary() }}</p>
+</section>
+
+<section>
+  <details class="labels" [open]="labelsOpen">
+    <summary>Name your pomodoros <span class="optional">(optional)</span></summary>
+    <p class="note">Say what each one is for, and the timer shows it while you work.</p>
+    <ol>
+      @for (i of indexes(); track i) {
+        <li [class.done]="i < finished()">
+          <span class="num" aria-hidden="true">{{ i + 1 }}</span>
+          <input
+            type="text"
+            [id]="'plan-label-' + i"
+            [value]="labels()[i] ?? ''"
+            (input)="setLabel(i, $event)"
+            [maxLength]="maxLabel"
+            [placeholder]="'Pomodoro ' + (i + 1)"
+            [attr.aria-label]="'Label for pomodoro ' + (i + 1) + (i < finished() ? ' (done)' : '')"
+            autocomplete="off"
+          />
+          @if (i < finished()) {
+            <svg class="check" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z" />
+            </svg>
+          }
+        </li>
+      }
+    </ol>
+  </details>
+</section>
+
+<div class="actions">
+  @if (hasPlan) {
+    <button type="button" class="text-btn" (click)="clear()">Clear plan</button>
+  }
+  <button type="button" class="save" (click)="save()">Save plan</button>
+</div>
+<p class="note">Plans start fresh each day. Whatever you finish counts.</p>

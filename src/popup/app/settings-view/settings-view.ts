@@ -60,6 +60,8 @@ export class SettingsView {
     volumePercent: [70],
     theme: ['system' as ThemeId],
     showQuotes: [false],
+    planEnabled: [false],
+    planPrompt: [true],
   });
 
   constructor() {

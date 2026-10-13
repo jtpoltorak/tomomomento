@@ -7,10 +7,10 @@ There's no account, no analytics, no ads, and no tracking.
 
 ## What stays on your computer
 
-- Your settings and the timer's progress are saved with Chrome's built-in
-  storage so the timer keeps going when the popup closes. If Chrome Sync is
-  on, Google syncs your settings between your own signed-in browsers. They
-  never reach me.
+- Your settings, the timer's progress, your stats, and today's plan are saved
+  with Chrome's built-in storage so the timer keeps going when the popup
+  closes. If Chrome Sync is on, Google syncs your settings between your own
+  signed-in browsers. They never reach me.
 - Alert sounds are generated on your device. The extension makes no network
   requests.
 - The optional site blocker compares the addresses of pages you open against
@@ -21,8 +21,8 @@ There's no account, no analytics, no ads, and no tracking.
 
 ## The web app
 
-Tomomomento also runs as a web app. There, your settings and the timer's
-progress are saved in your browser's storage for that site and never leave
+Tomomomento also runs as a web app. There, your settings, the timer's
+progress, your stats, and today's plan are saved in your browser's storage for that site and never leave
 your device. The web app is hosted on Railway at tomomomento.com; its older
 github.io address, on GitHub Pages, only forwards visitors there. Like any web
 host, Railway and GitHub see visitors' IP addresses when the page loads and may

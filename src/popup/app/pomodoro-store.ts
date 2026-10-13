@@ -1,5 +1,6 @@
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import type { Command } from '../../shared/messages';
+import { clearPlan, EMPTY_PLAN_DATA, planFor, savePlan, type PlanData } from '../../shared/plan';
 import type { History } from '../../shared/stats';
 import {
   DEFAULT_SETTINGS,
@@ -29,6 +30,8 @@ export class PomodoroStore {
   readonly blockerAccess = signal(false);
   /** Finished focus sessions per day, for the Stats screen. */
   readonly history = signal<History>({});
+  /** "Plan my day" data. Use `todayPlan` for the plan that counts right now. */
+  readonly plan = signal<PlanData>(EMPTY_PLAN_DATA);
 
   /** Ticks while the timer runs so the countdown re-renders. */
   private readonly now = signal(Date.now());
@@ -40,6 +43,17 @@ export class PomodoroStore {
     const total = this.totalMs();
     return total > 0 ? Math.min(1, Math.max(0, 1 - this.remainingMs() / total)) : 0;
   });
+  /** Today's plan, when planning is on and a plan was made today. */
+  readonly todayPlan = computed(() =>
+    this.settings().planEnabled ? planFor(this.plan(), this.state().todayKey) : null,
+  );
+  /** The once-a-day "Plan today?" card. */
+  readonly showPlanPrompt = computed(() => {
+    const s = this.settings();
+    const today = this.state().todayKey;
+    return s.planEnabled && s.planPrompt && !this.todayPlan() && this.plan().skippedOn !== today;
+  });
+
   readonly alertsOff = computed(
     () => !this.settings().soundEnabled && !this.settings().notificationsEnabled,
   );
@@ -70,9 +84,11 @@ export class PomodoroStore {
   }
 
   async refresh(): Promise<void> {
-    const { state, settings, alertHintDismissed, blockerAccess, history } = await this.host.load();
+    const { state, settings, alertHintDismissed, blockerAccess, history, plan } =
+      await this.host.load();
     this.blockerAccess.set(blockerAccess);
     this.history.set(history);
+    this.plan.set(plan);
     this.state.set(rollDay(state, Date.now()));
     this.settings.set(settings);
     this.alertHintDismissed.set(alertHintDismissed);
@@ -91,8 +107,31 @@ export class PomodoroStore {
   }
 
   async updateSettings(settings: Settings): Promise<void> {
+    const wasPlanning = this.settings().planEnabled;
     this.settings.set(settings);
     await this.host.saveSettings(settings);
+    // Turning planning off forgets today's plan, so turning it back on starts clean.
+    if (wasPlanning && !settings.planEnabled && this.plan().plan) {
+      await this.setPlan(clearPlan(this.plan()));
+    }
+  }
+
+  async savePlan(pomodoros: number, labels: readonly string[]): Promise<void> {
+    await this.setPlan(savePlan(this.plan(), this.state().todayKey, pomodoros, labels));
+  }
+
+  async clearPlan(): Promise<void> {
+    await this.setPlan(clearPlan(this.plan()));
+  }
+
+  /** "Not today": hides the plan card until tomorrow. */
+  async skipPlanToday(): Promise<void> {
+    await this.setPlan({ ...this.plan(), skippedOn: this.state().todayKey });
+  }
+
+  private async setPlan(plan: PlanData): Promise<void> {
+    this.plan.set(plan);
+    await this.host.savePlan(plan);
   }
 
   /** Must be called straight from a click, since Chrome only prompts on a user gesture. */

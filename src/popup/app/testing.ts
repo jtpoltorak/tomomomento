@@ -8,6 +8,7 @@ import {
   type TimerState,
 } from '../../shared/timer';
 import type { Command } from '../../shared/messages';
+import { clearPlan, EMPTY_PLAN_DATA, planFor, savePlan, type PlanData } from '../../shared/plan';
 import type { History } from '../../shared/stats';
 import { PomodoroStore } from './pomodoro-store';
 
@@ -17,6 +18,10 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
   const state = signal<TimerState>({ ...initialState(DEFAULT_SETTINGS, now), ...overrides });
   const settings = signal<Settings>(DEFAULT_SETTINGS);
   const sent: Command[] = [];
+  const plan = signal<PlanData>(EMPTY_PLAN_DATA);
+  const todayPlan = computed(() =>
+    settings().planEnabled ? planFor(plan(), state().todayKey) : null,
+  );
   const fake = {
     state,
     settings,
@@ -24,6 +29,12 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
     alertHintDismissed: signal(false),
     blockerAccess: signal(false),
     history: signal<History>(history),
+    plan,
+    todayPlan,
+    showPlanPrompt: computed(() => {
+      const s = settings();
+      return s.planEnabled && s.planPrompt && !todayPlan() && plan().skippedOn !== state().todayKey;
+    }),
     remainingMs: computed(() => remainingMs(state(), now)),
     totalMs: computed(() => phaseDurationMs(state().phase, settings())),
     progress: computed(() => 0),
@@ -51,6 +62,15 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
     },
     async resetStats() {
       fake.history.set({});
+    },
+    async savePlan(pomodoros: number, labels: readonly string[]) {
+      fake.plan.set(savePlan(fake.plan(), state().todayKey, pomodoros, labels));
+    },
+    async clearPlan() {
+      fake.plan.set(clearPlan(fake.plan()));
+    },
+    async skipPlanToday() {
+      fake.plan.set({ ...fake.plan(), skippedOn: state().todayKey });
     },
   };
   return fake;

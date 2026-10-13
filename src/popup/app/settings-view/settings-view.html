@@ -180,6 +180,30 @@
   </section>
 
   <section>
+    <h2>Planning</h2>
+    <label class="switch-row">
+      <span>Plan my day</span>
+      <input type="checkbox" role="switch" formControlName="planEnabled" />
+    </label>
+    <p class="note">
+      Choose how many pomodoros to do today, see about when you'd finish, and watch the plan fill in
+      under the timer.
+    </p>
+    @if (form.controls.planEnabled.value) {
+      <div class="sub-options">
+        <label class="switch-row">
+          <span>Ask me each day</span>
+          <input type="checkbox" role="switch" formControlName="planPrompt" />
+        </label>
+        <p class="note">
+          A small card on the timer the first time you open it each day. "Not today" hides it until
+          tomorrow.
+        </p>
+      </div>
+    }
+  </section>
+
+  <section>
     <fieldset class="theme">
       <legend><h2>Appearance</h2></legend>
       <div class="segmented">

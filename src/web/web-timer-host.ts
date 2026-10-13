@@ -6,6 +6,7 @@
 
 import type { Command, CommandResponse } from '../shared/messages';
 import { playSound } from '../shared/sounds';
+import { planDoneMessage, sanitizePlanData, type PlanData } from '../shared/plan';
 import { recordPomodoro, sanitizeHistory, seedHistory, type History } from '../shared/stats';
 import {
   advance,
@@ -33,6 +34,7 @@ const KEYS = {
   state: 'tomatick.state',
   hint: 'tomatick.alertHintDismissed',
   history: 'tomomomento.history',
+  plan: 'tomomomento.plan',
 };
 const LOCK_NAME = 'tomatick-timer';
 const NOTIFICATION_TAG = 'phase-complete';
@@ -62,6 +64,10 @@ function loadSettings(): Settings {
 
 function loadState(): TimerState {
   return read<TimerState>(KEYS.state) ?? initialState(loadSettings(), Date.now());
+}
+
+function loadPlan(): PlanData {
+  return sanitizePlanData(read<unknown>(KEYS.plan));
 }
 
 function loadHistory(): History {
@@ -109,6 +115,7 @@ export class WebTimerHost implements TimerHost {
       alertHintDismissed: Boolean(read<boolean>(KEYS.hint)),
       blockerAccess: false,
       history: loadHistory(),
+      plan: loadPlan(),
     };
   }
 
@@ -175,6 +182,13 @@ export class WebTimerHost implements TimerHost {
     });
   }
 
+  async savePlan(plan: PlanData): Promise<void> {
+    await withLock(() => {
+      write(KEYS.plan, plan);
+      this.emit();
+    });
+  }
+
   private commit(state: TimerState): TimerState {
     write(KEYS.state, state);
     this.schedule(state);
@@ -237,7 +251,10 @@ export class WebTimerHost implements TimerHost {
   ): Promise<void> {
     const tasks: Promise<void>[] = [];
     if (settings.soundEnabled) tasks.push(this.playAlertSound(settings));
-    if (settings.notificationsEnabled) tasks.push(this.showNotification(finished, next));
+    if (settings.notificationsEnabled) {
+      const planLine = finished === 'work' ? planDoneMessage(loadPlan(), settings, next) : null;
+      tasks.push(this.showNotification(finished, next, planLine));
+    }
     const results = await Promise.allSettled(tasks);
     for (const r of results) if (r.status === 'rejected') console.error('Alert failed', r.reason);
   }
@@ -253,14 +270,19 @@ export class WebTimerHost implements TimerHost {
     await playSound(this.audio, settings.sound, settings.volume);
   }
 
-  private async showNotification(finished: Phase, next: TimerState): Promise<void> {
+  private async showNotification(
+    finished: Phase,
+    next: TimerState,
+    planLine: string | null,
+  ): Promise<void> {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     const title = finished === 'work' ? 'Focus session complete' : 'Break is over';
+    const nextLine =
+      next.status === 'running'
+        ? `${PHASE_LABELS[next.phase]} started.`
+        : `Ready for your ${PHASE_LABELS[next.phase].toLowerCase()}.`;
     const options: NotificationOptions = {
-      body:
-        next.status === 'running'
-          ? `${PHASE_LABELS[next.phase]} started.`
-          : `Ready for your ${PHASE_LABELS[next.phase].toLowerCase()}.`,
+      body: planLine ? `${planLine} ${nextLine}` : nextLine,
       icon: 'icons/icon-192.png',
       tag: NOTIFICATION_TAG,
       requireInteraction: next.status !== 'running',

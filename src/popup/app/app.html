@@ -72,8 +72,10 @@
       <app-help-view />
     } @else if (view() === 'stats') {
       <app-stats-view />
+    } @else if (view() === 'plan') {
+      <app-plan-view (done)="show('timer')" />
     } @else {
-      <app-timer-view (openSettings)="show('settings')" />
+      <app-timer-view (openSettings)="show('settings')" (openPlan)="show('plan')" />
     }
   }
 </main>

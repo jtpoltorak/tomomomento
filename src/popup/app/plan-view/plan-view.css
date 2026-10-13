@@ -1,0 +1,232 @@
+:host {
+  display: block;
+  /* The plan counts focus sessions, so it keeps the Focus orange in every phase, like Stats. */
+  --accent: var(--focus-accent);
+}
+
+section {
+  padding-bottom: 1.125rem;
+  margin-bottom: 1.125rem;
+  border-bottom: 1px solid var(--border);
+}
+h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.note {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 1.25rem;
+}
+
+/* How many: one big number between two round buttons. */
+.counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+.round {
+  display: grid;
+  place-items: center;
+  width: 3.375rem;
+  height: 3.375rem;
+  padding: 0;
+  border: 2px solid var(--control);
+  border-radius: 50%;
+  background: transparent;
+  font-size: 1.875rem;
+  line-height: 1;
+}
+.round:hover:not(:disabled) {
+  background: var(--surface);
+}
+.round:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+.count {
+  min-width: 2ch;
+  font-size: 3.75rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.unit {
+  margin: 0.25rem 0 0.75rem;
+  text-align: center;
+  color: var(--muted);
+}
+.picks {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.pick {
+  min-width: 3rem;
+  padding: 0.25rem 0.875rem;
+  border: 1px solid var(--control);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 1.25rem;
+}
+.pick:hover {
+  background: var(--surface);
+}
+.pick[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 500;
+}
+
+/* Your day: focus and break blocks drawn to scale, from now to the last planned pomodoro. */
+.timeline {
+  display: flex;
+  gap: 2px;
+  height: 1.25rem;
+  overflow: hidden;
+  border-radius: 0.375rem;
+}
+.block {
+  flex: 1 1 0;
+  min-width: 2px;
+}
+[data-phase='work'] {
+  background: var(--focus-accent);
+}
+[data-phase='shortBreak'] {
+  background: var(--short-accent);
+}
+[data-phase='longBreak'] {
+  background: var(--long-accent);
+}
+.ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.375rem;
+  color: var(--muted);
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+}
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-top: 0.375rem;
+  color: var(--muted);
+  font-size: 1.0625rem;
+}
+.key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.1875rem;
+}
+.summary {
+  margin: 0.75rem 0 0;
+}
+
+/* Labels are tucked away so planning stays one tap for anyone who doesn't want them. */
+.labels summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+.optional {
+  color: var(--muted);
+  font-weight: 400;
+}
+.labels ol {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.labels li {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.num {
+  width: 1.75rem;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.labels input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--control);
+  border-radius: 0.75rem;
+  background: var(--bg);
+  color: inherit;
+  font: inherit;
+}
+.labels input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.labels li.done input {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.check {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: var(--accent);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+.text-btn {
+  margin-right: auto;
+  padding: 0.375rem 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  text-decoration: underline;
+}
+.text-btn:hover {
+  color: var(--fg);
+}
+.save {
+  padding: 0.625rem 1.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+.save:hover {
+  filter: brightness(1.08);
+}
+
+@media (forced-colors: active) {
+  .block,
+  .swatch {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+  .pick[aria-pressed='true'],
+  .save {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+}

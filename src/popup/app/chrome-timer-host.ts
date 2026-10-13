@@ -1,10 +1,13 @@
 import { BLOCKER_PERMISSIONS } from '../../shared/blocker';
 import { sendCommand, type Command, type CommandResponse } from '../../shared/messages';
+import type { PlanData } from '../../shared/plan';
 import {
   loadHistory,
+  loadPlan,
   loadSettings,
   loadState,
   saveHistory,
+  savePlanData,
   saveSettings,
 } from '../../shared/storage';
 import type { Settings } from '../../shared/timer';
@@ -15,14 +18,22 @@ const HINT_KEY = 'alertHintDismissed';
 /** The extension popup's host: the background worker owns the timer, chrome.storage holds it. */
 export class ChromeTimerHost implements TimerHost {
   async load(): Promise<HostSnapshot> {
-    const [state, settings, ui, blockerAccess, history] = await Promise.all([
+    const [state, settings, ui, blockerAccess, history, plan] = await Promise.all([
       loadState(),
       loadSettings(),
       chrome.storage.local.get(HINT_KEY),
       chrome.permissions.contains(BLOCKER_PERMISSIONS),
       loadHistory(),
+      loadPlan(),
     ]);
-    return { state, settings, alertHintDismissed: Boolean(ui[HINT_KEY]), blockerAccess, history };
+    return {
+      state,
+      settings,
+      alertHintDismissed: Boolean(ui[HINT_KEY]),
+      blockerAccess,
+      history,
+      plan,
+    };
   }
 
   onChange(listener: () => void): () => void {
@@ -54,5 +65,9 @@ export class ChromeTimerHost implements TimerHost {
 
   resetStats(): Promise<void> {
     return saveHistory({});
+  }
+
+  savePlan(plan: PlanData): Promise<void> {
+    return savePlanData(plan);
   }
 }

@@ -88,4 +88,11 @@ describe('HelpView', () => {
     expect(el.textContent).not.toContain('site blocker');
     expect(el.textContent).toContain("tab's title shows the time left");
   });
+
+  it('explains Stats and Plan my day in the basics', () => {
+    const el = setup();
+    const headings = Array.from(el.querySelectorAll('h3')).map((h) => h.textContent?.trim());
+    expect(headings).toEqual(['Stats', 'Plan my day']);
+    expect(el.querySelectorAll('.plan-steps li').length).toBe(3);
+  });
 });

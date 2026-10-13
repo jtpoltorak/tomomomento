@@ -11,22 +11,24 @@ import {
 import { INSTALL_PROMPT } from './install-prompt';
 import { PomodoroStore } from './pomodoro-store';
 import { HelpView } from './help-view/help-view';
+import { PlanView } from './plan-view/plan-view';
 import { SettingsView } from './settings-view/settings-view';
 import { StatsView } from './stats-view/stats-view';
 import { applyTheme } from './theme';
 import { TimerView } from './timer-view/timer-view';
 
-type View = 'timer' | 'settings' | 'help' | 'stats';
+type View = 'timer' | 'settings' | 'help' | 'stats' | 'plan';
 
 const TITLES: Record<Exclude<View, 'timer'>, string> = {
   settings: 'Settings',
   help: 'Help',
   stats: 'Stats',
+  plan: "Today's plan",
 };
 
 @Component({
   selector: 'app-root',
-  imports: [TimerView, SettingsView, HelpView, StatsView],
+  imports: [TimerView, SettingsView, HelpView, StatsView, PlanView],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

@@ -113,13 +113,30 @@ await page.evaluate(async () => {
       lastCount: 6,
       skippedOn: null,
     },
+    // A few thoughts parked during focus, for the parking lot and break shots.
+    parkingLot: {
+      thoughts: [
+        { id: '1', text: 'Call the dentist about Thursday', at: Date.now() - 3000 },
+        { id: '2', text: 'Look up that song from the coffee shop', at: Date.now() - 2000 },
+        { id: '3', text: 'Buy milk', at: Date.now() - 1000 },
+      ],
+      seenAt: 0,
+    },
   });
 });
-await setSettings({ planEnabled: true });
+await setSettings({ planEnabled: true, parkingLot: true });
 
-const plan = await popup('', async () => {
-  await page.locator('[data-view="plan"]').first().click();
-  await page.waitForSelector('app-plan-view');
+const parking = await popup('', async () => {
+  await page.locator('[data-view="parking"]').click();
+  await page.waitForSelector('app-parking-view');
+  await page.fill('#thought', 'Email Sam the photos');
+  await page.keyboard.press('Enter');
+  await page.locator('#thought').blur();
+});
+// Opening the lot marked everything seen; un-see it so the break card shows.
+await page.evaluate(async () => {
+  const { parkingLot } = await chrome.storage.local.get('parkingLot');
+  await chrome.storage.local.set({ parkingLot: { ...parkingLot, seenAt: 0 } });
 });
 
 const focus = await popup('', async () => {
@@ -134,14 +151,14 @@ const stats = await popup('', async () => {
   await page.waitForSelector('app-stats-view');
 });
 await setSettings({ theme: 'system' });
-// The break, with the optional quote turned on and no plan, to keep it calm.
-await setSettings({ showQuotes: true, planEnabled: false });
+// The break, with a break idea and the parked thoughts card, and no plan, to keep it calm.
+await setSettings({ breakIdeas: true, planEnabled: false });
 const brk = await popup('', async () => {
   await send({ command: 'setPhase', phase: 'shortBreak' });
   await send({ command: 'start' });
   await page.waitForTimeout(1500);
 });
-await setSettings({ showQuotes: false });
+await setSettings({ breakIdeas: false });
 
 // The blocked page, during a focus session.
 await send({ command: 'setPhase', phase: 'work' });
@@ -190,15 +207,14 @@ await render(
   ),
 );
 await render(
-  `${out}/screenshot-2-plan.png`,
+  `${out}/screenshot-2-parking.png`,
   1280,
   800,
   shot(
-    'Plan your day',
-    'Pick how many pomodoros to aim for and see roughly when you’d be done. Name them if it helps. Plans start fresh each day, and whatever you finish counts.',
-    plan,
+    'Park stray thoughts',
+    'A thought pops up mid-focus? Jot it in the parking lot and get back to work. Your next break reminds you what you parked.',
+    parking,
     '#ffe8dc',
-    380,
   ),
 );
 await render(
@@ -219,7 +235,7 @@ await render(
   800,
   shot(
     'Breaks that actually happen',
-    'Short breaks between sessions and a long one after four. Get a gentle sound or notification when time’s up, and an optional quote to rest on.',
+    'Short breaks between sessions and a long one after four. Get a gentle sound or notification when time’s up, and an idea for something screen-free to do.',
     brk,
     '#dcf5e1',
   ),

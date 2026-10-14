@@ -1,5 +1,14 @@
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import type { Command } from '../../shared/messages';
+import {
+  clearThoughts,
+  EMPTY_PARKING_LOT,
+  markSeen,
+  parkThought,
+  removeThought,
+  unseenCount,
+  type ParkingLot,
+} from '../../shared/parking';
 import { clearPlan, EMPTY_PLAN_DATA, planFor, savePlan, type PlanData } from '../../shared/plan';
 import type { History } from '../../shared/stats';
 import {
@@ -32,6 +41,7 @@ export class PomodoroStore {
   readonly history = signal<History>({});
   /** "Plan my day" data. Use `todayPlan` for the plan that counts right now. */
   readonly plan = signal<PlanData>(EMPTY_PLAN_DATA);
+  readonly parkingLot = signal<ParkingLot>(EMPTY_PARKING_LOT);
 
   /** Ticks while the timer runs so the countdown re-renders. */
   private readonly now = signal(Date.now());
@@ -53,6 +63,17 @@ export class PomodoroStore {
     const today = this.state().todayKey;
     return s.planEnabled && s.planPrompt && !this.todayPlan() && this.plan().skippedOn !== today;
   });
+
+  /** Thoughts waiting in the parking lot, or 0 when it's turned off. */
+  readonly parkedCount = computed(() =>
+    this.settings().parkingLot ? this.parkingLot().thoughts.length : 0,
+  );
+  /** On a break, a nudge to look at thoughts parked since you last did. */
+  readonly parkedOnBreak = computed(() =>
+    this.settings().parkingLot && this.state().phase !== 'work'
+      ? unseenCount(this.parkingLot())
+      : 0,
+  );
 
   readonly alertsOff = computed(
     () => !this.settings().soundEnabled && !this.settings().notificationsEnabled,
@@ -84,8 +105,9 @@ export class PomodoroStore {
   }
 
   async refresh(): Promise<void> {
-    const { state, settings, alertHintDismissed, blockerAccess, history, plan } =
+    const { state, settings, alertHintDismissed, blockerAccess, history, plan, parkingLot } =
       await this.host.load();
+    this.parkingLot.set(parkingLot);
     this.blockerAccess.set(blockerAccess);
     this.history.set(history);
     this.plan.set(plan);
@@ -132,6 +154,28 @@ export class PomodoroStore {
   private async setPlan(plan: PlanData): Promise<void> {
     this.plan.set(plan);
     await this.host.savePlan(plan);
+  }
+
+  async parkThought(text: string): Promise<void> {
+    await this.setParkingLot(parkThought(this.parkingLot(), text, Date.now(), crypto.randomUUID()));
+  }
+
+  async removeThought(id: string): Promise<void> {
+    await this.setParkingLot(removeThought(this.parkingLot(), id));
+  }
+
+  async clearThoughts(): Promise<void> {
+    await this.setParkingLot(clearThoughts(this.parkingLot()));
+  }
+
+  /** Opening the lot, or "Later" on the break card, quiets the card until something new is parked. */
+  async markParkingSeen(): Promise<void> {
+    await this.setParkingLot(markSeen(this.parkingLot(), Date.now()));
+  }
+
+  private async setParkingLot(lot: ParkingLot): Promise<void> {
+    this.parkingLot.set(lot);
+    await this.host.saveParkingLot(lot);
   }
 
   /** Must be called straight from a click, since Chrome only prompts on a user gesture. */

@@ -8,27 +8,30 @@ import {
   Injector,
   signal,
 } from '@angular/core';
+import { thoughtsText } from '../../shared/parking';
 import { INSTALL_PROMPT } from './install-prompt';
 import { PomodoroStore } from './pomodoro-store';
 import { HelpView } from './help-view/help-view';
+import { ParkingView } from './parking-view/parking-view';
 import { PlanView } from './plan-view/plan-view';
 import { SettingsView } from './settings-view/settings-view';
 import { StatsView } from './stats-view/stats-view';
 import { applyTheme } from './theme';
 import { TimerView } from './timer-view/timer-view';
 
-type View = 'timer' | 'settings' | 'help' | 'stats' | 'plan';
+type View = 'timer' | 'settings' | 'help' | 'stats' | 'plan' | 'parking';
 
 const TITLES: Record<Exclude<View, 'timer'>, string> = {
   settings: 'Settings',
   help: 'Help',
   stats: 'Stats',
   plan: "Today's plan",
+  parking: 'Parking lot',
 };
 
 @Component({
   selector: 'app-root',
-  imports: [TimerView, SettingsView, HelpView, StatsView, PlanView],
+  imports: [TimerView, SettingsView, HelpView, StatsView, PlanView, ParkingView],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -54,6 +57,12 @@ export class App {
     });
   }
 
+  /** "Parking lot, 3 thoughts". */
+  protected readonly parkingLabel = computed(() => {
+    const n = this.store.parkedCount();
+    return n === 0 ? 'Parking lot' : `Parking lot, ${thoughtsText(n)}`;
+  });
+
   protected show(view: View): void {
     const from = this.view();
     this.view.set(view);
@@ -65,7 +74,8 @@ export class App {
         const target =
           view === 'timer'
             ? el.querySelector<HTMLElement>(`[data-view="${from}"]`)
-            : el.querySelector<HTMLElement>('h1');
+            : // The parking lot is for getting a thought down fast, so go straight to the box.
+              el.querySelector<HTMLElement>(view === 'parking' ? '#thought' : 'h1');
         target?.focus();
       },
       { injector: this.injector },

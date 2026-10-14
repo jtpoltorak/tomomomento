@@ -339,3 +339,41 @@
     background: CanvasText;
   }
 }
+
+/* Parked thoughts, on a break: one compact row, so it fits alongside a plan. */
+.parked-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.375rem 0.375rem 0.375rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  font-size: 1.25rem;
+}
+.parked-card p {
+  margin: 0;
+  font-weight: 600;
+}
+.parked-card-actions {
+  display: flex;
+  gap: 0.375rem;
+}
+.parked-card .pill-btn {
+  padding-inline: 0.875rem;
+}
+:host:has(.parked-card) {
+  gap: 1rem;
+}
+:host:has(.parked-card) .dial {
+  padding: 0;
+  gap: 0.5rem;
+}
+/* With a plan strip and a label too, the clock gives up a little room, like it does for a quote. */
+:host:has(.plan-strip):has(.parked-card) {
+  gap: 0.625rem;
+}
+:host:has(.plan-strip):has(.parked-card) .clock {
+  font-size: 4.25rem;
+}

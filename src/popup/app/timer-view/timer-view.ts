@@ -11,6 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
+import { thoughtsText } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
 import { formatClock, PHASE_LABELS, type Phase } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
@@ -24,6 +25,7 @@ export class TimerView {
   protected readonly store = inject(PomodoroStore);
   readonly openSettings = output<void>();
   readonly openPlan = output<void>();
+  readonly openParking = output<void>();
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
 
@@ -40,10 +42,19 @@ export class TimerView {
     this.lastQuote = pickQuote(this.phase(), this.lastQuote);
     return this.lastQuote;
   });
+  /** On a break, how many thoughts were parked since you last looked. The plan card comes first. */
+  protected readonly parkedCard = computed(() =>
+    this.store.showPlanPrompt() ? 0 : this.store.parkedOnBreak(),
+  );
+  protected readonly parkedText = computed(() => thoughtsText(this.parkedCard()));
   // The popup only has room for one extra line of text under the controls, so
-  // the daily plan card and your own label for this pomodoro come before a quote.
+  // the daily plan card, the parked thoughts card and your own label for this
+  // pomodoro come before a quote.
   protected readonly quote = computed(() =>
-    this.store.settings().showQuotes && !this.store.showPlanPrompt() && !this.planLabelNow()
+    this.store.settings().showQuotes &&
+    !this.store.showPlanPrompt() &&
+    !this.parkedCard() &&
+    !this.planLabelNow()
       ? this.phaseQuote()
       : null,
   );
@@ -52,7 +63,11 @@ export class TimerView {
   protected readonly showAlertHint = computed(() => {
     const s = this.store.settings();
     return (
-      this.store.alertsOff() && !this.store.alertHintDismissed() && !s.showQuotes && !s.planEnabled
+      this.store.alertsOff() &&
+      !this.store.alertHintDismissed() &&
+      !s.showQuotes &&
+      !s.planEnabled &&
+      !s.parkingLot
     );
   });
 
@@ -162,6 +177,14 @@ export class TimerView {
       () => this.host.nativeElement.querySelector<HTMLElement>('.plan-add')?.focus(),
       { injector: this.injector },
     );
+  }
+
+  protected async parkLater(): Promise<void> {
+    await this.store.markParkingSeen();
+    // The card's buttons are gone, so hand focus to the parking lot button up top.
+    afterNextRender(() => document.querySelector<HTMLElement>('[data-view="parking"]')?.focus(), {
+      injector: this.injector,
+    });
   }
 
   protected toggle(): void {

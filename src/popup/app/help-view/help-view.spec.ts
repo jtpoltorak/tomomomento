@@ -89,10 +89,10 @@ describe('HelpView', () => {
     expect(el.textContent).toContain("tab's title shows the time left");
   });
 
-  it('explains Stats and Plan my day in the basics', () => {
+  it('explains Stats, Plan my day and the parking lot in the basics', () => {
     const el = setup();
     const headings = Array.from(el.querySelectorAll('h3')).map((h) => h.textContent?.trim());
-    expect(headings).toEqual(['Stats', 'Plan my day']);
+    expect(headings).toEqual(['Stats', 'Plan my day', 'Parking lot']);
     expect(el.querySelectorAll('.plan-steps li').length).toBe(3);
   });
 });

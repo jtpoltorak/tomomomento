@@ -1,0 +1,58 @@
+<section aria-labelledby="park-heading">
+  <h2 id="park-heading">Park a thought</h2>
+  <div class="add">
+    <input
+      #box
+      type="text"
+      id="thought"
+      [maxLength]="maxLength"
+      placeholder="Like “call the dentist”"
+      aria-label="Thought to park"
+      aria-describedby="park-note"
+      autocomplete="off"
+      (keydown.enter)="park(box)"
+      (input)="message.set('')"
+    />
+    <button type="button" class="add-btn" (click)="park(box)">Park it</button>
+  </div>
+  <p class="note" id="park-note" role="status">
+    {{ message() || 'Write it down, let it go, and get back to focus.' }}
+  </p>
+</section>
+
+<section aria-labelledby="parked-heading">
+  <h2 id="parked-heading">{{ heading() }}</h2>
+  <ul class="thoughts">
+    @for (t of thoughts(); track t.id) {
+      <li>
+        <span class="text">{{ t.text }}</span>
+        <button
+          type="button"
+          class="done"
+          (click)="done(t.id)"
+          [attr.aria-label]="'Done with ' + t.text"
+          title="Done"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z" />
+          </svg>
+        </button>
+      </li>
+    } @empty {
+      <li class="empty">Nothing parked. Your head is clear.</li>
+    }
+  </ul>
+  @if (thoughts().length > 1) {
+    @if (confirming()) {
+      <div class="confirm" role="group" aria-labelledby="clear-question">
+        <p id="clear-question">Clear all {{ thoughts().length }} thoughts?</p>
+        <div class="confirm-actions">
+          <button type="button" class="text-btn danger" (click)="confirmClear()">Clear all</button>
+          <button type="button" class="text-btn cancel" (click)="cancelClear()">Cancel</button>
+        </div>
+      </div>
+    } @else {
+      <button type="button" class="text-btn clear" (click)="askClear()">Clear all</button>
+    }
+  }
+</section>

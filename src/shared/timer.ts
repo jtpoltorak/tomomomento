@@ -33,6 +33,8 @@ export interface Settings {
   planEnabled: boolean;
   /** With planning on, offer a card on the first open of each day. */
   planPrompt: boolean;
+  /** The parking lot: jot stray thoughts during focus, look at them on a break. */
+  parkingLot: boolean;
 }
 
 export interface TimerState {
@@ -70,6 +72,7 @@ export const DEFAULT_SETTINGS: Settings = {
   // Planning is opt-in. Once someone turns it on, they've asked to be asked.
   planEnabled: false,
   planPrompt: true,
+  parkingLot: false,
 };
 
 export const THEME_LABELS: Record<ThemeId, string> = {
@@ -244,5 +247,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     showQuotes: input.showQuotes ?? d.showQuotes,
     planEnabled: input.planEnabled ?? d.planEnabled,
     planPrompt: input.planPrompt ?? d.planPrompt,
+    parkingLot: input.parkingLot ?? d.parkingLot,
   };
 }

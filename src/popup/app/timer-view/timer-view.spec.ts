@@ -179,4 +179,53 @@ describe('TimerView', () => {
       expect(el.querySelector('.plan-now')?.textContent?.trim()).toBe('Next: Email');
     });
   });
+
+  describe('parking lot', () => {
+    async function parked(phase: 'work' | 'shortBreak', seenAt = 0) {
+      const ctx = await setup({ phase });
+      ctx.store.settings.update((s) => ({ ...s, parkingLot: true, showQuotes: true }));
+      ctx.store.parkingLot.set({
+        thoughts: [
+          { id: 'a', text: 'Call the dentist', at: 100 },
+          { id: 'b', text: 'Buy milk', at: 200 },
+        ],
+        seenAt,
+      });
+      await ctx.fixture.whenStable();
+      return ctx;
+    }
+
+    it('waits for a break before mentioning parked thoughts', async () => {
+      const { el } = await parked('work');
+      expect(el.querySelector('.parked-card')).toBeNull();
+      expect(el.querySelector('.quote')).toBeTruthy();
+    });
+
+    it('points to new thoughts on a break, in place of the quote', async () => {
+      const { el, button } = await parked('shortBreak', 150);
+      expect(el.querySelector('#parked-card-title')?.textContent).toBe('1 thought parked');
+      expect(el.querySelector('.quote')).toBeNull();
+      expect(button('Look now')).toBeTruthy();
+    });
+
+    it('opens the lot from the card, and "Later" quiets it', async () => {
+      const { el, fixture, button, store } = await parked('shortBreak');
+      let opened = 0;
+      fixture.componentInstance.openParking.subscribe(() => opened++);
+      button('Look now').click();
+      expect(opened).toBe(1);
+
+      button('Later').click();
+      await fixture.whenStable();
+      expect(store.parkingLot().seenAt).toBeGreaterThan(200);
+      expect(el.querySelector('.parked-card')).toBeNull();
+    });
+
+    it('stays quiet when the parking lot is off', async () => {
+      const { el, fixture, store } = await parked('shortBreak');
+      store.settings.update((s) => ({ ...s, parkingLot: false }));
+      await fixture.whenStable();
+      expect(el.querySelector('.parked-card')).toBeNull();
+    });
+  });
 });

@@ -1,12 +1,15 @@
 import { BLOCKER_PERMISSIONS } from '../../shared/blocker';
 import { sendCommand, type Command, type CommandResponse } from '../../shared/messages';
+import type { ParkingLot } from '../../shared/parking';
 import type { PlanData } from '../../shared/plan';
 import {
   loadHistory,
+  loadParkingLot,
   loadPlan,
   loadSettings,
   loadState,
   saveHistory,
+  saveParkingLot,
   savePlanData,
   saveSettings,
 } from '../../shared/storage';
@@ -18,13 +21,14 @@ const HINT_KEY = 'alertHintDismissed';
 /** The extension popup's host: the background worker owns the timer, chrome.storage holds it. */
 export class ChromeTimerHost implements TimerHost {
   async load(): Promise<HostSnapshot> {
-    const [state, settings, ui, blockerAccess, history, plan] = await Promise.all([
+    const [state, settings, ui, blockerAccess, history, plan, parkingLot] = await Promise.all([
       loadState(),
       loadSettings(),
       chrome.storage.local.get(HINT_KEY),
       chrome.permissions.contains(BLOCKER_PERMISSIONS),
       loadHistory(),
       loadPlan(),
+      loadParkingLot(),
     ]);
     return {
       state,
@@ -33,6 +37,7 @@ export class ChromeTimerHost implements TimerHost {
       blockerAccess,
       history,
       plan,
+      parkingLot,
     };
   }
 
@@ -69,5 +74,9 @@ export class ChromeTimerHost implements TimerHost {
 
   savePlan(plan: PlanData): Promise<void> {
     return savePlanData(plan);
+  }
+
+  saveParkingLot(lot: ParkingLot): Promise<void> {
+    return saveParkingLot(lot);
   }
 }

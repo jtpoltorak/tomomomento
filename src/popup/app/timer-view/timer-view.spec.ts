@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { savePlan } from '../../../shared/plan';
+import { SHORT_BREAK_IDEAS } from '../../../shared/break-ideas';
 import { BREAK_QUOTES, FOCUS_QUOTES } from '../../../shared/quotes';
 import { createFakeStore, provideFakeStore } from '../testing';
 import { TimerView } from './timer-view';
@@ -226,6 +227,36 @@ describe('TimerView', () => {
       store.settings.update((s) => ({ ...s, parkingLot: false }));
       await fixture.whenStable();
       expect(el.querySelector('.parked-card')).toBeNull();
+    });
+  });
+
+  describe('break ideas', () => {
+    it('suggests one on breaks in place of "Take a breather", and another on request', async () => {
+      const { el, fixture, store } = await setup({ phase: 'shortBreak' });
+      expect(el.querySelector('.status')?.textContent).toBe('Time for a break');
+      expect(el.querySelector('.another')).toBeNull();
+
+      store.settings.update((s) => ({ ...s, breakIdeas: true }));
+      await fixture.whenStable();
+      const first = el.querySelector('.status')?.textContent;
+      expect(SHORT_BREAK_IDEAS).toContain(first);
+
+      el.querySelector<HTMLButtonElement>('[aria-label="Another idea"]')!.click();
+      await fixture.whenStable();
+      const second = el.querySelector('.status')?.textContent;
+      expect(SHORT_BREAK_IDEAS).toContain(second);
+      expect(second).not.toBe(first);
+    });
+
+    it('leaves focus sessions and pauses alone', async () => {
+      const { el, fixture, store } = await setup();
+      store.settings.update((s) => ({ ...s, breakIdeas: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.status')?.textContent).toBe('Ready to focus');
+
+      store.state.update((s) => ({ ...s, phase: 'longBreak', status: 'paused' }));
+      await fixture.whenStable();
+      expect(el.querySelector('.status')?.textContent).toBe('Paused');
     });
   });
 });

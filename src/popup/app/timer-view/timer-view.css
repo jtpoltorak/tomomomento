@@ -69,6 +69,25 @@
   color: var(--muted);
   font-size: 1.3125rem;
 }
+/* A break idea can be swapped for another with the small button beside it. */
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+.status-row:has(.another) {
+  margin-block: -0.25rem;
+  padding-left: 2.5rem; /* keeps the text itself centered under the clock */
+}
+.another.icon-btn.ghost {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+.another svg {
+  width: 1.375rem;
+  height: 1.375rem;
+}
 
 .controls {
   display: flex;

@@ -13,6 +13,9 @@ these first.
   On your next break, the timer lets you know what you parked. Check thoughts
   off as you deal with them. Off by default; turn it on in Settings > Planning.
   Thoughts stay on your device.
+- **Break ideas (optional):** each break suggests something quick and
+  screen-free to do, like stretching or refilling your water, with a button for
+  another idea. Off by default; turn it on in Settings > Appearance.
 
 ## 1.2.0 (2026-10-13)
 

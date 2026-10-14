@@ -63,6 +63,7 @@ export class SettingsView {
     planEnabled: [false],
     planPrompt: [true],
     parkingLot: [false],
+    breakIdeas: [false],
   });
 
   constructor() {

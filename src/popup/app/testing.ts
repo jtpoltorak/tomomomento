@@ -8,6 +8,7 @@ import {
   type TimerState,
 } from '../../shared/timer';
 import type { Command } from '../../shared/messages';
+import { applyBackup, type BackupData } from '../../shared/backup';
 import {
   clearThoughts,
   EMPTY_PARKING_LOT,
@@ -96,6 +97,31 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
     },
     async markParkingSeen() {
       parkingLot.set(markSeen(parkingLot(), Date.now()));
+    },
+    backupData(): BackupData {
+      return {
+        settings: settings(),
+        history: fake.history(),
+        plan: plan(),
+        parkingLot: parkingLot(),
+      };
+    },
+    async restoreBackup(incoming: BackupData, keep: readonly (keyof Settings)[]) {
+      const next = applyBackup(fake.backupData(), incoming, keep, state().todayKey);
+      settings.set(next.settings);
+      fake.history.set(next.history);
+      plan.set(next.plan);
+      parkingLot.set(next.parkingLot);
+      return next.settings;
+    },
+    /** Tests set this to act like the extension popup. */
+    inPopup: false,
+    openedTab: 0,
+    async needsTabForFiles() {
+      return fake.inPopup;
+    },
+    async openSettingsTab() {
+      fake.openedTab++;
     },
     async skipPlanToday() {
       fake.plan.set({ ...fake.plan(), skippedOn: state().todayKey });

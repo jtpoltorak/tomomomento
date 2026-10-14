@@ -11,6 +11,7 @@ There's no account, no analytics, no ads, and no tracking.
   with Chrome's built-in storage so the timer keeps going when the popup
   closes. If Chrome Sync is on, Google syncs your settings between your own
   signed-in browsers. They never reach me.
+- Back up in Settings saves a file of your settings, stats, plan and parked thoughts to your own downloads, and Restore reads one you pick. Nothing is uploaded.
 - Alert sounds are generated on your device. The extension makes no network
   requests.
 - The optional site blocker compares the addresses of pages you open against

@@ -159,4 +159,87 @@ describe('SettingsView', () => {
     expect(store.settings().planEnabled).toBe(true);
     expect(store.settings().planPrompt).toBe(true);
   });
+
+  describe('back up and restore', () => {
+    const button = (el: HTMLElement, text: string) =>
+      Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === text)!;
+
+    async function pick(
+      fixture: { whenStable(): Promise<unknown> },
+      el: HTMLElement,
+      text: string,
+    ) {
+      const input = el.querySelector<HTMLInputElement>('input[type=file]')!;
+      Object.defineProperty(input, 'files', {
+        configurable: true,
+        value: [new File([text], 'backup.json', { type: 'application/json' })],
+      });
+      input.dispatchEvent(new Event('change'));
+      await vi.waitFor(() => expect(el.querySelector('.confirm, .error')).toBeTruthy());
+      await fixture.whenStable();
+    }
+
+    it('downloads a backup file', async () => {
+      const { el, fixture } = await setup();
+      const clicked: HTMLAnchorElement[] = [];
+      const spy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+        this: HTMLAnchorElement,
+      ) {
+        clicked.push(this);
+      });
+      URL.createObjectURL ??= () => 'blob:x';
+      URL.revokeObjectURL ??= () => {};
+      button(el, 'Back up').click();
+      fixture.detectChanges();
+      expect(clicked[0]?.download).toMatch(/^tomomomento-backup-\d{4}-\d{2}-\d{2}\.json$/);
+      expect(el.querySelector('[role=status]')?.textContent).toContain(
+        'Backed up to tomomomento-backup-',
+      );
+      spy.mockRestore();
+    });
+
+    it('restores after asking, keeping the site blocker as it is', async () => {
+      vi.useRealTimers();
+      const { store, el, fixture } = await setup();
+      const backup = JSON.stringify({
+        app: 'tomomomento',
+        version: 1,
+        exportedAt: '2026-10-01T12:00:00.000Z',
+        settings: { workMinutes: 45, blockSites: true, parkingLot: true },
+        history: { '2026-10-01': { pomodoros: 6, focusMinutes: 270 } },
+        parkingLot: { thoughts: [{ id: 'x', text: 'Buy milk', at: 1 }], seenAt: 0 },
+      });
+      await pick(fixture, el, backup);
+      expect(el.querySelector('#restore-question')?.textContent).toContain('from Oct 1, 2026');
+      expect(store.settings().workMinutes).toBe(25);
+
+      button(el, 'Restore').click();
+      await vi.waitFor(() => expect(store.settings().workMinutes).toBe(45));
+      await fixture.whenStable();
+      expect(store.settings().blockSites).toBe(false);
+      expect(store.settings().parkingLot).toBe(true);
+      expect(store.history()['2026-10-01'].pomodoros).toBe(6);
+      expect(store.parkingLot().thoughts[0].text).toBe('Buy milk');
+      expect((el.querySelector('#workMinutes') as HTMLInputElement).value).toBe('45');
+      expect(el.querySelector('[role=status]')?.textContent).toContain('Restored');
+    });
+
+    it('explains a file that is not a backup', async () => {
+      vi.useRealTimers();
+      const { el, fixture } = await setup();
+      await pick(fixture, el, 'hello');
+      expect(el.querySelector('[role=alert]')?.textContent).toContain("isn't a Tomomomento backup");
+    });
+
+    it('moves to a tab first when the popup would close on the file chooser', async () => {
+      vi.useRealTimers();
+      const { store, el } = await setup();
+      store.inPopup = true;
+      const close = vi.spyOn(window, 'close').mockImplementation(() => {});
+      button(el, 'Restore…').click();
+      await vi.waitFor(() => expect(store.openedTab).toBe(1));
+      expect(close).toHaveBeenCalled();
+      close.mockRestore();
+    });
+  });
 });

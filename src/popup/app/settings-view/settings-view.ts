@@ -1,7 +1,17 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { debounceTime } from 'rxjs';
+import { backupFileName, createBackup, parseBackup, type BackupData } from '../../../shared/backup';
 import { MAX_BLOCKED_SITES, normalizeSite, SUGGESTED_SITES } from '../../../shared/blocker';
 import { playSound } from '../../../shared/sounds';
 import {
@@ -40,6 +50,13 @@ export class SettingsView {
   protected readonly siteError = signal('');
   protected readonly notificationError = signal('');
   private savedTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+
+  // Back up and restore.
+  protected readonly dataMessage = signal('');
+  protected readonly dataError = signal('');
+  protected readonly pendingRestore = signal<{ data: BackupData; date: string } | null>(null);
 
   protected readonly durations = [
     { key: 'workMinutes', label: 'Focus', max: 180 },
@@ -154,6 +171,77 @@ export class SettingsView {
     await this.audio.resume();
     const { sound, volumePercent } = this.form.getRawValue();
     await playSound(this.audio, sound, volumePercent / 100);
+  }
+
+  protected backUp(): void {
+    const now = Date.now();
+    const json = JSON.stringify(createBackup(this.store.backupData(), now), null, 2);
+    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = backupFileName(now);
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    this.dataError.set('');
+    this.dataMessage.set(`Backed up to ${link.download}.`);
+  }
+
+  protected async chooseBackup(input: HTMLInputElement): Promise<void> {
+    this.dataError.set('');
+    this.dataMessage.set('');
+    if (await this.store.needsTabForFiles()) {
+      // The popup would close as soon as the file chooser opened.
+      await this.store.openSettingsTab();
+      window.close();
+      return;
+    }
+    input.value = '';
+    input.click();
+  }
+
+  protected async readBackup(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    if (!file) return;
+    const parsed = parseBackup(await file.text());
+    if (!parsed.ok) {
+      this.dataError.set(parsed.error);
+      return;
+    }
+    const date =
+      parsed.exportedAt?.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }) ?? '';
+    this.pendingRestore.set({ data: parsed.data, date });
+    this.focus('.confirm .cancel');
+  }
+
+  protected cancelRestore(): void {
+    this.pendingRestore.set(null);
+    this.focus('.restore');
+  }
+
+  protected async confirmRestore(): Promise<void> {
+    const pending = this.pendingRestore();
+    if (!pending) return;
+    this.pendingRestore.set(null);
+    // Switches that need this browser's permission stay as they are here.
+    const keep: (keyof Settings)[] = this.isWeb
+      ? ['blockSites', 'notificationsEnabled']
+      : ['blockSites'];
+    const settings = await this.store.restoreBackup(pending.data, keep);
+    this.form.setValue(this.toForm(settings), { emitEvent: false });
+    this.blockSites.set(settings.blockSites);
+    this.blockedSites.set(settings.blockedSites);
+    this.dataMessage.set('Restored. Welcome back!');
+    this.focus('.restore');
+  }
+
+  private focus(selector: string): void {
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>(selector)?.focus(), {
+      injector: this.injector,
+    });
   }
 
   protected restoreDefaults(): void {

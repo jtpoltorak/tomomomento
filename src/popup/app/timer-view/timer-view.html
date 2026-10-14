@@ -46,7 +46,8 @@
       </button>
     }
   </div>
-  @if (planLabelNow(); as now) {
+  <!-- The helpers card is short-lived, so it borrows this line's room while it shows. -->
+  @if (!helpersCard() && planLabelNow(); as now) {
     <p class="plan-now">
       {{ now.prefix }}: <strong>{{ now.label }}</strong>
     </p>
@@ -113,6 +114,39 @@
   </button>
 }
 
+@if (helpersCard()) {
+  <aside class="helpers-card" aria-labelledby="helpers-title">
+    <p id="helpers-title">New: park stray thoughts and get break ideas.</p>
+    <div class="helpers-actions">
+      @if (store.settings().parkingLot) {
+        <span class="helper-on">✓ Parking lot</span>
+      } @else {
+        <button
+          type="button"
+          class="pill-btn solid"
+          aria-label="Turn on the parking lot"
+          (click)="turnOn('parkingLot')"
+        >
+          + Parking lot
+        </button>
+      }
+      @if (store.settings().breakIdeas) {
+        <span class="helper-on">✓ Break ideas</span>
+      } @else {
+        <button
+          type="button"
+          class="pill-btn solid"
+          aria-label="Turn on break ideas"
+          (click)="turnOn('breakIdeas')"
+        >
+          + Break ideas
+        </button>
+      }
+      <button type="button" class="link no-thanks" (click)="noThanks()">No thanks</button>
+    </div>
+  </aside>
+}
+
 @if (parkedCard()) {
   <aside class="parked-card" aria-labelledby="parked-card-title">
     <p id="parked-card-title">{{ parkedText() }} parked</p>
@@ -132,14 +166,55 @@
   </figure>
 }
 
-<footer class="footer">
-  <div class="cycle" role="img" [attr.aria-label]="cycleText()" [title]="cycleText()">
-    @for (done of cycleDots(); track $index) {
-      <span class="dot" [class.done]="done"></span>
-    }
+@if (parkOpen()) {
+  <div class="quick-park" role="group" aria-label="Park a thought">
+    <input
+      #quick
+      type="text"
+      id="quick-thought"
+      [maxLength]="maxThought"
+      placeholder="Park a thought…"
+      aria-label="Thought to park"
+      autocomplete="off"
+      (keydown.enter)="park(quick)"
+      (keydown.escape)="closePark()"
+    />
+    <button type="button" class="pill-btn solid" (click)="park(quick)">Park</button>
+    <button
+      type="button"
+      class="icon-btn ghost close"
+      (click)="closePark()"
+      aria-label="Cancel"
+      title="Cancel"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M18.3 7.1 16.9 5.7 12 10.6 7.1 5.7 5.7 7.1l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z"
+        />
+      </svg>
+    </button>
   </div>
-  <div class="today">{{ store.state().completedToday }} done today</div>
-</footer>
+} @else {
+  <footer class="footer">
+    <div class="cycle" role="img" [attr.aria-label]="cycleText()" [title]="cycleText()">
+      @for (done of cycleDots(); track $index) {
+        <span class="dot" [class.done]="done"></span>
+      }
+    </div>
+    @if (quickPark()) {
+      <span class="park-slot" aria-live="polite">
+        @if (justParked()) {
+          <span class="parked-note">✓ Parked</span>
+        } @else {
+          <button type="button" class="link park-link" (click)="openPark()">
+            + Park a thought
+          </button>
+        }
+      </span>
+    }
+    <div class="today">{{ store.state().completedToday }} done today</div>
+  </footer>
+}
 
 @if (showAlertHint()) {
   <aside class="hint">

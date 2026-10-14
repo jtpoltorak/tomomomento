@@ -259,4 +259,90 @@ describe('TimerView', () => {
       expect(el.querySelector('.status')?.textContent).toBe('Paused');
     });
   });
+
+  describe('helpers card', () => {
+    async function fresh(overrides = {}) {
+      const ctx = await setup(overrides);
+      ctx.store.helpersTipDismissed.set(false);
+      await ctx.fixture.whenStable();
+      return ctx;
+    }
+
+    it('offers the parking lot and break ideas until both are on', async () => {
+      const { el, fixture, store } = await fresh();
+      expect(el.querySelector('#helpers-title')?.textContent).toContain('New:');
+      expect(el.querySelector('.hint')).toBeNull(); // one card at a time
+
+      el.querySelector<HTMLButtonElement>('[aria-label="Turn on the parking lot"]')!.click();
+      await fixture.whenStable();
+      expect(store.settings().parkingLot).toBe(true);
+      expect(el.querySelector('.helper-on')?.textContent).toContain('Parking lot');
+      expect(store.helpersTipDismissed()).toBe(false);
+
+      el.querySelector<HTMLButtonElement>('[aria-label="Turn on break ideas"]')!.click();
+      await fixture.whenStable();
+      expect(store.settings().breakIdeas).toBe(true);
+      expect(store.helpersTipDismissed()).toBe(true);
+      expect(el.querySelector('.helpers-card')).toBeNull();
+    });
+
+    it('goes away for good with "No thanks"', async () => {
+      const { el, fixture, store, button } = await fresh();
+      button('No thanks').click();
+      await fixture.whenStable();
+      expect(store.helpersTipDismissed()).toBe(true);
+      expect(store.settings().parkingLot).toBe(false);
+      expect(el.querySelector('.helpers-card')).toBeNull();
+    });
+
+    it('stays out of a running focus session', async () => {
+      const { el } = await fresh({ status: 'running', endTime: Date.now() + 60_000 });
+      expect(el.querySelector('.helpers-card')).toBeNull();
+    });
+  });
+
+  describe('quick park', () => {
+    async function focus(phase: 'work' | 'shortBreak' = 'work') {
+      const ctx = await setup({ phase });
+      ctx.store.settings.update((s) => ({ ...s, parkingLot: true }));
+      await ctx.fixture.whenStable();
+      return ctx;
+    }
+
+    it('parks a thought from the timer during focus', async () => {
+      const { el, fixture, store, button } = await focus();
+      button('+ Park a thought').click();
+      await fixture.whenStable();
+      const input = el.querySelector<HTMLInputElement>('#quick-thought')!;
+      expect(el.querySelector('.footer')).toBeNull();
+      input.value = 'Call the dentist';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      await fixture.whenStable();
+      expect(store.parkingLot().thoughts.map((t) => t.text)).toEqual(['Call the dentist']);
+      expect(el.querySelector('#quick-thought')).toBeNull();
+      expect(el.querySelector('.parked-note')?.textContent).toContain('Parked');
+    });
+
+    it('closes with Escape without parking anything', async () => {
+      const { el, fixture, store, button } = await focus();
+      button('+ Park a thought').click();
+      await fixture.whenStable();
+      const input = el.querySelector<HTMLInputElement>('#quick-thought')!;
+      input.value = 'Never mind';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await fixture.whenStable();
+      expect(store.parkingLot().thoughts).toEqual([]);
+      expect(el.querySelector('.park-link')).toBeTruthy();
+    });
+
+    it('is not offered on breaks', async () => {
+      const { el } = await focus('shortBreak');
+      expect(el.querySelector('.park-link')).toBeNull();
+    });
+
+    it('is not offered with the parking lot off', async () => {
+      const { el } = await setup();
+      expect(el.querySelector('.park-link')).toBeNull();
+    });
+  });
 });

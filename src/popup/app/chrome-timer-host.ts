@@ -18,6 +18,7 @@ import type { Settings } from '../../shared/timer';
 import type { HostSnapshot, TimerHost } from './timer-host';
 
 const HINT_KEY = 'alertHintDismissed';
+const HELPERS_TIP_KEY = 'helpersTipDismissed';
 
 /** The extension popup's host: the background worker owns the timer, chrome.storage holds it. */
 export class ChromeTimerHost implements TimerHost {
@@ -25,7 +26,7 @@ export class ChromeTimerHost implements TimerHost {
     const [state, settings, ui, blockerAccess, history, plan, parkingLot] = await Promise.all([
       loadState(),
       loadSettings(),
-      chrome.storage.local.get(HINT_KEY),
+      chrome.storage.local.get([HINT_KEY, HELPERS_TIP_KEY]),
       chrome.permissions.contains(BLOCKER_PERMISSIONS),
       loadHistory(),
       loadPlan(),
@@ -35,6 +36,7 @@ export class ChromeTimerHost implements TimerHost {
       state,
       settings,
       alertHintDismissed: Boolean(ui[HINT_KEY]),
+      helpersTipDismissed: Boolean(ui[HELPERS_TIP_KEY]),
       blockerAccess,
       history,
       plan,
@@ -67,6 +69,10 @@ export class ChromeTimerHost implements TimerHost {
 
   async dismissAlertHint(): Promise<void> {
     await chrome.storage.local.set({ [HINT_KEY]: true });
+  }
+
+  async dismissHelpersTip(): Promise<void> {
+    await chrome.storage.local.set({ [HELPERS_TIP_KEY]: true });
   }
 
   resetStats(): Promise<void> {

@@ -4,18 +4,22 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
-## Unreleased
+## 1.3.0 (2026-10-14)
 
 ### New
 
 - **Parking lot (optional):** a notepad button at the top for jotting down a
   stray thought mid-focus, so it's out of your head without leaving the timer.
-  On your next break, the timer lets you know what you parked. Check thoughts
-  off as you deal with them. Off by default; turn it on in Settings > Planning.
-  Thoughts stay on your device.
+  During focus, "+ Park a thought" under the timer opens a quick box right
+  there. On your next break, the timer lets you know what you parked. Check
+  thoughts off as you deal with them. Off by default; turn it on in Settings >
+  Planning. Thoughts stay on your device.
 - **Break ideas (optional):** each break suggests something quick and
   screen-free to do, like stretching or refilling your water, with a button for
   another idea. Off by default; turn it on in Settings > Appearance.
+- **Try the new helpers:** a one-time card on the timer offers to turn on the
+  parking lot and break ideas with one tap. "No thanks" hides it for good, and
+  both stay in Settings either way.
 - **Back up and restore:** Settings can now save your settings, stats, plan
   and parked thoughts to a file, and restore them here or on another device.
   Restoring adds the backup's stats and parked thoughts to yours rather than

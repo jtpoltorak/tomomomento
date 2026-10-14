@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Everything to paste into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-for Tomomomento 1.2.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
+for Tomomomento 1.3.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
 `node scripts/store-images.mjs` after UI changes.
 
 ## Store listing tab
@@ -32,6 +32,9 @@ Features
 • An optional site blocker that shows a "stay focused" page for the sites you choose, only during focus sessions
 • Stats: your totals for today, the week, the month, and all time, with a 16-week calendar
 • Optional "Plan my day": pick how many pomodoros to aim for, see roughly when you'd finish, and name each one if you like
+• An optional parking lot: jot down stray thoughts mid-focus, and see them again on your break
+• Optional break ideas: something quick and screen-free to do on each break
+• Back up your settings, stats, and parked thoughts to a file, and restore them on any device
 • A built-in guide to the technique and how to use it
 • Light and dark themes that follow your system, or pick one yourself
 • Optional quotes on the timer screen: focus quotes while you work, rest quotes on breaks
@@ -39,15 +42,16 @@ Features
 • Alt+Shift+P opens Tomomomento from anywhere in Chrome
 
 Private by design
-Tomomomento has no account, no ads, no analytics, and no tracking. It makes no network requests. Your settings, stats, and plan stay in your browser.
+Tomomomento has no account, no ads, no analytics, and no tracking. It makes no network requests. Your settings, stats, plan, and parked thoughts stay in your browser. Backups are files you save yourself.
 
 Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Not using Chrome? The same timer runs in any browser on the website below.
 
-What's new in 1.2
-• Stats: a chart button opens your totals, the last 7 days, and a 16-week calendar. History starts with this update and stays on your device.
-• Plan my day (optional): pick how many pomodoros to aim for, see your focus and break time laid out with an estimated finish time, and name each pomodoro if you like. Turn it on in Settings > Planning.
-• Help now covers Stats and Plan my day
+What's new in 1.3
+• Parking lot (optional): jot down a stray thought mid-focus, right from the timer. Your next break reminds you what you parked.
+• Break ideas (optional): each break suggests something quick and screen-free, like stretching or refilling your water.
+• Turn both on with one tap from the card on the timer, or any time in Settings.
+• Back up and restore: save your settings, stats, plan, and parked thoughts to a file, and restore them here or on another device. Nothing is uploaded.
 
 Links
 Website: https://tomomomento.com
@@ -63,9 +67,9 @@ Pomodoro® and the Pomodoro Technique® are registered trademarks of Francesco C
 **Screenshots** (1280×800, in this order):
 
 1. `images/screenshot-1-focus.png`: the timer during a focus session
-2. `images/screenshot-2-plan.png`: Plan my day
+2. `images/screenshot-2-parking.png`: the parking lot
 3. `images/screenshot-3-stats.png`: Stats, in the dark theme
-4. `images/screenshot-4-break.png`: a short break, with a quote
+4. `images/screenshot-4-break.png`: a short break, with a break idea and parked thoughts
 5. `images/screenshot-5-blocker.png`: the "stay focused" page
 
 **Small promo tile** (440×280): `images/promo-small.png`

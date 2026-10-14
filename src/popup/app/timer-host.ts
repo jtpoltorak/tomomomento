@@ -1,4 +1,5 @@
 import { InjectionToken } from '@angular/core';
+import type { BackupData } from '../../shared/backup';
 import type { Command, CommandResponse } from '../../shared/messages';
 import type { ParkingLot } from '../../shared/parking';
 import type { PlanData } from '../../shared/plan';
@@ -48,6 +49,15 @@ export interface TimerHost {
   resetStats(): Promise<void>;
   savePlan(plan: PlanData): Promise<void>;
   saveParkingLot(lot: ParkingLot): Promise<void>;
+  /** Replaces settings, stats, plan and parked thoughts in one go, for restoring a backup. */
+  restoreData(data: BackupData): Promise<void>;
+  /**
+   * True when picking a file has to happen somewhere else: Chrome closes the
+   * extension popup as soon as the file chooser opens.
+   */
+  needsTabForFiles(): Promise<boolean>;
+  /** Opens Settings in a full browser tab. */
+  openSettingsTab(): Promise<void>;
 }
 
 export const TIMER_HOST = new InjectionToken<TimerHost>('TimerHost');

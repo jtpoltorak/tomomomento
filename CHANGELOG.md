@@ -16,6 +16,10 @@ these first.
 - **Break ideas (optional):** each break suggests something quick and
   screen-free to do, like stretching or refilling your water, with a button for
   another idea. Off by default; turn it on in Settings > Appearance.
+- **Back up and restore:** Settings can now save your settings, stats, plan
+  and parked thoughts to a file, and restore them here or on another device.
+  Restoring adds the backup's stats and parked thoughts to yours rather than
+  replacing them. Nothing is uploaded.
 
 ## 1.2.0 (2026-10-13)
 

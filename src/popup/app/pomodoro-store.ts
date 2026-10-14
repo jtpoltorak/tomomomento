@@ -1,5 +1,6 @@
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import type { Command } from '../../shared/messages';
+import { applyBackup, type BackupData } from '../../shared/backup';
 import {
   clearThoughts,
   EMPTY_PARKING_LOT,
@@ -176,6 +177,35 @@ export class PomodoroStore {
   private async setParkingLot(lot: ParkingLot): Promise<void> {
     this.parkingLot.set(lot);
     await this.host.saveParkingLot(lot);
+  }
+
+  /** Everything a backup holds, as it stands now. */
+  backupData(): BackupData {
+    return {
+      settings: this.settings(),
+      history: this.history(),
+      plan: this.plan(),
+      parkingLot: this.parkingLot(),
+    };
+  }
+
+  /**
+   * Restores a backup. Switches that need this browser's permission keep
+   * their current value; stats and parked thoughts are combined.
+   */
+  async restoreBackup(incoming: BackupData, keep: readonly (keyof Settings)[]): Promise<Settings> {
+    const next = applyBackup(this.backupData(), incoming, keep, this.state().todayKey);
+    await this.host.restoreData(next);
+    await this.refresh();
+    return next.settings;
+  }
+
+  needsTabForFiles(): Promise<boolean> {
+    return this.host.needsTabForFiles();
+  }
+
+  openSettingsTab(): Promise<void> {
+    return this.host.openSettingsTab();
   }
 
   /** Must be called straight from a click, since Chrome only prompts on a user gesture. */

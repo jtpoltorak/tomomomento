@@ -238,6 +238,37 @@
     </p>
   </section>
 
+  <section aria-labelledby="data-heading">
+    <h2 id="data-heading">Back up and restore</h2>
+    <div class="data-actions">
+      <button type="button" class="add-btn" (click)="backUp()">Back up</button>
+      <button type="button" class="add-btn restore" (click)="chooseBackup(file)">Restore…</button>
+      <input #file type="file" accept=".json,application/json" hidden (change)="readBackup(file)" />
+    </div>
+    @if (pendingRestore(); as p) {
+      <div class="confirm" role="group" aria-labelledby="restore-question">
+        <p id="restore-question">
+          Restore the backup{{ p.date ? ' from ' + p.date : '' }}? Your settings will be replaced,
+          and its stats and parked thoughts added to yours.
+        </p>
+        <div class="confirm-actions">
+          <button type="button" class="add-btn" (click)="confirmRestore()">Restore</button>
+          <button type="button" class="add-btn cancel" (click)="cancelRestore()">Cancel</button>
+        </div>
+      </div>
+    }
+    @if (dataError()) {
+      <p class="note error" role="alert">{{ dataError() }}</p>
+    } @else {
+      <p class="note" role="status">
+        {{
+          dataMessage() ||
+            'Saves your settings, stats, plan and parked thoughts to a file. Restore it here or on another device.'
+        }}
+      </p>
+    }
+  </section>
+
   <footer>
     <button type="button" class="text-btn" (click)="restoreDefaults()">Restore defaults</button>
     <span class="saved" role="status">{{ saved() ? 'Saved' : '' }}</span>

@@ -89,10 +89,16 @@ describe('HelpView', () => {
     expect(el.textContent).toContain("tab's title shows the time left");
   });
 
-  it('explains Stats, Plan my day, the parking lot and break ideas in the basics', () => {
+  it('explains Stats, Plan my day, the parking lot, break ideas and backups in the basics', () => {
     const el = setup();
     const headings = Array.from(el.querySelectorAll('h3')).map((h) => h.textContent?.trim());
-    expect(headings).toEqual(['Stats', 'Plan my day', 'Parking lot', 'Break ideas']);
+    expect(headings).toEqual([
+      'Stats',
+      'Plan my day',
+      'Parking lot',
+      'Break ideas',
+      'Back up and restore',
+    ]);
     expect(el.querySelectorAll('.plan-steps li').length).toBe(3);
   });
 });

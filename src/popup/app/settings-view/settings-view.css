@@ -294,3 +294,18 @@ footer {
     color: HighlightText;
   }
 }
+
+.data-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.confirm {
+  margin-top: 0.75rem;
+}
+.confirm p {
+  margin: 0 0 0.75rem;
+}
+.confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+}

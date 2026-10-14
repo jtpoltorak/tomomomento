@@ -4,6 +4,7 @@
 // lives in localStorage instead of chrome.storage, and a setTimeout replaces
 // chrome.alarms.
 
+import type { BackupData } from '../shared/backup';
 import type { Command, CommandResponse } from '../shared/messages';
 import { playSound } from '../shared/sounds';
 import { sanitizeParkingLot, type ParkingLot } from '../shared/parking';
@@ -198,6 +199,25 @@ export class WebTimerHost implements TimerHost {
       this.emit();
     });
   }
+
+  async restoreData(data: BackupData): Promise<void> {
+    await withLock(() => {
+      write(KEYS.settings, sanitizeSettings(data.settings));
+      write(KEYS.history, data.history);
+      write(KEYS.plan, data.plan);
+      write(KEYS.parkingLot, data.parkingLot);
+      // An idle timer should show the restored length right away.
+      const state = loadState();
+      if (state.status === 'idle') this.commit(reset(state, loadSettings()));
+      else this.emit();
+    });
+  }
+
+  async needsTabForFiles(): Promise<boolean> {
+    return false;
+  }
+
+  async openSettingsTab(): Promise<void> {}
 
   private commit(state: TimerState): TimerState {
     write(KEYS.state, state);

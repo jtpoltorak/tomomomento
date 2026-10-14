@@ -96,6 +96,16 @@
   </button>
 }
 
+@if (parkedCard()) {
+  <aside class="parked-card" aria-labelledby="parked-card-title">
+    <p id="parked-card-title">{{ parkedText() }} parked</p>
+    <div class="parked-card-actions">
+      <button type="button" class="pill-btn solid" (click)="openParking.emit()">Look now</button>
+      <button type="button" class="pill-btn" (click)="parkLater()">Later</button>
+    </div>
+  </aside>
+}
+
 @if (quote(); as q) {
   <figure class="quote">
     <blockquote>

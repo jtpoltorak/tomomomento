@@ -8,6 +8,15 @@ import {
   type TimerState,
 } from '../../shared/timer';
 import type { Command } from '../../shared/messages';
+import {
+  clearThoughts,
+  EMPTY_PARKING_LOT,
+  markSeen,
+  parkThought,
+  removeThought,
+  unseenCount,
+  type ParkingLot,
+} from '../../shared/parking';
 import { clearPlan, EMPTY_PLAN_DATA, planFor, savePlan, type PlanData } from '../../shared/plan';
 import type { History } from '../../shared/stats';
 import { PomodoroStore } from './pomodoro-store';
@@ -22,6 +31,8 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
   const todayPlan = computed(() =>
     settings().planEnabled ? planFor(plan(), state().todayKey) : null,
   );
+  const parkingLot = signal<ParkingLot>(EMPTY_PARKING_LOT);
+  let nextId = 1;
   const fake = {
     state,
     settings,
@@ -35,6 +46,11 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
       const s = settings();
       return s.planEnabled && s.planPrompt && !todayPlan() && plan().skippedOn !== state().todayKey;
     }),
+    parkingLot,
+    parkedCount: computed(() => (settings().parkingLot ? parkingLot().thoughts.length : 0)),
+    parkedOnBreak: computed(() =>
+      settings().parkingLot && state().phase !== 'work' ? unseenCount(parkingLot()) : 0,
+    ),
     remainingMs: computed(() => remainingMs(state(), now)),
     totalMs: computed(() => phaseDurationMs(state().phase, settings())),
     progress: computed(() => 0),
@@ -68,6 +84,18 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
     },
     async clearPlan() {
       fake.plan.set(clearPlan(fake.plan()));
+    },
+    async parkThought(text: string) {
+      parkingLot.set(parkThought(parkingLot(), text, Date.now(), `t${nextId++}`));
+    },
+    async removeThought(id: string) {
+      parkingLot.set(removeThought(parkingLot(), id));
+    },
+    async clearThoughts() {
+      parkingLot.set(clearThoughts(parkingLot()));
+    },
+    async markParkingSeen() {
+      parkingLot.set(markSeen(parkingLot(), Date.now()));
     },
     async skipPlanToday() {
       fake.plan.set({ ...fake.plan(), skippedOn: state().todayKey });

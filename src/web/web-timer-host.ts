@@ -6,6 +6,7 @@
 
 import type { Command, CommandResponse } from '../shared/messages';
 import { playSound } from '../shared/sounds';
+import { sanitizeParkingLot, type ParkingLot } from '../shared/parking';
 import { planDoneMessage, sanitizePlanData, type PlanData } from '../shared/plan';
 import { recordPomodoro, sanitizeHistory, seedHistory, type History } from '../shared/stats';
 import {
@@ -35,6 +36,7 @@ const KEYS = {
   hint: 'tomatick.alertHintDismissed',
   history: 'tomomomento.history',
   plan: 'tomomomento.plan',
+  parkingLot: 'tomomomento.parkingLot',
 };
 const LOCK_NAME = 'tomatick-timer';
 const NOTIFICATION_TAG = 'phase-complete';
@@ -116,6 +118,7 @@ export class WebTimerHost implements TimerHost {
       blockerAccess: false,
       history: loadHistory(),
       plan: loadPlan(),
+      parkingLot: sanitizeParkingLot(read<unknown>(KEYS.parkingLot)),
     };
   }
 
@@ -185,6 +188,13 @@ export class WebTimerHost implements TimerHost {
   async savePlan(plan: PlanData): Promise<void> {
     await withLock(() => {
       write(KEYS.plan, plan);
+      this.emit();
+    });
+  }
+
+  async saveParkingLot(lot: ParkingLot): Promise<void> {
+    await withLock(() => {
+      write(KEYS.parkingLot, lot);
       this.emit();
     });
   }

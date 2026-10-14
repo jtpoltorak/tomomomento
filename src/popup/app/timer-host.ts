@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import type { Command, CommandResponse } from '../../shared/messages';
+import type { ParkingLot } from '../../shared/parking';
 import type { PlanData } from '../../shared/plan';
 import type { History } from '../../shared/stats';
 import type { Settings, TimerState } from '../../shared/timer';
@@ -22,6 +23,8 @@ export interface HostSnapshot {
   history: History;
   /** Today's plan for "Plan my day". */
   plan: PlanData;
+  /** Thoughts parked during focus. */
+  parkingLot: ParkingLot;
 }
 
 /**
@@ -44,6 +47,7 @@ export interface TimerHost {
   /** Clears the Stats history. The timer and today's tally on it are left alone. */
   resetStats(): Promise<void>;
   savePlan(plan: PlanData): Promise<void>;
+  saveParkingLot(lot: ParkingLot): Promise<void>;
 }
 
 export const TIMER_HOST = new InjectionToken<TimerHost>('TimerHost');

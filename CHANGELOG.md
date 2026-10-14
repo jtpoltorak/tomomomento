@@ -4,6 +4,16 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Parking lot (optional):** a notepad button at the top for jotting down a
+  stray thought mid-focus, so it's out of your head without leaving the timer.
+  On your next break, the timer lets you know what you parked. Check thoughts
+  off as you deal with them. Off by default; turn it on in Settings > Planning.
+  Thoughts stay on your device.
+
 ## 1.2.0 (2026-10-13)
 
 ### New

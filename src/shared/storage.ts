@@ -1,3 +1,4 @@
+import { sanitizeParkingLot, type ParkingLot } from './parking';
 import { sanitizePlanData, type PlanData } from './plan';
 import { sanitizeHistory, seedHistory, type History } from './stats';
 import {
@@ -50,4 +51,14 @@ export async function loadPlan(): Promise<PlanData> {
 
 export async function savePlanData(plan: PlanData): Promise<void> {
   await chrome.storage.local.set({ plan });
+}
+
+/** Thoughts in the parking lot. Never leaves the device. */
+export async function loadParkingLot(): Promise<ParkingLot> {
+  const { parkingLot } = await chrome.storage.local.get('parkingLot');
+  return sanitizeParkingLot(parkingLot);
+}
+
+export async function saveParkingLot(lot: ParkingLot): Promise<void> {
+  await chrome.storage.local.set({ parkingLot: lot });
 }

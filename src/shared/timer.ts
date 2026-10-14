@@ -35,6 +35,8 @@ export interface Settings {
   planPrompt: boolean;
   /** The parking lot: jot stray thoughts during focus, look at them on a break. */
   parkingLot: boolean;
+  /** On breaks, suggest something screen-free to do in place of "Take a breather". */
+  breakIdeas: boolean;
 }
 
 export interface TimerState {
@@ -73,6 +75,7 @@ export const DEFAULT_SETTINGS: Settings = {
   planEnabled: false,
   planPrompt: true,
   parkingLot: false,
+  breakIdeas: false,
 };
 
 export const THEME_LABELS: Record<ThemeId, string> = {
@@ -248,5 +251,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     planEnabled: input.planEnabled ?? d.planEnabled,
     planPrompt: input.planPrompt ?? d.planPrompt,
     parkingLot: input.parkingLot ?? d.parkingLot,
+    breakIdeas: input.breakIdeas ?? d.breakIdeas,
   };
 }

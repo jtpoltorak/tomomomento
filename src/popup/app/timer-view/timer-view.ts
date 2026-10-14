@@ -3,14 +3,17 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   ElementRef,
   HostListener,
   inject,
   Injector,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
+import { breakIdea } from '../../../shared/break-ideas';
 import { thoughtsText } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
 import { formatClock, PHASE_LABELS, type Phase } from '../../../shared/timer';
@@ -67,7 +70,8 @@ export class TimerView {
       !this.store.alertHintDismissed() &&
       !s.showQuotes &&
       !s.planEnabled &&
-      !s.parkingLot
+      !s.parkingLot &&
+      !s.breakIdeas
     );
   });
 
@@ -81,8 +85,19 @@ export class TimerView {
     return `${left} of ${total} ${total === 1 ? 'minute' : 'minutes'} left`;
   });
 
+  /** How many times "Another idea" was pressed on this break. */
+  private readonly ideaOffset = signal(0);
+  /** A screen-free suggestion for this break, the same each time the popup opens. */
+  protected readonly idea = computed(() => {
+    const { phase, status, todayKey, completedToday } = this.store.state();
+    if (!this.store.settings().breakIdeas || status === 'paused') return null;
+    return breakIdea(phase, `${todayKey}:${completedToday}:${phase}`, this.ideaOffset());
+  });
+
   protected readonly status = computed(() => {
     const { phase, status } = this.store.state();
+    const idea = this.idea();
+    if (idea) return idea;
     if (status === 'running') return phase === 'work' ? 'Stay focused' : 'Take a breather';
     if (status === 'paused') return 'Paused';
     return phase === 'work' ? 'Ready to focus' : 'Time for a break';
@@ -166,6 +181,11 @@ export class TimerView {
   });
 
   constructor() {
+    // A new break starts back at its own idea.
+    effect(() => {
+      this.phase();
+      untracked(() => this.ideaOffset.set(0));
+    });
     const id = setInterval(() => this.minute.set(Date.now()), 30_000);
     inject(DestroyRef).onDestroy(() => clearInterval(id));
   }
@@ -177,6 +197,10 @@ export class TimerView {
       () => this.host.nativeElement.querySelector<HTMLElement>('.plan-add')?.focus(),
       { injector: this.injector },
     );
+  }
+
+  protected anotherIdea(): void {
+    this.ideaOffset.update((n) => n + 1);
   }
 
   protected async parkLater(): Promise<void> {

@@ -28,7 +28,24 @@
   >
     <div class="bar-fill" [style.transform]="'scaleX(' + (1 - store.progress()) + ')'"></div>
   </div>
-  <div class="status" aria-live="polite">{{ status() }}</div>
+  <div class="status-row">
+    <div class="status" aria-live="polite">{{ status() }}</div>
+    @if (idea()) {
+      <button
+        type="button"
+        class="icon-btn ghost another"
+        (click)="anotherIdea()"
+        aria-label="Another idea"
+        title="Another idea"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"
+          />
+        </svg>
+      </button>
+    }
+  </div>
   @if (planLabelNow(); as now) {
     <p class="plan-now">
       {{ now.prefix }}: <strong>{{ now.label }}</strong>

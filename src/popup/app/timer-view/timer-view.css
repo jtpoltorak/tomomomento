@@ -396,3 +396,79 @@
 :host:has(.plan-strip):has(.parked-card) .clock {
   font-size: 4.25rem;
 }
+
+/* Offers the optional helpers once, until they're on or waved off. */
+.helpers-card {
+  padding: 0.5rem 0.5rem 0.5rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  font-size: 1.125rem;
+}
+.helpers-card p {
+  margin: 0 0 0.375rem;
+  font-weight: 600;
+}
+.helpers-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+.helpers-card .pill-btn {
+  padding: 0.25rem 0.75rem;
+  font-size: 1.125rem;
+}
+.helper-on {
+  padding: 0.25rem 0.5rem;
+  color: var(--muted);
+}
+.no-thanks {
+  margin-left: auto;
+  font-size: 1.125rem;
+}
+:host:has(.helpers-card) {
+  gap: 1rem;
+}
+:host:has(.helpers-card) .dial {
+  padding: 0;
+  gap: 0.5rem;
+}
+:host:has(.plan-strip):has(.helpers-card) {
+  gap: 0.625rem;
+}
+:host:has(.plan-strip):has(.helpers-card) .clock {
+  font-size: 4.25rem;
+}
+
+/* Park a thought from the footer, without leaving the timer. */
+.park-link {
+  font-size: 1.125rem;
+}
+.parked-note {
+  color: var(--focus-accent);
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+.quick-park {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.quick-park input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--control);
+  border-radius: 0.75rem;
+  background: var(--bg);
+  color: inherit;
+  font: inherit;
+  font-size: 1.125rem;
+}
+.quick-park input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.quick-park .pill-btn {
+  font-size: 1.125rem;
+}

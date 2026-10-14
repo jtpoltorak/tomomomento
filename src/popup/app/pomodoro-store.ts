@@ -36,6 +36,7 @@ export class PomodoroStore {
   readonly settings = signal<Settings>(DEFAULT_SETTINGS);
   readonly loaded = signal(false);
   readonly alertHintDismissed = signal(true);
+  readonly helpersTipDismissed = signal(true);
   /** Whether the user has granted the site access the blocker needs. */
   readonly blockerAccess = signal(false);
   /** Finished focus sessions per day, for the Stats screen. */
@@ -106,8 +107,17 @@ export class PomodoroStore {
   }
 
   async refresh(): Promise<void> {
-    const { state, settings, alertHintDismissed, blockerAccess, history, plan, parkingLot } =
-      await this.host.load();
+    const {
+      state,
+      settings,
+      alertHintDismissed,
+      helpersTipDismissed,
+      blockerAccess,
+      history,
+      plan,
+      parkingLot,
+    } = await this.host.load();
+    this.helpersTipDismissed.set(helpersTipDismissed);
     this.parkingLot.set(parkingLot);
     this.blockerAccess.set(blockerAccess);
     this.history.set(history);
@@ -223,6 +233,11 @@ export class PomodoroStore {
   async dismissAlertHint(): Promise<void> {
     this.alertHintDismissed.set(true);
     await this.host.dismissAlertHint();
+  }
+
+  async dismissHelpersTip(): Promise<void> {
+    this.helpersTipDismissed.set(true);
+    await this.host.dismissHelpersTip();
   }
 
   async resetStats(): Promise<void> {

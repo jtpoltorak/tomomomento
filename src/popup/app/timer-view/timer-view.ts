@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
 import { breakIdea } from '../../../shared/break-ideas';
-import { thoughtsText } from '../../../shared/parking';
+import { MAX_THOUGHT_LENGTH, thoughtsText } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
 import { formatClock, PHASE_LABELS, type Phase } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
@@ -45,9 +45,24 @@ export class TimerView {
     this.lastQuote = pickQuote(this.phase(), this.lastQuote);
     return this.lastQuote;
   });
+  /**
+   * A card offering the optional helpers (parking lot, break ideas) to anyone
+   * who hasn't turned them both on or said no. It stays out of a running focus
+   * session, and the daily plan card comes first.
+   */
+  protected readonly helpersCard = computed(() => {
+    const s = this.store.settings();
+    const { phase, status } = this.store.state();
+    return (
+      !this.store.helpersTipDismissed() &&
+      !(s.parkingLot && s.breakIdeas) &&
+      !(phase === 'work' && status === 'running') &&
+      !this.store.showPlanPrompt()
+    );
+  });
   /** On a break, how many thoughts were parked since you last looked. The plan card comes first. */
   protected readonly parkedCard = computed(() =>
-    this.store.showPlanPrompt() ? 0 : this.store.parkedOnBreak(),
+    this.store.showPlanPrompt() || this.helpersCard() ? 0 : this.store.parkedOnBreak(),
   );
   protected readonly parkedText = computed(() => thoughtsText(this.parkedCard()));
   // The popup only has room for one extra line of text under the controls, so
@@ -56,6 +71,7 @@ export class TimerView {
   protected readonly quote = computed(() =>
     this.store.settings().showQuotes &&
     !this.store.showPlanPrompt() &&
+    !this.helpersCard() &&
     !this.parkedCard() &&
     !this.planLabelNow()
       ? this.phaseQuote()
@@ -71,7 +87,8 @@ export class TimerView {
       !s.showQuotes &&
       !s.planEnabled &&
       !s.parkingLot &&
-      !s.breakIdeas
+      !s.breakIdeas &&
+      !this.helpersCard()
     );
   });
 
@@ -187,7 +204,14 @@ export class TimerView {
       untracked(() => this.ideaOffset.set(0));
     });
     const id = setInterval(() => this.minute.set(Date.now()), 30_000);
-    inject(DestroyRef).onDestroy(() => clearInterval(id));
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(id);
+      clearTimeout(this.parkedTimer);
+    });
+    // The quick-park box belongs to focus; a break closes it.
+    effect(() => {
+      if (!this.quickPark()) untracked(() => this.parkOpen.set(false));
+    });
   }
 
   protected async skipPlan(): Promise<void> {
@@ -197,6 +221,71 @@ export class TimerView {
       () => this.host.nativeElement.querySelector<HTMLElement>('.plan-add')?.focus(),
       { injector: this.injector },
     );
+  }
+
+  /** Turns on one helper from the card. Once both are on, the card has done its job. */
+  protected async turnOn(helper: 'parkingLot' | 'breakIdeas'): Promise<void> {
+    const next = { ...this.store.settings(), [helper]: true };
+    await this.store.updateSettings(next);
+    if (next.parkingLot && next.breakIdeas) await this.store.dismissHelpersTip();
+    // The button is gone (or the whole card is), so keep keyboard focus nearby.
+    afterNextRender(
+      () =>
+        (
+          this.host.nativeElement.querySelector<HTMLElement>('.helpers-card .pill-btn') ??
+          this.host.nativeElement.querySelector<HTMLElement>('.primary-btn')
+        )?.focus(),
+      { injector: this.injector },
+    );
+  }
+
+  protected async noThanks(): Promise<void> {
+    await this.store.dismissHelpersTip();
+    afterNextRender(
+      () => this.host.nativeElement.querySelector<HTMLElement>('.primary-btn')?.focus(),
+      { injector: this.injector },
+    );
+  }
+
+  // ---- Park a thought without leaving the timer ----
+
+  /** Offered during focus, when the parking lot is on. */
+  protected readonly quickPark = computed(
+    () => this.store.settings().parkingLot && this.store.state().phase === 'work',
+  );
+  protected readonly parkOpen = signal(false);
+  protected readonly maxThought = MAX_THOUGHT_LENGTH;
+  /** A brief "Parked" in place of the link after parking. */
+  protected readonly justParked = signal(false);
+  private parkedTimer: ReturnType<typeof setTimeout> | undefined;
+
+  protected openPark(): void {
+    this.parkOpen.set(true);
+    this.focusSoon('#quick-thought');
+  }
+
+  protected closePark(): void {
+    this.parkOpen.set(false);
+    this.focusSoon('.park-link');
+  }
+
+  protected async park(input: HTMLInputElement): Promise<void> {
+    if (!input.value.trim()) {
+      this.closePark();
+      return;
+    }
+    await this.store.parkThought(input.value);
+    this.parkOpen.set(false);
+    this.justParked.set(true);
+    clearTimeout(this.parkedTimer);
+    this.parkedTimer = setTimeout(() => this.justParked.set(false), 2500);
+    this.focusSoon('.primary-btn');
+  }
+
+  private focusSoon(selector: string): void {
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>(selector)?.focus(), {
+      injector: this.injector,
+    });
   }
 
   protected anotherIdea(): void {

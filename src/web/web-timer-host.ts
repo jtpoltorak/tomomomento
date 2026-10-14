@@ -35,6 +35,7 @@ const KEYS = {
   settings: 'tomatick.settings',
   state: 'tomatick.state',
   hint: 'tomatick.alertHintDismissed',
+  helpersTip: 'tomomomento.helpersTipDismissed',
   history: 'tomomomento.history',
   plan: 'tomomomento.plan',
   parkingLot: 'tomomomento.parkingLot',
@@ -116,6 +117,7 @@ export class WebTimerHost implements TimerHost {
       state: loadState(),
       settings: loadSettings(),
       alertHintDismissed: Boolean(read<boolean>(KEYS.hint)),
+      helpersTipDismissed: Boolean(read<boolean>(KEYS.helpersTip)),
       blockerAccess: false,
       history: loadHistory(),
       plan: loadPlan(),
@@ -177,6 +179,10 @@ export class WebTimerHost implements TimerHost {
 
   async dismissAlertHint(): Promise<void> {
     write(KEYS.hint, true);
+  }
+
+  async dismissHelpersTip(): Promise<void> {
+    write(KEYS.helpersTip, true);
   }
 
   async resetStats(): Promise<void> {

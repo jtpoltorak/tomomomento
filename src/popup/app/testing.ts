@@ -39,6 +39,7 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
     settings,
     loaded: signal(true),
     alertHintDismissed: signal(false),
+    helpersTipDismissed: signal(true),
     blockerAccess: signal(false),
     history: signal<History>(history),
     plan,
@@ -76,6 +77,9 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
     },
     async dismissAlertHint() {
       fake.alertHintDismissed.set(true);
+    },
+    async dismissHelpersTip() {
+      fake.helpersTipDismissed.set(true);
     },
     async resetStats() {
       fake.history.set({});

@@ -18,6 +18,8 @@ export interface HostSnapshot {
   state: TimerState;
   settings: Settings;
   alertHintDismissed: boolean;
+  /** Whether the "Try these" card for optional helpers was answered. */
+  helpersTipDismissed: boolean;
   /** Whether the user has granted the site access the blocker needs. */
   blockerAccess: boolean;
   /** Finished focus sessions per day, for the Stats screen. */
@@ -45,6 +47,7 @@ export interface TimerHost {
   /** Must be called straight from a click, since browsers only prompt on a user gesture. */
   requestNotificationAccess(): Promise<boolean>;
   dismissAlertHint(): Promise<void>;
+  dismissHelpersTip(): Promise<void>;
   /** Clears the Stats history. The timer and today's tally on it are left alone. */
   resetStats(): Promise<void>;
   savePlan(plan: PlanData): Promise<void>;

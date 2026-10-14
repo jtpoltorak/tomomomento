@@ -48,8 +48,9 @@ Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Not using Chrome? The same timer runs in any browser on the website below.
 
 What's new in 1.3
-• Parking lot (optional): a notepad button for jotting down a stray thought mid-focus. Your next break reminds you what you parked. Turn it on in Settings > Planning.
-• Break ideas (optional): each break suggests something quick and screen-free, like stretching or refilling your water. Turn it on in Settings > Appearance.
+• Parking lot (optional): jot down a stray thought mid-focus, right from the timer. Your next break reminds you what you parked.
+• Break ideas (optional): each break suggests something quick and screen-free, like stretching or refilling your water.
+• Turn both on with one tap from the card on the timer, or any time in Settings.
 • Back up and restore: save your settings, stats, plan, and parked thoughts to a file, and restore them here or on another device. Nothing is uploaded.
 
 Links

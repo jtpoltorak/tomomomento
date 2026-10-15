@@ -53,6 +53,17 @@ export function recordPomodoro(history: History, finishedAt: number, minutes: nu
 }
 
 /**
+ * Adds extra focus time ("Keep going") to the day it finished on, without
+ * another pomodoro. A day with no pomodoros yet isn't started for it.
+ */
+export function addFocusMinutes(history: History, finishedAt: number, minutes: number): History {
+  const key = localDateKey(finishedAt);
+  const day = history[key];
+  if (!day) return history;
+  return { ...history, [key]: { ...day, focusMinutes: day.focusMinutes + minutes } };
+}
+
+/**
  * History before this feature existed is just today's tally on the timer
  * state, so the first history carries that over instead of starting at zero.
  */

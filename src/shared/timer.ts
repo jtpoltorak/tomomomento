@@ -39,6 +39,8 @@ export interface Settings {
   breakIdeas: boolean;
   /** Offer a short "Just start" focus session for days when a full one feels like too much. */
   justStart: boolean;
+  /** When focus ends, offer a few more minutes of it before the break. */
+  keepGoing: boolean;
 }
 
 export interface TimerState {
@@ -59,6 +61,10 @@ export interface TimerState {
    * "Just start" session). Absent otherwise, and in state saved by older versions.
    */
   phaseMs?: number;
+  /** This focus phase is extra time after a finished one ("Keep going"), so it doesn't count again. */
+  extending?: boolean;
+  /** This break follows a focus session that ran out, so "Keep going" can be offered. */
+  afterFocus?: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -84,10 +90,14 @@ export const DEFAULT_SETTINGS: Settings = {
   parkingLot: false,
   breakIdeas: false,
   justStart: false,
+  keepGoing: false,
 };
 
 /** How long a "Just start" focus session runs. */
 export const JUST_START_MINUTES = 10;
+
+/** How much extra focus "Keep going" adds. */
+export const KEEP_GOING_MINUTES = 5;
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -128,10 +138,12 @@ export function phaseLengthMs(state: TimerState, settings: Settings): number {
   return state.phaseMs ?? phaseDurationMs(state.phase, settings);
 }
 
-/** Drops a "Just start" length, so the phase goes back to its usual one. */
+/**
+ * Drops what only belongs to the phase in progress (a "Just start" or "Keep
+ * going" length, and the offer to keep going), so a new phase starts plain.
+ */
 function usualLength(state: TimerState): TimerState {
-  if (state.phaseMs === undefined) return state;
-  const { phaseMs: _, ...rest } = state;
+  const { phaseMs: _length, extending: _extra, afterFocus: _offer, ...rest } = state;
   return rest;
 }
 
@@ -195,6 +207,30 @@ export function justStart(state: TimerState, settings: Settings, now: number): T
   return { ...state, status: 'running', endTime: now + ms, remainingMs: ms, phaseMs: ms };
 }
 
+/** Whether to offer "Keep going": on a break that a finished focus session led to. */
+export function canKeepGoing(state: TimerState, settings: Settings): boolean {
+  return settings.keepGoing && state.phase !== 'work' && state.afterFocus === true;
+}
+
+/**
+ * Goes back to focus for a few more minutes, and the break waits. The focus
+ * session already counted, so the extra time adds focus minutes but not another
+ * pomodoro. When it ends, the same kind of break comes next.
+ */
+export function keepGoing(state: TimerState, settings: Settings, now: number): TimerState {
+  if (!canKeepGoing(state, settings)) return state;
+  const ms = KEEP_GOING_MINUTES * 60_000;
+  return {
+    ...usualLength(state),
+    phase: 'work',
+    status: 'running',
+    endTime: now + ms,
+    remainingMs: ms,
+    phaseMs: ms,
+    extending: true,
+  };
+}
+
 /** Puts the current phase back to its full length without changing phase. */
 export function reset(state: TimerState, settings: Settings): TimerState {
   return {
@@ -231,10 +267,13 @@ export function advance(
 ): TimerState {
   let s = rollDay(usualLength(state), finishedAt);
   let next: Phase;
+  // Extra "Keep going" time ran out, or a real focus session did.
+  const ranOut = state.phase === 'work' && countWork;
+  const counts = ranOut && !state.extending;
 
   if (s.phase === 'work') {
-    const completedInCycle = countWork ? s.completedInCycle + 1 : s.completedInCycle;
-    const completedToday = countWork ? s.completedToday + 1 : s.completedToday;
+    const completedInCycle = counts ? s.completedInCycle + 1 : s.completedInCycle;
+    const completedToday = counts ? s.completedToday + 1 : s.completedToday;
     s = { ...s, completedInCycle, completedToday };
     next = completedInCycle >= settings.sessionsBeforeLongBreak ? 'longBreak' : 'shortBreak';
     s = rollDay(s, now);
@@ -252,6 +291,7 @@ export function advance(
     status: autoStart ? 'running' : 'idle',
     endTime: autoStart ? now + duration : null,
     remainingMs: duration,
+    ...(ranOut ? { afterFocus: true } : {}),
   };
 }
 
@@ -296,5 +336,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     parkingLot: input.parkingLot ?? d.parkingLot,
     breakIdeas: input.breakIdeas ?? d.breakIdeas,
     justStart: input.justStart ?? d.justStart,
+    keepGoing: input.keepGoing ?? d.keepGoing,
   };
 }

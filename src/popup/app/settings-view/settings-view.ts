@@ -17,6 +17,7 @@ import { playSound } from '../../../shared/sounds';
 import {
   DEFAULT_SETTINGS,
   JUST_START_MINUTES,
+  KEEP_GOING_MINUTES,
   sanitizeSettings,
   SOUND_LABELS,
   THEME_LABELS,
@@ -44,6 +45,7 @@ export class SettingsView {
   protected readonly themes = Object.entries(THEME_LABELS) as [ThemeId, string][];
   protected readonly saved = signal(false);
   protected readonly justStartMinutes = JUST_START_MINUTES;
+  protected readonly keepGoingMinutes = KEEP_GOING_MINUTES;
 
   // The blocker lives outside the form because turning it on waits on Chrome's permission prompt.
   protected readonly blockSites = signal(this.store.settings().blockSites);
@@ -84,6 +86,7 @@ export class SettingsView {
     parkingLot: [false],
     breakIdeas: [false],
     justStart: [false],
+    keepGoing: [false],
   });
 
   constructor() {

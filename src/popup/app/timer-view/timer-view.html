@@ -217,6 +217,11 @@
         }
       </span>
     }
+    @if (keepGoingOffer()) {
+      <button type="button" class="link keep-going" (click)="keepGoing()">
+        +{{ keepGoingMinutes }} min focus
+      </button>
+    }
     <div class="today">{{ store.state().completedToday }} done today</div>
   </footer>
 }

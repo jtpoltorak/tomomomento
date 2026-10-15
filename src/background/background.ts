@@ -12,7 +12,7 @@ import type {
 } from '../shared/messages';
 import { BLOCKER_PERMISSIONS, hostMatches, shouldBlock, SUGGESTED_SITES } from '../shared/blocker';
 import { planDoneMessage } from '../shared/plan';
-import { recordPomodoro } from '../shared/stats';
+import { addFocusMinutes, recordPomodoro } from '../shared/stats';
 import {
   loadHistory,
   loadPlan,
@@ -24,7 +24,10 @@ import {
 } from '../shared/storage';
 import {
   advance,
+  canKeepGoing,
   justStart,
+  KEEP_GOING_MINUTES,
+  keepGoing,
   pause,
   phaseLengthMs,
   PHASE_LABELS,
@@ -176,12 +179,14 @@ async function alertPhaseComplete(
   finished: Phase,
   next: TimerState,
   settings: Settings,
+  extended = false,
 ): Promise<void> {
   const tasks: Promise<void>[] = [];
   if (settings.soundEnabled) tasks.push(playAlertSound(settings));
   if (settings.notificationsEnabled) {
-    const planLine = finished === 'work' ? planDoneMessage(await loadPlan(), settings, next) : null;
-    tasks.push(showNotification(finished, next, planLine));
+    const planLine =
+      finished === 'work' && !extended ? planDoneMessage(await loadPlan(), settings, next) : null;
+    tasks.push(showNotification(finished, next, planLine, extended, canKeepGoing(next, settings)));
   }
   const results = await Promise.allSettled(tasks);
   for (const r of results) if (r.status === 'rejected') console.error('Alert failed', r.reason);
@@ -191,8 +196,14 @@ async function showNotification(
   finished: Phase,
   next: TimerState,
   planLine: string | null,
+  extended: boolean,
+  offerKeepGoing: boolean,
 ): Promise<void> {
-  const title = finished === 'work' ? 'Focus session complete' : 'Break is over';
+  const title = extended
+    ? 'Extra time is up'
+    : finished === 'work'
+      ? 'Focus session complete'
+      : 'Break is over';
   const nextLine =
     next.status === 'running'
       ? `${PHASE_LABELS[next.phase]} started.`
@@ -204,13 +215,25 @@ async function showNotification(
     iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
     title,
     message,
-    buttons:
-      next.status === 'running'
-        ? []
-        : [{ title: `Start ${PHASE_LABELS[next.phase].toLowerCase()}` }],
+    buttons: notificationButtons(next, offerKeepGoing).map((b) => ({
+      title:
+        b === 'start'
+          ? `Start ${PHASE_LABELS[next.phase].toLowerCase()}`
+          : `Keep going (+${KEEP_GOING_MINUTES} min)`,
+    })),
     priority: 2,
     requireInteraction: next.status !== 'running',
   });
+}
+
+type NotificationButton = 'start' | 'keepGoing';
+
+/** "Start" when the next phase waits for you, and "Keep going" when it's offered. */
+function notificationButtons(next: TimerState, offerKeepGoing: boolean): NotificationButton[] {
+  const buttons: NotificationButton[] = [];
+  if (next.status !== 'running') buttons.push('start');
+  if (offerKeepGoing) buttons.push('keepGoing');
+  return buttons;
 }
 
 /** Finishes the current phase if its end time has passed. */
@@ -226,11 +249,16 @@ function completeIfDue(): Promise<TimerState> {
     if (state.phase === 'work') {
       // Read before the state is saved, so a first history still sees today's old tally.
       const history = await loadHistory();
-      await saveHistory(recordPomodoro(history, state.endTime, focusMinutes(state, settings)));
+      const minutes = focusMinutes(state, settings);
+      await saveHistory(
+        state.extending
+          ? addFocusMinutes(history, state.endTime, minutes)
+          : recordPomodoro(history, state.endTime, minutes),
+      );
     }
     await commit(next);
     await updateBadge(next, true);
-    await alertPhaseComplete(state.phase, next, settings);
+    await alertPhaseComplete(state.phase, next, settings, state.extending === true);
     return next;
   });
 }
@@ -250,6 +278,9 @@ function runCommand(cmd: Command): Promise<TimerState> {
         return commit(start(state, now));
       case 'justStart':
         return commit(justStart(state, settings, now));
+      case 'keepGoing':
+        await chrome.notifications.clear(NOTIFICATION_ID);
+        return commit(keepGoing(state, settings, now));
       case 'pause':
         return commit(pause(state, now));
       case 'reset':
@@ -277,10 +308,15 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === PHASE_END_ALARM || alarm.name === BADGE_ALARM) void completeIfDue();
 });
 
-chrome.notifications.onButtonClicked.addListener((id) => {
+chrome.notifications.onButtonClicked.addListener((id, index) => {
   if (id !== NOTIFICATION_ID) return;
   void chrome.notifications.clear(id);
-  void runCommand({ command: 'start' });
+  void (async () => {
+    // The buttons were laid out from this same state, so the index lines up.
+    const [state, settings] = await Promise.all([loadState(), loadSettings()]);
+    const button = notificationButtons(state, canKeepGoing(state, settings))[index];
+    if (button) await runCommand({ command: button === 'start' ? 'start' : 'keepGoing' });
+  })();
 });
 
 chrome.notifications.onClicked.addListener((id) => {

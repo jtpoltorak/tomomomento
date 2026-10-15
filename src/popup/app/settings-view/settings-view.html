@@ -124,6 +124,14 @@
       <span>Start focus automatically after a break</span>
       <input type="checkbox" role="switch" formControlName="autoStartWork" />
     </label>
+    <label class="switch-row">
+      <span>Offer to keep going</span>
+      <input type="checkbox" role="switch" formControlName="keepGoing" />
+    </label>
+    <p class="note">
+      Still in the flow when focus ends? A "+{{ keepGoingMinutes }} min focus" button puts your
+      break off a little. Extra time adds to your focus minutes in Stats.
+    </p>
   </section>
 
   <section>

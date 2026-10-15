@@ -1,10 +1,12 @@
 import {
   advance,
   canJustStart,
+  canKeepGoing,
   DEFAULT_SETTINGS,
   formatClock,
   initialState,
   justStart,
+  keepGoing,
   pause,
   phaseLengthMs,
   remainingMs,
@@ -203,6 +205,54 @@ describe('timer state machine', () => {
     it('stays off unless turned on', () => {
       expect(sanitizeSettings({}).justStart).toBe(false);
       expect(sanitizeSettings({ justStart: true }).justStart).toBe(true);
+    });
+  });
+
+  describe('keep going', () => {
+    const on = { ...s, keepGoing: true };
+    const finished = () => advance(start(initialState(on, T0), T0), on, T0 + 25 * MIN, true);
+
+    it('is offered on the break after a focus session runs out', () => {
+      expect(canKeepGoing(finished(), on)).toBe(true);
+      expect(canKeepGoing(finished(), s)).toBe(false);
+      // Not after a skipped session, and not once you leave the break.
+      expect(canKeepGoing(advance(initialState(on, T0), on, T0, false), on)).toBe(false);
+      expect(canKeepGoing(reset(finished(), on), on)).toBe(false);
+      expect(canKeepGoing(setPhase(finished(), 'longBreak', on), on)).toBe(false);
+      // Starting the break keeps the offer open.
+      expect(canKeepGoing(start(finished(), T0 + 26 * MIN), on)).toBe(true);
+    });
+
+    it('adds 5 minutes of focus that does not count another pomodoro', () => {
+      const st = keepGoing(finished(), on, T0 + 26 * MIN);
+      expect(st).toMatchObject({ phase: 'work', status: 'running', extending: true });
+      expect(phaseLengthMs(st, on)).toBe(5 * MIN);
+
+      const back = advance(st, on, T0 + 31 * MIN, true);
+      expect(back).toMatchObject({ phase: 'shortBreak', completedToday: 1, completedInCycle: 1 });
+      expect(back.extending).toBeUndefined();
+      // And again, if you're still going.
+      expect(canKeepGoing(back, on)).toBe(true);
+    });
+
+    it('comes back to the long break it put off', () => {
+      let st = initialState(on, T0);
+      for (let i = 0; i < 4; i++) {
+        st = advance(start(st, T0), on, T0, true); // focus runs out
+        if (i < 3) st = advance(st, on, T0, false); // skip the short break
+      }
+      expect(st.phase).toBe('longBreak');
+      st = advance(keepGoing(st, on, T0), on, T0 + 5 * MIN, true);
+      expect(st).toMatchObject({ phase: 'longBreak', completedInCycle: 4 });
+    });
+
+    it('does nothing when not offered', () => {
+      const st = initialState(on, T0);
+      expect(keepGoing(st, on, T0)).toBe(st);
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).keepGoing).toBe(false);
     });
   });
 });

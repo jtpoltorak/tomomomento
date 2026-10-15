@@ -87,6 +87,19 @@ describe('WebTimerHost', () => {
     expect(Object.values(history)).toEqual([{ pomodoros: 1, focusMinutes: 10 }]);
   });
 
+  it('adds "Keep going" time to focus minutes without another pomodoro', async () => {
+    const host = new WebTimerHost();
+    await host.saveSettings({ ...DEFAULT_SETTINGS, keepGoing: true });
+    await host.send({ command: 'start' });
+    await vi.advanceTimersByTimeAsync(25 * 60_000 + 100);
+    const res = await host.send({ command: 'keepGoing' });
+    expect(res.ok && res.state).toMatchObject({ phase: 'work', remainingMs: 5 * 60_000 });
+    await vi.advanceTimersByTimeAsync(5 * 60_000 + 100);
+    const { state, history } = await host.load();
+    expect(state).toMatchObject({ phase: 'shortBreak', completedToday: 1 });
+    expect(Object.values(history)).toEqual([{ pomodoros: 1, focusMinutes: 30 }]);
+  });
+
   it("starts the history from today's tally saved before stats existed", async () => {
     const { state } = await new WebTimerHost().load();
     localStorage.setItem('tomatick.state', JSON.stringify({ ...state, completedToday: 2 }));

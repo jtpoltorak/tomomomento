@@ -30,6 +30,11 @@
   </div>
   <div class="status-row">
     <div class="status" aria-live="polite">{{ status() }}</div>
+    @if (justStartOffer()) {
+      <button type="button" class="link just-start" (click)="justStart()">
+        or just start: {{ justStartMinutes }} min
+      </button>
+    }
     @if (idea()) {
       <button
         type="button"

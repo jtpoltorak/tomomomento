@@ -345,4 +345,42 @@ describe('TimerView', () => {
       expect(el.querySelector('.park-link')).toBeNull();
     });
   });
+
+  describe('just start', () => {
+    async function offered(overrides = {}) {
+      const ctx = await setup(overrides);
+      ctx.store.settings.update((s) => ({ ...s, justStart: true }));
+      await ctx.fixture.whenStable();
+      return ctx;
+    }
+
+    it('offers a 10-minute start beside "Ready to focus"', async () => {
+      const { el, fixture, store, button } = await offered();
+      expect(el.querySelector('.status')?.textContent).toBe('Ready to focus');
+      button('or just start: 10 min').click();
+      await fixture.whenStable();
+      expect(store.sent).toEqual([{ command: 'justStart' }]);
+    });
+
+    it('is not offered once the session has begun, or on breaks', async () => {
+      expect((await offered({ status: 'paused' })).el.querySelector('.just-start')).toBeNull();
+      TestBed.resetTestingModule();
+      expect((await offered({ phase: 'shortBreak' })).el.querySelector('.just-start')).toBeNull();
+    });
+
+    it('is not offered unless turned on', async () => {
+      const { el } = await setup();
+      expect(el.querySelector('.just-start')).toBeNull();
+    });
+
+    it('shows a short session against its own length', async () => {
+      const { el } = await setup({
+        status: 'paused',
+        remainingMs: 4 * 60_000,
+        phaseMs: 10 * 60_000,
+      });
+      const bar = el.querySelector('[role="progressbar"]')!;
+      expect(bar.getAttribute('aria-valuetext')).toBe('4 of 10 minutes left');
+    });
+  });
 });

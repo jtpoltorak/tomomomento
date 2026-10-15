@@ -2,7 +2,7 @@ import { computed, signal } from '@angular/core';
 import {
   DEFAULT_SETTINGS,
   initialState,
-  phaseDurationMs,
+  phaseLengthMs,
   remainingMs,
   type Settings,
   type TimerState,
@@ -54,7 +54,7 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
       settings().parkingLot && state().phase !== 'work' ? unseenCount(parkingLot()) : 0,
     ),
     remainingMs: computed(() => remainingMs(state(), now)),
-    totalMs: computed(() => phaseDurationMs(state().phase, settings())),
+    totalMs: computed(() => phaseLengthMs(state(), settings())),
     progress: computed(() => 0),
     alertsOff: computed(() => !settings().soundEnabled && !settings().notificationsEnabled),
     sent,

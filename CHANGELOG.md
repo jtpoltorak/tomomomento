@@ -4,6 +4,14 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Just start (optional):** on days when 25 minutes feels like too much, a
+  "just start: 10 min" link under the clock begins a short focus session that
+  counts like any other. Turn it on under Timers in Settings.
+
 ## 1.3.0 (2026-10-14)
 
 ### New

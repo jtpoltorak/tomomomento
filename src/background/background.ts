@@ -24,7 +24,9 @@ import {
 } from '../shared/storage';
 import {
   advance,
+  justStart,
   pause,
+  phaseLengthMs,
   PHASE_LABELS,
   remainingMs,
   reset,
@@ -224,13 +226,18 @@ function completeIfDue(): Promise<TimerState> {
     if (state.phase === 'work') {
       // Read before the state is saved, so a first history still sees today's old tally.
       const history = await loadHistory();
-      await saveHistory(recordPomodoro(history, state.endTime, settings.workMinutes));
+      await saveHistory(recordPomodoro(history, state.endTime, focusMinutes(state, settings)));
     }
     await commit(next);
     await updateBadge(next, true);
     await alertPhaseComplete(state.phase, next, settings);
     return next;
   });
+}
+
+/** Minutes of a finished focus session, which a "Just start" one makes shorter. */
+function focusMinutes(state: TimerState, settings: Settings): number {
+  return Math.round(phaseLengthMs(state, settings) / 60_000);
 }
 
 function runCommand(cmd: Command): Promise<TimerState> {
@@ -241,6 +248,8 @@ function runCommand(cmd: Command): Promise<TimerState> {
     switch (cmd.command) {
       case 'start':
         return commit(start(state, now));
+      case 'justStart':
+        return commit(justStart(state, settings, now));
       case 'pause':
         return commit(pause(state, now));
       case 'reset':

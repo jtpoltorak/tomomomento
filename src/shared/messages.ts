@@ -2,6 +2,8 @@ import type { Phase, SoundId, TimerState } from './timer';
 
 export type Command =
   | { command: 'start' }
+  /** A short "Just start" focus session. */
+  | { command: 'justStart' }
   | { command: 'pause' }
   | { command: 'reset' }
   | { command: 'skip' }

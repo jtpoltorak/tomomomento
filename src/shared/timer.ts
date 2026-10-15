@@ -37,6 +37,8 @@ export interface Settings {
   parkingLot: boolean;
   /** On breaks, suggest something screen-free to do in place of "Take a breather". */
   breakIdeas: boolean;
+  /** Offer a short "Just start" focus session for days when a full one feels like too much. */
+  justStart: boolean;
 }
 
 export interface TimerState {
@@ -52,6 +54,11 @@ export interface TimerState {
   completedToday: number;
   /** Local date (YYYY-MM-DD) that `completedToday` belongs to. */
   todayKey: string;
+  /**
+   * The full length of this phase, only when it differs from Settings (a
+   * "Just start" session). Absent otherwise, and in state saved by older versions.
+   */
+  phaseMs?: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -76,7 +83,11 @@ export const DEFAULT_SETTINGS: Settings = {
   planPrompt: true,
   parkingLot: false,
   breakIdeas: false,
+  justStart: false,
 };
+
+/** How long a "Just start" focus session runs. */
+export const JUST_START_MINUTES = 10;
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -110,6 +121,18 @@ export function phaseDurationMs(phase: Phase, settings: Settings): number {
     longBreak: settings.longBreakMinutes,
   }[phase];
   return minutes * 60_000;
+}
+
+/** How long the current phase runs in full, for the progress bar and Stats. */
+export function phaseLengthMs(state: TimerState, settings: Settings): number {
+  return state.phaseMs ?? phaseDurationMs(state.phase, settings);
+}
+
+/** Drops a "Just start" length, so the phase goes back to its usual one. */
+function usualLength(state: TimerState): TimerState {
+  if (state.phaseMs === undefined) return state;
+  const { phaseMs: _, ...rest } = state;
+  return rest;
 }
 
 export function initialState(settings: Settings, now: number): TimerState {
@@ -152,10 +175,30 @@ export function pause(state: TimerState, now: number): TimerState {
   return { ...state, status: 'paused', endTime: null, remainingMs: remainingMs(state, now) };
 }
 
+/**
+ * Whether to offer "Just start": a focus session that hasn't begun yet, when
+ * the usual one is longer than the short one.
+ */
+export function canJustStart(state: TimerState, settings: Settings): boolean {
+  return (
+    settings.justStart &&
+    state.phase === 'work' &&
+    state.status === 'idle' &&
+    settings.workMinutes > JUST_START_MINUTES
+  );
+}
+
+/** Starts a short focus session. It counts like any other once it runs out. */
+export function justStart(state: TimerState, settings: Settings, now: number): TimerState {
+  if (!canJustStart(state, settings)) return state;
+  const ms = JUST_START_MINUTES * 60_000;
+  return { ...state, status: 'running', endTime: now + ms, remainingMs: ms, phaseMs: ms };
+}
+
 /** Puts the current phase back to its full length without changing phase. */
 export function reset(state: TimerState, settings: Settings): TimerState {
   return {
-    ...state,
+    ...usualLength(state),
     status: 'idle',
     endTime: null,
     remainingMs: phaseDurationMs(state.phase, settings),
@@ -165,7 +208,7 @@ export function reset(state: TimerState, settings: Settings): TimerState {
 /** Jumps to a specific phase, ready to start, without counting anything. */
 export function setPhase(state: TimerState, phase: Phase, settings: Settings): TimerState {
   return {
-    ...state,
+    ...usualLength(state),
     phase,
     status: 'idle',
     endTime: null,
@@ -186,7 +229,7 @@ export function advance(
   countWork: boolean,
   finishedAt: number = now,
 ): TimerState {
-  let s = rollDay(state, finishedAt);
+  let s = rollDay(usualLength(state), finishedAt);
   let next: Phase;
 
   if (s.phase === 'work') {
@@ -252,5 +295,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     planPrompt: input.planPrompt ?? d.planPrompt,
     parkingLot: input.parkingLot ?? d.parkingLot,
     breakIdeas: input.breakIdeas ?? d.breakIdeas,
+    justStart: input.justStart ?? d.justStart,
   };
 }

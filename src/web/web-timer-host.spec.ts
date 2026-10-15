@@ -76,6 +76,17 @@ describe('WebTimerHost', () => {
     expect((await host.load()).history).toEqual({});
   });
 
+  it('records a "Just start" session as 10 focus minutes', async () => {
+    const host = new WebTimerHost();
+    await host.saveSettings({ ...DEFAULT_SETTINGS, justStart: true });
+    const res = await host.send({ command: 'justStart' });
+    expect(res.ok && res.state.remainingMs).toBe(10 * 60_000);
+    await vi.advanceTimersByTimeAsync(10 * 60_000 + 100);
+    const { state, history } = await host.load();
+    expect(state).toMatchObject({ phase: 'shortBreak', completedToday: 1 });
+    expect(Object.values(history)).toEqual([{ pomodoros: 1, focusMinutes: 10 }]);
+  });
+
   it("starts the history from today's tally saved before stats existed", async () => {
     const { state } = await new WebTimerHost().load();
     localStorage.setItem('tomatick.state', JSON.stringify({ ...state, completedToday: 2 }));

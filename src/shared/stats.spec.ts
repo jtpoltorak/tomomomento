@@ -1,4 +1,5 @@
 import {
+  addFocusMinutes,
   formatMinutes,
   heatLevel,
   heatmap,
@@ -23,6 +24,15 @@ describe('stats', () => {
       '2026-10-13': { pomodoros: 2, focusMinutes: 50 },
       '2026-10-12': { pomodoros: 1, focusMinutes: 50 },
     });
+  });
+
+  it('adds extra focus minutes to a day without another pomodoro', () => {
+    const h = recordPomodoro({}, day(10, 13), 25);
+    expect(addFocusMinutes(h, day(10, 13), 5)).toEqual({
+      '2026-10-13': { pomodoros: 1, focusMinutes: 30 },
+    });
+    // A day with no pomodoros isn't started by extra time alone.
+    expect(addFocusMinutes(h, day(10, 14), 5)).toBe(h);
   });
 
   it("carries today's tally over into a first history", () => {

@@ -51,6 +51,23 @@ describe('planSchedule', () => {
     expect(endsAt - NOW).toBe(50 * MIN);
   });
 
+  it('puts "Keep going" time ahead of the plan, without using up a pomodoro', () => {
+    const extra = state({
+      status: 'running',
+      endTime: NOW + 3 * MIN,
+      remainingMs: 5 * MIN,
+      completedInCycle: 1,
+      phaseMs: 5 * MIN,
+      extending: true,
+    });
+    const { blocks } = planSchedule(1, extra, DEFAULT_SETTINGS, NOW);
+    expect(blocks.map((b) => [b.phase, b.ms / MIN])).toEqual([
+      ['work', 3],
+      ['shortBreak', 5],
+      ['work', 25],
+    ]);
+  });
+
   it('starts with what is left of a break', () => {
     const onBreak = state({ phase: 'shortBreak', remainingMs: 3 * MIN, completedInCycle: 1 });
     const { blocks } = planSchedule(1, onBreak, DEFAULT_SETTINGS, NOW);

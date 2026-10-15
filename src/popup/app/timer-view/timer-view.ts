@@ -18,8 +18,10 @@ import { MAX_THOUGHT_LENGTH, thoughtsText } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
 import {
   canJustStart,
+  canKeepGoing,
   formatClock,
   JUST_START_MINUTES,
+  KEEP_GOING_MINUTES,
   PHASE_LABELS,
   type Phase,
 } from '../../../shared/timer';
@@ -118,9 +120,10 @@ export class TimerView {
   });
 
   protected readonly status = computed(() => {
-    const { phase, status } = this.store.state();
+    const { phase, status, extending } = this.store.state();
     const idea = this.idea();
     if (idea) return idea;
+    if (extending && status === 'running') return 'Extra time. Your break is waiting';
     if (status === 'running') return phase === 'work' ? 'Stay focused' : 'Take a breather';
     if (status === 'paused') return 'Paused';
     return phase === 'work' ? 'Ready to focus' : 'Time for a break';
@@ -131,6 +134,12 @@ export class TimerView {
     canJustStart(this.store.state(), this.store.settings()),
   );
   protected readonly justStartMinutes = JUST_START_MINUTES;
+
+  /** Still in the flow when focus ends? A few more minutes before the break. */
+  protected readonly keepGoingOffer = computed(() =>
+    canKeepGoing(this.store.state(), this.store.settings()),
+  );
+  protected readonly keepGoingMinutes = KEEP_GOING_MINUTES;
 
   protected readonly primaryLabel = computed(() => {
     const status = this.store.state().status;
@@ -204,7 +213,9 @@ export class TimerView {
 
   /** The label for the pomodoro in progress, or the next one during a break. */
   protected readonly planLabelNow = computed(() => {
-    const label = this.plan()?.labels[this.planDone()];
+    // Extra time goes with the pomodoro that just finished.
+    const index = this.planDone() - (this.store.state().extending ? 1 : 0);
+    const label = this.plan()?.labels[index];
     if (!label) return null;
     return { prefix: this.store.state().phase === 'work' ? 'Now' : 'Next', label };
   });
@@ -319,6 +330,11 @@ export class TimerView {
   protected justStart(): void {
     void this.store.send({ command: 'justStart' });
     // The link goes away once the timer runs, so keep keyboard focus on the controls.
+    this.focusSoon('.primary-btn');
+  }
+
+  protected keepGoing(): void {
+    void this.store.send({ command: 'keepGoing' });
     this.focusSoon('.primary-btn');
   }
 

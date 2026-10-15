@@ -9,10 +9,17 @@ import type { Command, CommandResponse } from '../shared/messages';
 import { playSound } from '../shared/sounds';
 import { sanitizeParkingLot, type ParkingLot } from '../shared/parking';
 import { planDoneMessage, sanitizePlanData, type PlanData } from '../shared/plan';
-import { recordPomodoro, sanitizeHistory, seedHistory, type History } from '../shared/stats';
+import {
+  addFocusMinutes,
+  recordPomodoro,
+  sanitizeHistory,
+  seedHistory,
+  type History,
+} from '../shared/stats';
 import {
   advance,
   justStart,
+  keepGoing,
   DEFAULT_SETTINGS,
   formatClock,
   initialState,
@@ -145,6 +152,9 @@ export class WebTimerHost implements TimerHost {
           return this.commit(start(state, now));
         case 'justStart':
           return this.commit(justStart(state, settings, now));
+        case 'keepGoing':
+          void this.closeNotification();
+          return this.commit(keepGoing(state, settings, now));
         case 'pause':
           return this.commit(pause(state, now));
         case 'reset':
@@ -276,18 +286,19 @@ export class WebTimerHost implements TimerHost {
       const next = advance(state, settings, Date.now(), true, state.endTime);
       if (state.phase === 'work') {
         // Read before the state is saved, so a first history still sees today's old tally.
+        const minutes = Math.round(phaseLengthMs(state, settings) / 60_000);
+        const history = loadHistory();
         write(
           KEYS.history,
-          recordPomodoro(
-            loadHistory(),
-            state.endTime,
-            Math.round(phaseLengthMs(state, settings) / 60_000),
-          ),
+          state.extending
+            ? addFocusMinutes(history, state.endTime, minutes)
+            : recordPomodoro(history, state.endTime, minutes),
         );
       }
       this.justFinished = next.status === 'idle';
       this.commit(next);
-      if (alert) void this.alertPhaseComplete(state.phase, next, settings);
+      if (alert)
+        void this.alertPhaseComplete(state.phase, next, settings, state.extending === true);
     });
   }
 
@@ -295,12 +306,14 @@ export class WebTimerHost implements TimerHost {
     finished: Phase,
     next: TimerState,
     settings: Settings,
+    extended: boolean,
   ): Promise<void> {
     const tasks: Promise<void>[] = [];
     if (settings.soundEnabled) tasks.push(this.playAlertSound(settings));
     if (settings.notificationsEnabled) {
-      const planLine = finished === 'work' ? planDoneMessage(loadPlan(), settings, next) : null;
-      tasks.push(this.showNotification(finished, next, planLine));
+      const planLine =
+        finished === 'work' && !extended ? planDoneMessage(loadPlan(), settings, next) : null;
+      tasks.push(this.showNotification(finished, next, planLine, extended));
     }
     const results = await Promise.allSettled(tasks);
     for (const r of results) if (r.status === 'rejected') console.error('Alert failed', r.reason);
@@ -321,9 +334,14 @@ export class WebTimerHost implements TimerHost {
     finished: Phase,
     next: TimerState,
     planLine: string | null,
+    extended: boolean,
   ): Promise<void> {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    const title = finished === 'work' ? 'Focus session complete' : 'Break is over';
+    const title = extended
+      ? 'Extra time is up'
+      : finished === 'work'
+        ? 'Focus session complete'
+        : 'Break is over';
     const nextLine =
       next.status === 'running'
         ? `${PHASE_LABELS[next.phase]} started.`

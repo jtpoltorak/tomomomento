@@ -4,6 +4,8 @@ export type Command =
   | { command: 'start' }
   /** A short "Just start" focus session. */
   | { command: 'justStart' }
+  /** A few more minutes of focus before the break ("Keep going"). */
+  | { command: 'keepGoing' }
   | { command: 'pause' }
   | { command: 'reset' }
   | { command: 'skip' }

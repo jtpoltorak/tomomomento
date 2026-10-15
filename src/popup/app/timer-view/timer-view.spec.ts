@@ -383,4 +383,34 @@ describe('TimerView', () => {
       expect(bar.getAttribute('aria-valuetext')).toBe('4 of 10 minutes left');
     });
   });
+
+  describe('keep going', () => {
+    it('offers a few more minutes of focus on the break after one', async () => {
+      const { el, fixture, store, button } = await setup({ phase: 'shortBreak', afterFocus: true });
+      expect(el.querySelector('.keep-going')).toBeNull();
+      store.settings.update((s) => ({ ...s, keepGoing: true }));
+      await fixture.whenStable();
+      button('+5 min focus').click();
+      await fixture.whenStable();
+      expect(store.sent).toEqual([{ command: 'keepGoing' }]);
+    });
+
+    it('is not offered on a break you chose yourself', async () => {
+      const { el, fixture, store } = await setup({ phase: 'shortBreak' });
+      store.settings.update((s) => ({ ...s, keepGoing: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.keep-going')).toBeNull();
+    });
+
+    it('says the break is waiting during the extra time', async () => {
+      const { el } = await setup({
+        status: 'running',
+        endTime: Date.now() + 5 * 60_000,
+        remainingMs: 5 * 60_000,
+        phaseMs: 5 * 60_000,
+        extending: true,
+      });
+      expect(el.querySelector('.status')?.textContent).toBe('Extra time. Your break is waiting');
+    });
+  });
 });

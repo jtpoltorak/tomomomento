@@ -134,7 +134,17 @@ export function planSchedule(
 
   if (left > 0) {
     const current = remainingMs(state, now);
-    if (state.phase === 'work') {
+    if (state.phase === 'work' && state.extending) {
+      // Extra time after a pomodoro that already counted, then the break it put off.
+      blocks.push({ phase: 'work', ms: current });
+      const long = inCycle >= settings.sessionsBeforeLongBreak;
+      blocks.push(
+        long
+          ? { phase: 'longBreak', ms: settings.longBreakMinutes * 60_000 }
+          : { phase: 'shortBreak', ms: settings.shortBreakMinutes * 60_000 },
+      );
+      if (long) inCycle = 0;
+    } else if (state.phase === 'work') {
       blocks.push({ phase: 'work', ms: current });
       left--;
       breakAfterWork();

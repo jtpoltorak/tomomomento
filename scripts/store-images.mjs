@@ -151,14 +151,19 @@ const stats = await popup('', async () => {
   await page.waitForSelector('app-stats-view');
 });
 await setSettings({ theme: 'system' });
-// The break, with a break idea and the parked thoughts card, and no plan, to keep it calm.
-await setSettings({ breakIdeas: true, planEnabled: false });
+// The break, with a break idea, the parked thoughts card and "+5 min focus", and no
+// plan, to keep it calm. The break has to follow a finished focus session to offer more.
+await setSettings({ breakIdeas: true, keepGoing: true, planEnabled: false });
 const brk = await popup('', async () => {
   await send({ command: 'setPhase', phase: 'shortBreak' });
   await send({ command: 'start' });
+  await page.evaluate(async () => {
+    const { state } = await chrome.storage.local.get('state');
+    await chrome.storage.local.set({ state: { ...state, afterFocus: true } });
+  });
   await page.waitForTimeout(1500);
 });
-await setSettings({ breakIdeas: false });
+await setSettings({ breakIdeas: false, keepGoing: false });
 
 // The blocked page, during a focus session.
 await send({ command: 'setPhase', phase: 'work' });
@@ -235,7 +240,7 @@ await render(
   800,
   shot(
     'Breaks that actually happen',
-    'Short breaks between sessions and a long one after four. Get a gentle sound or notification when time’s up, and an idea for something screen-free to do.',
+    'Short breaks between sessions and a long one after four, with an idea for something screen-free to do. Still in the flow? Take five more minutes first.',
     brk,
     '#dcf5e1',
   ),

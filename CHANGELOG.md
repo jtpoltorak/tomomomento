@@ -15,6 +15,9 @@ these first.
   ends. The progress bar glows softly, the timer says a minute is left, and
   with sound on you'll hear a soft tone. Turn it on under When time's up in
   Settings.
+- **Paused reminder (optional):** after 10 minutes on pause, a quiet
+  notification asks whether to resume or start over. Turn it on under When
+  time's up in Settings.
 - **Calm clock (optional):** whole minutes ("24 min") instead of a ticking
   countdown, for when watching the seconds feels stressful. Turn it on under
   Appearance in Settings.

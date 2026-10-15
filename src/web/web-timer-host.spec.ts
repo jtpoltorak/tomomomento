@@ -125,6 +125,19 @@ describe('WebTimerHost', () => {
     expect(document.title).toBe('24 min Focus · Tomomomento');
   });
 
+  it('asks "Still paused?" in the tab title after 10 minutes on pause', async () => {
+    const host = new WebTimerHost();
+    await host.saveSettings({ ...DEFAULT_SETTINGS, pauseNudge: true });
+    await host.send({ command: 'start' });
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    await host.send({ command: 'pause' });
+    expect(document.title).toBe('20:00 Focus (paused) · Tomomomento');
+    await vi.advanceTimersByTimeAsync(10 * 60_000 + 100);
+    expect(document.title).toBe('Still paused? 20:00 Focus · Tomomomento');
+    await host.send({ command: 'start' });
+    expect(document.title).toBe('20:00 Focus · Tomomomento');
+  });
+
   it("starts the history from today's tally saved before stats existed", async () => {
     const { state } = await new WebTimerHost().load();
     localStorage.setItem('tomatick.state', JSON.stringify({ ...state, completedToday: 2 }));

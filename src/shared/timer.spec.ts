@@ -11,6 +11,7 @@ import {
   justStart,
   keepGoing,
   pause,
+  pauseNudgeAt,
   phaseLengthMs,
   remainingMs,
   reset,
@@ -297,5 +298,28 @@ describe('timer state machine', () => {
     expect(calmMinutes(30_000)).toBe(1);
     expect(calmMinutes(0)).toBe(0);
     expect(sanitizeSettings({}).calmClock).toBe(false);
+  });
+
+  describe('paused reminder', () => {
+    const on = { ...s, pauseNudge: true };
+
+    it('comes 10 minutes after pausing, once per pause', () => {
+      const paused = pause(start(initialState(on, T0), T0), T0 + 3 * MIN);
+      expect(paused.pausedAt).toBe(T0 + 3 * MIN);
+      expect(pauseNudgeAt(paused, on)).toBe(T0 + 13 * MIN);
+      expect(pauseNudgeAt(paused, s)).toBeNull();
+    });
+
+    it('is cleared by resuming, restarting, or moving on', () => {
+      const paused = pause(start(initialState(on, T0), T0), T0 + 3 * MIN);
+      expect(start(paused, T0 + 20 * MIN).pausedAt).toBeUndefined();
+      expect(reset(paused, on).pausedAt).toBeUndefined();
+      expect(advance(paused, on, T0 + 20 * MIN, false).pausedAt).toBeUndefined();
+      expect(pauseNudgeAt(start(paused, T0 + 20 * MIN), on)).toBeNull();
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).pauseNudge).toBe(false);
+    });
   });
 });

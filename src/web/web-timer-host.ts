@@ -26,6 +26,7 @@ import {
   formatClock,
   initialState,
   pause,
+  pauseNudgeAt,
   phaseLengthMs,
   PHASE_LABELS,
   remainingMs,
@@ -52,9 +53,12 @@ const KEYS = {
   parkingLot: 'tomomomento.parkingLot',
   /** The end time of the phase whose heads-up already played, so only one tab plays it. */
   headsUpFor: 'tomomomento.headsUpFor',
+  /** When the paused timer's reminder already showed, so only one tab shows it. */
+  pauseNudgeFor: 'tomomomento.pauseNudgeFor',
 };
 const LOCK_NAME = 'tomatick-timer';
 const NOTIFICATION_TAG = 'phase-complete';
+const PAUSE_NOTIFICATION_TAG = 'still-paused';
 const APP_TITLE = 'Tomomomento: Focus Timer';
 
 function read<T>(key: string): T | undefined {
@@ -106,8 +110,10 @@ export class WebTimerHost implements TimerHost {
   private phaseTimer: ReturnType<typeof setTimeout> | undefined;
   private titleTimer: ReturnType<typeof setInterval> | undefined;
   private headsUpTimer: ReturnType<typeof setTimeout> | undefined;
+  private nudgeTimer: ReturnType<typeof setTimeout> | undefined;
   private audio: AudioContext | undefined;
   private notification: Notification | undefined;
+  private pauseNotification: Notification | undefined;
   /** Set when a phase ends on its own, for the "time's up" tab title. */
   private justFinished = false;
 
@@ -147,6 +153,8 @@ export class WebTimerHost implements TimerHost {
   send(command: Command): Promise<CommandResponse> {
     // Browsers only allow sound after a click, and this runs during one.
     if (loadSettings().soundEnabled) this.unlockAudio();
+    // Whatever you just did answers "still paused?".
+    void this.closeNotification(PAUSE_NOTIFICATION_TAG);
     return withLock(() => {
       const settings = loadSettings();
       const now = Date.now();
@@ -263,6 +271,11 @@ export class WebTimerHost implements TimerHost {
     clearTimeout(this.phaseTimer);
     clearInterval(this.titleTimer);
     clearTimeout(this.headsUpTimer);
+    clearTimeout(this.nudgeTimer);
+    const nudge = pauseNudgeAt(state, loadSettings());
+    if (nudge !== null) {
+      this.nudgeTimer = setTimeout(() => void this.pauseNudge(), Math.max(0, nudge - Date.now()));
+    }
     if (state.status === 'running' && state.endTime !== null) {
       const delay = Math.max(0, state.endTime - Date.now());
       this.phaseTimer = setTimeout(() => void this.completeIfDue(true), delay + 50);
@@ -280,6 +293,11 @@ export class WebTimerHost implements TimerHost {
     if (state.status === 'running' || state.status === 'paused') {
       const left = remainingMs(state, Date.now());
       const clock = loadSettings().calmClock ? `${calmMinutes(left)} min` : formatClock(left);
+      const nudge = pauseNudgeAt(state, loadSettings());
+      if (nudge !== null && Date.now() >= nudge) {
+        document.title = `Still paused? ${clock} ${label} · Tomomomento`;
+        return;
+      }
       const paused = state.status === 'paused' ? ' (paused)' : '';
       document.title = `${clock} ${label}${paused} · Tomomomento`;
     } else if (this.justFinished) {
@@ -287,6 +305,47 @@ export class WebTimerHost implements TimerHost {
     } else {
       document.title = APP_TITLE;
     }
+  }
+
+  /**
+   * "Still paused?": the tab title asks, and so does a quiet notification
+   * when the browser allows them. Once per pause, across tabs.
+   */
+  private pauseNudge(): Promise<void> {
+    return withLock(() => {
+      const state = loadState();
+      const at = pauseNudgeAt(state, loadSettings());
+      if (at === null || Date.now() < at) return;
+      this.updateTitle(state);
+      if (read<number>(KEYS.pauseNudgeFor) === state.pausedAt) return;
+      write(KEYS.pauseNudgeFor, state.pausedAt);
+      void this.showPauseNotification(state).catch((err: unknown) =>
+        console.error('Reminder failed', err),
+      );
+    });
+  }
+
+  private async showPauseNotification(state: TimerState): Promise<void> {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const minutesLeft = Math.ceil(state.remainingMs / 60_000);
+    const title = 'Still paused';
+    const options: NotificationOptions = {
+      body: `${PHASE_LABELS[state.phase]} has ${minutesLeft} min left. Pick it back up?`,
+      icon: 'icons/icon-192.png',
+      tag: PAUSE_NOTIFICATION_TAG,
+      silent: true,
+    };
+    const registration = await navigator.serviceWorker?.getRegistration();
+    if (registration) {
+      await registration.showNotification(title, options);
+      return;
+    }
+    this.pauseNotification?.close();
+    const notification = (this.pauseNotification = new Notification(title, options));
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
   }
 
   /** The quiet tone a minute before the phase ends, for people who turned sound on. */
@@ -401,10 +460,10 @@ export class WebTimerHost implements TimerHost {
     };
   }
 
-  private async closeNotification(): Promise<void> {
-    this.notification?.close();
+  private async closeNotification(tag = NOTIFICATION_TAG): Promise<void> {
+    (tag === NOTIFICATION_TAG ? this.notification : this.pauseNotification)?.close();
     const registration = await navigator.serviceWorker?.getRegistration();
-    const open = (await registration?.getNotifications({ tag: NOTIFICATION_TAG })) ?? [];
+    const open = (await registration?.getNotifications({ tag })) ?? [];
     for (const n of open) n.close();
   }
 }

@@ -31,6 +31,7 @@ import {
   KEEP_GOING_MINUTES,
   keepGoing,
   pause,
+  pauseNudgeAt,
   phaseLengthMs,
   PHASE_LABELS,
   remainingMs,
@@ -46,7 +47,9 @@ import {
 const PHASE_END_ALARM = 'phase-end';
 const BADGE_ALARM = 'badge-refresh';
 const HEADS_UP_ALARM = 'heads-up';
+const PAUSE_NUDGE_ALARM = 'pause-nudge';
 const NOTIFICATION_ID = 'phase-complete';
+const PAUSE_NOTIFICATION_ID = 'still-paused';
 
 const BADGE_COLORS: Record<Phase, string> = {
   work: '#d9480f',
@@ -128,12 +131,38 @@ async function syncAlarms(state: TimerState, settings?: Settings): Promise<void>
     await chrome.alarms.clear(PHASE_END_ALARM);
     await chrome.alarms.clear(BADGE_ALARM);
   }
-  const headsUp = headsUpAt(state, settings ?? (await loadSettings()));
+  settings ??= await loadSettings();
+  const headsUp = headsUpAt(state, settings);
   if (headsUp !== null && headsUp > Date.now()) {
     await chrome.alarms.create(HEADS_UP_ALARM, { when: headsUp });
   } else {
     await chrome.alarms.clear(HEADS_UP_ALARM);
   }
+  const nudge = pauseNudgeAt(state, settings);
+  if (nudge !== null) {
+    await chrome.alarms.create(PAUSE_NUDGE_ALARM, { when: Math.max(nudge, Date.now()) });
+  } else {
+    await chrome.alarms.clear(PAUSE_NUDGE_ALARM);
+  }
+}
+
+/** A quiet "still paused?" notification, once per pause. */
+function pauseNudge(): Promise<void> {
+  return serialized(async () => {
+    const [state, settings] = await Promise.all([loadState(), loadSettings()]);
+    const at = pauseNudgeAt(state, settings);
+    if (at === null || Date.now() < at - 1000) return;
+    const minutesLeft = Math.ceil(state.remainingMs / 60_000);
+    await chrome.notifications.create(PAUSE_NOTIFICATION_ID, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
+      title: 'Still paused',
+      message: `${PHASE_LABELS[state.phase]} has ${minutesLeft} min left. Pick it back up?`,
+      buttons: [{ title: 'Resume' }, { title: 'Start over' }],
+      silent: true,
+      priority: 0,
+    });
+  });
 }
 
 /** The quiet tone a minute before the phase ends, for people who turned sound on. */
@@ -292,6 +321,8 @@ function focusMinutes(state: TimerState, settings: Settings): number {
 }
 
 function runCommand(cmd: Command): Promise<TimerState> {
+  // Whatever you just did answers "still paused?".
+  void chrome.notifications.clear(PAUSE_NOTIFICATION_ID);
   return serialized(async () => {
     const [stored, settings] = await Promise.all([loadState(), loadSettings()]);
     const now = Date.now();
@@ -330,9 +361,14 @@ chrome.runtime.onMessage.addListener((message: CommandMessage, _sender, sendResp
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === PHASE_END_ALARM || alarm.name === BADGE_ALARM) void completeIfDue();
   if (alarm.name === HEADS_UP_ALARM) void headsUp();
+  if (alarm.name === PAUSE_NUDGE_ALARM) void pauseNudge();
 });
 
 chrome.notifications.onButtonClicked.addListener((id, index) => {
+  if (id === PAUSE_NOTIFICATION_ID) {
+    void runCommand({ command: index === 0 ? 'start' : 'reset' });
+    return;
+  }
   if (id !== NOTIFICATION_ID) return;
   void chrome.notifications.clear(id);
   void (async () => {
@@ -344,7 +380,7 @@ chrome.notifications.onButtonClicked.addListener((id, index) => {
 });
 
 chrome.notifications.onClicked.addListener((id) => {
-  if (id === NOTIFICATION_ID) void chrome.notifications.clear(id);
+  if (id === NOTIFICATION_ID || id === PAUSE_NOTIFICATION_ID) void chrome.notifications.clear(id);
 });
 
 // When durations change in Options, an idle timer should show the new length.

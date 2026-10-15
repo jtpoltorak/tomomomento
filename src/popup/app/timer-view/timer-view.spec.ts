@@ -438,4 +438,24 @@ describe('TimerView', () => {
       expect(el.querySelector('.status')?.textContent).toBe('1 minute left on your break');
     });
   });
+
+  describe('calm clock', () => {
+    it('shows whole minutes instead of a ticking clock', async () => {
+      const { el, fixture, store } = await setup({ remainingMs: 24 * 60_000 + 30_000 });
+      expect(el.querySelector('.clock')?.textContent).toBe('24:30');
+      store.settings.update((s) => ({ ...s, calmClock: true }));
+      await fixture.whenStable();
+      const clock = el.querySelector('.clock')!;
+      expect(clock.firstChild?.textContent?.trim()).toBe('25');
+      expect(clock.querySelector('.unit')?.textContent).toBe('min');
+      expect(clock.getAttribute('aria-label')).toBe('25 minutes left');
+    });
+
+    it('says "1 minute" in the last one', async () => {
+      const { el, fixture, store } = await setup({ remainingMs: 20_000 });
+      store.settings.update((s) => ({ ...s, calmClock: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.clock')?.getAttribute('aria-label')).toBe('1 minute left');
+    });
+  });
 });

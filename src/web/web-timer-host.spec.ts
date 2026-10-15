@@ -116,6 +116,15 @@ describe('WebTimerHost', () => {
     expect(played).toHaveBeenCalledTimes(1);
   });
 
+  it('shows whole minutes in the tab title with the calm clock', async () => {
+    const host = new WebTimerHost();
+    await host.saveSettings({ ...DEFAULT_SETTINGS, calmClock: true });
+    await host.send({ command: 'start' });
+    expect(document.title).toBe('25 min Focus · Tomomomento');
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(document.title).toBe('24 min Focus · Tomomomento');
+  });
+
   it("starts the history from today's tally saved before stats existed", async () => {
     const { state } = await new WebTimerHost().load();
     localStorage.setItem('tomatick.state', JSON.stringify({ ...state, completedToday: 2 }));

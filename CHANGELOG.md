@@ -15,6 +15,9 @@ these first.
   ends. The progress bar glows softly, the timer says a minute is left, and
   with sound on you'll hear a soft tone. Turn it on under When time's up in
   Settings.
+- **Calm clock (optional):** whole minutes ("24 min") instead of a ticking
+  countdown, for when watching the seconds feels stressful. Turn it on under
+  Appearance in Settings.
 - **Keep going (optional):** still in the flow when focus ends? A "+5 min
   focus" button at the bottom of the timer (and on the notification) puts the
   break off a little. Extra time adds to your focus minutes in Stats without

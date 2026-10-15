@@ -18,6 +18,7 @@ import {
 } from '../shared/stats';
 import {
   advance,
+  calmMinutes,
   headsUpAt,
   justStart,
   keepGoing,
@@ -277,7 +278,8 @@ export class WebTimerHost implements TimerHost {
   private updateTitle(state: TimerState): void {
     const label = PHASE_LABELS[state.phase];
     if (state.status === 'running' || state.status === 'paused') {
-      const clock = formatClock(remainingMs(state, Date.now()));
+      const left = remainingMs(state, Date.now());
+      const clock = loadSettings().calmClock ? `${calmMinutes(left)} min` : formatClock(left);
       const paused = state.status === 'paused' ? ' (paused)' : '';
       document.title = `${clock} ${label}${paused} · Tomomomento`;
     } else if (this.justFinished) {

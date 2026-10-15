@@ -88,6 +88,7 @@ export class SettingsView {
     justStart: [false],
     keepGoing: [false],
     headsUp: [false],
+    calmClock: [false],
   });
 
   constructor() {

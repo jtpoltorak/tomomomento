@@ -1,5 +1,6 @@
 import {
   advance,
+  calmMinutes,
   canJustStart,
   canKeepGoing,
   DEFAULT_SETTINGS,
@@ -287,5 +288,14 @@ describe('timer state machine', () => {
     it('stays off unless turned on', () => {
       expect(sanitizeSettings({}).headsUp).toBe(false);
     });
+  });
+
+  it('the calm clock shows whole minutes, rounded up', () => {
+    expect(calmMinutes(25 * MIN)).toBe(25);
+    expect(calmMinutes(24 * MIN + 1000)).toBe(25);
+    expect(calmMinutes(24 * MIN)).toBe(24);
+    expect(calmMinutes(30_000)).toBe(1);
+    expect(calmMinutes(0)).toBe(0);
+    expect(sanitizeSettings({}).calmClock).toBe(false);
   });
 });

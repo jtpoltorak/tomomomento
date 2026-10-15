@@ -19,6 +19,7 @@ import { pickQuote, type Quote } from '../../../shared/quotes';
 import {
   canJustStart,
   canKeepGoing,
+  calmMinutes,
   formatClock,
   inHeadsUp,
   JUST_START_MINUTES,
@@ -102,6 +103,16 @@ export class TimerView {
   });
 
   protected readonly clock = computed(() => formatClock(this.store.remainingMs()));
+  /**
+   * Whole minutes left with the calm clock on, or null for the usual clock.
+   * Only changes once a minute, so nothing ticks.
+   */
+  protected readonly calmClock = computed(() =>
+    this.store.settings().calmClock ? calmMinutes(this.store.remainingMs()) : null,
+  );
+  protected minutesText(n: number): string {
+    return `${n} ${n === 1 ? 'minute' : 'minutes'}`;
+  }
   // The bar empties as time passes, like sand running out.
   protected readonly percentLeft = computed(() => Math.round(100 * (1 - this.store.progress())));
   /** Whole minutes, so screen readers aren't flooded with a new value every second. */

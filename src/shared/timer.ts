@@ -43,6 +43,8 @@ export interface Settings {
   keepGoing: boolean;
   /** A gentle cue a minute before a phase ends, so the switch isn't a surprise. */
   headsUp: boolean;
+  /** Show whole minutes instead of a ticking minutes-and-seconds clock. */
+  calmClock: boolean;
 }
 
 export interface TimerState {
@@ -94,6 +96,7 @@ export const DEFAULT_SETTINGS: Settings = {
   justStart: false,
   keepGoing: false,
   headsUp: false,
+  calmClock: false,
 };
 
 /** How long a "Just start" focus session runs. */
@@ -318,6 +321,11 @@ export function advance(
   };
 }
 
+/** Whole minutes left, rounded up, for the calm clock: "25" until 24:00, then "24". */
+export function calmMinutes(ms: number): number {
+  return Math.ceil(ms / 60_000);
+}
+
 export function formatClock(ms: number): string {
   const totalSeconds = Math.ceil(ms / 1000);
   const m = Math.floor(totalSeconds / 60);
@@ -361,5 +369,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     justStart: input.justStart ?? d.justStart,
     keepGoing: input.keepGoing ?? d.keepGoing,
     headsUp: input.headsUp ?? d.headsUp,
+    calmClock: input.calmClock ?? d.calmClock,
   };
 }

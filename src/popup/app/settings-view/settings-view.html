@@ -133,6 +133,14 @@
       Handy for wrapping up a thought before the switch.
     </p>
     <label class="switch-row">
+      <span>Remind me when paused</span>
+      <input type="checkbox" role="switch" formControlName="pauseNudge" />
+    </label>
+    <p class="note">
+      After {{ pauseNudgeMinutes }} minutes on pause, a quiet notification asks whether to pick it
+      back up, so a paused timer isn't forgotten.
+    </p>
+    <label class="switch-row">
       <span>Offer to keep going</span>
       <input type="checkbox" role="switch" formControlName="keepGoing" />
     </label>

@@ -45,6 +45,8 @@ export interface Settings {
   headsUp: boolean;
   /** Show whole minutes instead of a ticking minutes-and-seconds clock. */
   calmClock: boolean;
+  /** A quiet reminder when the timer has sat paused for a while. */
+  pauseNudge: boolean;
 }
 
 export interface TimerState {
@@ -69,6 +71,8 @@ export interface TimerState {
   extending?: boolean;
   /** This break follows a focus session that ran out, so "Keep going" can be offered. */
   afterFocus?: boolean;
+  /** Epoch ms the timer was paused, for the "still paused?" reminder. Only while paused. */
+  pausedAt?: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -97,6 +101,7 @@ export const DEFAULT_SETTINGS: Settings = {
   keepGoing: false,
   headsUp: false,
   calmClock: false,
+  pauseNudge: false,
 };
 
 /** How long a "Just start" focus session runs. */
@@ -107,6 +112,9 @@ export const KEEP_GOING_MINUTES = 5;
 
 /** How long before a phase ends the heads-up comes. */
 export const HEADS_UP_MS = 60_000;
+
+/** How long the timer sits paused before the "still paused?" reminder. */
+export const PAUSE_NUDGE_MS = 10 * 60_000;
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -152,7 +160,13 @@ export function phaseLengthMs(state: TimerState, settings: Settings): number {
  * going" length, and the offer to keep going), so a new phase starts plain.
  */
 function usualLength(state: TimerState): TimerState {
-  const { phaseMs: _length, extending: _extra, afterFocus: _offer, ...rest } = state;
+  const {
+    phaseMs: _length,
+    extending: _extra,
+    afterFocus: _offer,
+    pausedAt: _paused,
+    ...rest
+  } = state;
   return rest;
 }
 
@@ -188,12 +202,27 @@ export function rollDay(state: TimerState, now: number): TimerState {
 
 export function start(state: TimerState, now: number): TimerState {
   if (state.status === 'running') return state;
-  return { ...state, status: 'running', endTime: now + state.remainingMs };
+  const { pausedAt: _, ...rest } = state;
+  return { ...rest, status: 'running', endTime: now + state.remainingMs };
 }
 
 export function pause(state: TimerState, now: number): TimerState {
   if (state.status !== 'running') return state;
-  return { ...state, status: 'paused', endTime: null, remainingMs: remainingMs(state, now) };
+  return {
+    ...state,
+    status: 'paused',
+    endTime: null,
+    remainingMs: remainingMs(state, now),
+    pausedAt: now,
+  };
+}
+
+/** When the "still paused?" reminder is due, or null when there isn't one. */
+export function pauseNudgeAt(state: TimerState, settings: Settings): number | null {
+  if (!settings.pauseNudge || state.status !== 'paused' || state.pausedAt === undefined) {
+    return null;
+  }
+  return state.pausedAt + PAUSE_NUDGE_MS;
 }
 
 /**
@@ -370,5 +399,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     keepGoing: input.keepGoing ?? d.keepGoing,
     headsUp: input.headsUp ?? d.headsUp,
     calmClock: input.calmClock ?? d.calmClock,
+    pauseNudge: input.pauseNudge ?? d.pauseNudge,
   };
 }

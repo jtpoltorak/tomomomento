@@ -18,6 +18,7 @@ import {
   DEFAULT_SETTINGS,
   JUST_START_MINUTES,
   KEEP_GOING_MINUTES,
+  PAUSE_NUDGE_MS,
   sanitizeSettings,
   SOUND_LABELS,
   THEME_LABELS,
@@ -46,6 +47,7 @@ export class SettingsView {
   protected readonly saved = signal(false);
   protected readonly justStartMinutes = JUST_START_MINUTES;
   protected readonly keepGoingMinutes = KEEP_GOING_MINUTES;
+  protected readonly pauseNudgeMinutes = PAUSE_NUDGE_MS / 60_000;
 
   // The blocker lives outside the form because turning it on waits on Chrome's permission prompt.
   protected readonly blockSites = signal(this.store.settings().blockSites);
@@ -89,6 +91,7 @@ export class SettingsView {
     keepGoing: [false],
     headsUp: [false],
     calmClock: [false],
+    pauseNudge: [false],
   });
 
   constructor() {

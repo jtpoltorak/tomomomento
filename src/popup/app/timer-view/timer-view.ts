@@ -22,6 +22,7 @@ import {
   calmMinutes,
   formatClock,
   inHeadsUp,
+  pauseNudgeAt,
   JUST_START_MINUTES,
   KEEP_GOING_MINUTES,
   PHASE_LABELS,
@@ -148,7 +149,8 @@ export class TimerView {
     if (idea) return idea;
     if (extending && status === 'running') return 'Extra time. Your break is waiting';
     if (status === 'running') return phase === 'work' ? 'Stay focused' : 'Take a breather';
-    if (status === 'paused') return 'Paused';
+    if (status === 'paused')
+      return this.stillPaused() ? 'Still paused. Pick it back up?' : 'Paused';
     return phase === 'work' ? 'Ready to focus' : 'Time for a break';
   });
 
@@ -163,6 +165,12 @@ export class TimerView {
     canKeepGoing(this.store.state(), this.store.settings()),
   );
   protected readonly keepGoingMinutes = KEEP_GOING_MINUTES;
+
+  /** Paused long enough for the "still paused?" reminder. */
+  private readonly stillPaused = computed(() => {
+    const at = pauseNudgeAt(this.store.state(), this.store.settings());
+    return at !== null && Math.max(this.minute(), Date.now()) >= at;
+  });
 
   protected readonly primaryLabel = computed(() => {
     const status = this.store.state().status;

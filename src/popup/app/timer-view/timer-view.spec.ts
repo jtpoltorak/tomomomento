@@ -458,4 +458,29 @@ describe('TimerView', () => {
       expect(el.querySelector('.clock')?.getAttribute('aria-label')).toBe('1 minute left');
     });
   });
+
+  describe('paused reminder', () => {
+    it('asks whether to pick it back up after a long pause', async () => {
+      const { el, fixture, store } = await setup({
+        status: 'paused',
+        remainingMs: 12 * 60_000,
+        pausedAt: Date.now() - 11 * 60_000,
+      });
+      expect(el.querySelector('.status')?.textContent).toBe('Paused');
+      store.settings.update((s) => ({ ...s, pauseNudge: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.status')?.textContent).toBe('Still paused. Pick it back up?');
+    });
+
+    it('just says "Paused" for a short pause', async () => {
+      const { el, fixture, store } = await setup({
+        status: 'paused',
+        remainingMs: 12 * 60_000,
+        pausedAt: Date.now() - 60_000,
+      });
+      store.settings.update((s) => ({ ...s, pauseNudge: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.status')?.textContent).toBe('Paused');
+    });
+  });
 });

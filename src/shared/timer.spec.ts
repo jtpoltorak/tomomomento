@@ -3,6 +3,8 @@ import {
   canJustStart,
   canKeepGoing,
   DEFAULT_SETTINGS,
+  headsUpAt,
+  inHeadsUp,
   formatClock,
   initialState,
   justStart,
@@ -253,6 +255,37 @@ describe('timer state machine', () => {
 
     it('stays off unless turned on', () => {
       expect(sanitizeSettings({}).keepGoing).toBe(false);
+    });
+  });
+
+  describe('heads-up', () => {
+    const on = { ...s, headsUp: true };
+
+    it('comes a minute before a running phase ends', () => {
+      const st = start(initialState(on, T0), T0);
+      expect(headsUpAt(st, on)).toBe(T0 + 24 * MIN);
+      expect(inHeadsUp(st, on, T0 + 23 * MIN)).toBe(false);
+      expect(inHeadsUp(st, on, T0 + 24 * MIN)).toBe(true);
+      expect(inHeadsUp(st, on, T0 + 25 * MIN)).toBe(false);
+    });
+
+    it('stays quiet when off, paused, idle, or for very short phases', () => {
+      const running = start(initialState(on, T0), T0);
+      expect(headsUpAt(start(initialState(s, T0), T0), s)).toBeNull();
+      expect(headsUpAt(pause(running, T0 + MIN), on)).toBeNull();
+      expect(headsUpAt(initialState(on, T0), on)).toBeNull();
+      const short = { ...on, shortBreakMinutes: 2 };
+      const brk = start(setPhase(initialState(short, T0), 'shortBreak', short), T0);
+      expect(headsUpAt(brk, short)).toBeNull();
+    });
+
+    it('follows a "Just start" length', () => {
+      const both = { ...on, justStart: true };
+      expect(headsUpAt(justStart(initialState(both, T0), both, T0), both)).toBe(T0 + 9 * MIN);
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).headsUp).toBe(false);
     });
   });
 });

@@ -11,6 +11,10 @@ these first.
 - **Just start (optional):** on days when 25 minutes feels like too much, a
   "just start: 10 min" link under the clock begins a short focus session that
   counts like any other. Turn it on under Timers in Settings.
+- **Heads-up (optional):** a gentle cue a minute before focus or a break
+  ends. The progress bar glows softly, the timer says a minute is left, and
+  with sound on you'll hear a soft tone. Turn it on under When time's up in
+  Settings.
 - **Keep going (optional):** still in the flow when focus ends? A "+5 min
   focus" button at the bottom of the timer (and on the notification) puts the
   break off a little. Extra time adds to your focus minutes in Stats without

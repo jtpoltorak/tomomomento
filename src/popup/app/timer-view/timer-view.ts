@@ -20,6 +20,7 @@ import {
   canJustStart,
   canKeepGoing,
   formatClock,
+  inHeadsUp,
   JUST_START_MINUTES,
   KEEP_GOING_MINUTES,
   PHASE_LABELS,
@@ -119,8 +120,19 @@ export class TimerView {
     return breakIdea(phase, `${todayKey}:${completedToday}:${phase}`, this.ideaOffset());
   });
 
+  /** The last minute of a running phase, when the heads-up is on. */
+  protected readonly headsUp = computed(() => {
+    this.store.remainingMs(); // ticks while the timer runs
+    return inHeadsUp(this.store.state(), this.store.settings(), Date.now());
+  });
+
   protected readonly status = computed(() => {
     const { phase, status, extending } = this.store.state();
+    if (this.headsUp()) {
+      return phase === 'work'
+        ? '1 minute left: find a stopping point'
+        : '1 minute left on your break';
+    }
     const idea = this.idea();
     if (idea) return idea;
     if (extending && status === 'running') return 'Extra time. Your break is waiting';

@@ -12,6 +12,7 @@ import type {
 } from '../shared/messages';
 import { BLOCKER_PERMISSIONS, hostMatches, shouldBlock, SUGGESTED_SITES } from '../shared/blocker';
 import { planDoneMessage } from '../shared/plan';
+import type { AlertSound } from '../shared/sounds';
 import { addFocusMinutes, recordPomodoro } from '../shared/stats';
 import {
   loadHistory,
@@ -24,6 +25,7 @@ import {
 } from '../shared/storage';
 import {
   advance,
+  headsUpAt,
   canKeepGoing,
   justStart,
   KEEP_GOING_MINUTES,
@@ -43,6 +45,7 @@ import {
 
 const PHASE_END_ALARM = 'phase-end';
 const BADGE_ALARM = 'badge-refresh';
+const HEADS_UP_ALARM = 'heads-up';
 const NOTIFICATION_ID = 'phase-complete';
 
 const BADGE_COLORS: Record<Phase, string> = {
@@ -116,7 +119,7 @@ async function redirectOpenTabs(sites: string[]): Promise<void> {
   );
 }
 
-async function syncAlarms(state: TimerState): Promise<void> {
+async function syncAlarms(state: TimerState, settings?: Settings): Promise<void> {
   if (state.status === 'running' && state.endTime !== null) {
     await chrome.alarms.create(PHASE_END_ALARM, { when: state.endTime });
     // 0.5 minutes is the shortest period Chrome allows.
@@ -125,6 +128,26 @@ async function syncAlarms(state: TimerState): Promise<void> {
     await chrome.alarms.clear(PHASE_END_ALARM);
     await chrome.alarms.clear(BADGE_ALARM);
   }
+  const headsUp = headsUpAt(state, settings ?? (await loadSettings()));
+  if (headsUp !== null && headsUp > Date.now()) {
+    await chrome.alarms.create(HEADS_UP_ALARM, { when: headsUp });
+  } else {
+    await chrome.alarms.clear(HEADS_UP_ALARM);
+  }
+}
+
+/** The quiet tone a minute before the phase ends, for people who turned sound on. */
+function headsUp(): Promise<void> {
+  return serialized(async () => {
+    const [state, settings] = await Promise.all([loadState(), loadSettings()]);
+    const at = headsUpAt(state, settings);
+    // A late alarm (the computer slept) shouldn't chime once the minute is mostly gone.
+    const now = Date.now();
+    if (at === null || now < at - 1000 || now > at + 20_000 || !settings.soundEnabled) return;
+    await playAlertSound('headsUp', settings.volume).catch((err: unknown) =>
+      console.error('Heads-up failed', err),
+    );
+  });
 }
 
 async function updateBadge(state: TimerState, justFinished = false): Promise<void> {
@@ -155,7 +178,7 @@ async function updateBadge(state: TimerState, justFinished = false): Promise<voi
 
 const OFFSCREEN_URL = 'offscreen.html';
 
-async function playAlertSound(settings: Settings): Promise<void> {
+async function playAlertSound(sound: AlertSound, volume: number): Promise<void> {
   const existing = await chrome.runtime.getContexts({
     contextTypes: [chrome.runtime.ContextType.OFFSCREEN_DOCUMENT],
   });
@@ -163,14 +186,14 @@ async function playAlertSound(settings: Settings): Promise<void> {
     await chrome.offscreen.createDocument({
       url: OFFSCREEN_URL,
       reasons: [chrome.offscreen.Reason.AUDIO_PLAYBACK],
-      justification: 'Play the alert sound the user turned on for when a timer ends.',
+      justification: 'Play the alert sounds the user turned on for when a timer ends.',
     });
   }
   const message: PlaySoundMessage = {
     type: 'play-sound',
     target: 'offscreen',
-    sound: settings.sound,
-    volume: settings.volume,
+    sound,
+    volume,
   };
   await chrome.runtime.sendMessage(message);
 }
@@ -182,7 +205,7 @@ async function alertPhaseComplete(
   extended = false,
 ): Promise<void> {
   const tasks: Promise<void>[] = [];
-  if (settings.soundEnabled) tasks.push(playAlertSound(settings));
+  if (settings.soundEnabled) tasks.push(playAlertSound(settings.sound, settings.volume));
   if (settings.notificationsEnabled) {
     const planLine =
       finished === 'work' && !extended ? planDoneMessage(await loadPlan(), settings, next) : null;
@@ -306,6 +329,7 @@ chrome.runtime.onMessage.addListener((message: CommandMessage, _sender, sendResp
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === PHASE_END_ALARM || alarm.name === BADGE_ALARM) void completeIfDue();
+  if (alarm.name === HEADS_UP_ALARM) void headsUp();
 });
 
 chrome.notifications.onButtonClicked.addListener((id, index) => {
@@ -330,7 +354,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
   void serialized(async () => {
     const [state, settings] = await Promise.all([loadState(), loadSettings()]);
     if (state.status === 'idle') await commit(reset(state, settings));
-    else await syncBlocking(state, settings);
+    else {
+      await syncBlocking(state, settings);
+      await syncAlarms(state, settings);
+    }
     // Turning the blocker off hands back its site access.
     if (!settings.blockSites && (await chrome.permissions.contains(BLOCKER_PERMISSIONS))) {
       await chrome.permissions.remove(BLOCKER_PERMISSIONS);

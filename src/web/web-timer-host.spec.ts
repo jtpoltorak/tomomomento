@@ -100,6 +100,22 @@ describe('WebTimerHost', () => {
     expect(Object.values(history)).toEqual([{ pomodoros: 1, focusMinutes: 30 }]);
   });
 
+  it('plays the heads-up tone once, a minute before the end', async () => {
+    const host = new WebTimerHost();
+    // No Web Audio in tests: stand in for unlocking and playing.
+    vi.spyOn(host as unknown as { unlockAudio: () => void }, 'unlockAudio').mockReturnValue();
+    const played = vi
+      .spyOn(host as unknown as { playSound: () => Promise<void> }, 'playSound')
+      .mockResolvedValue();
+    await host.saveSettings({ ...DEFAULT_SETTINGS, headsUp: true, soundEnabled: true });
+    await host.send({ command: 'start' });
+    await vi.advanceTimersByTimeAsync(23 * 60_000);
+    expect(played).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(60_000 + 100);
+    expect(played).toHaveBeenCalledWith('headsUp', DEFAULT_SETTINGS.volume);
+    expect(played).toHaveBeenCalledTimes(1);
+  });
+
   it("starts the history from today's tally saved before stats existed", async () => {
     const { state } = await new WebTimerHost().load();
     localStorage.setItem('tomatick.state', JSON.stringify({ ...state, completedToday: 2 }));

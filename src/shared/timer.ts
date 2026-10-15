@@ -41,6 +41,8 @@ export interface Settings {
   justStart: boolean;
   /** When focus ends, offer a few more minutes of it before the break. */
   keepGoing: boolean;
+  /** A gentle cue a minute before a phase ends, so the switch isn't a surprise. */
+  headsUp: boolean;
 }
 
 export interface TimerState {
@@ -91,6 +93,7 @@ export const DEFAULT_SETTINGS: Settings = {
   breakIdeas: false,
   justStart: false,
   keepGoing: false,
+  headsUp: false,
 };
 
 /** How long a "Just start" focus session runs. */
@@ -98,6 +101,9 @@ export const JUST_START_MINUTES = 10;
 
 /** How much extra focus "Keep going" adds. */
 export const KEEP_GOING_MINUTES = 5;
+
+/** How long before a phase ends the heads-up comes. */
+export const HEADS_UP_MS = 60_000;
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -205,6 +211,23 @@ export function justStart(state: TimerState, settings: Settings, now: number): T
   if (!canJustStart(state, settings)) return state;
   const ms = JUST_START_MINUTES * 60_000;
   return { ...state, status: 'running', endTime: now + ms, remainingMs: ms, phaseMs: ms };
+}
+
+/**
+ * When the heads-up for the running phase is due, or null when there isn't
+ * one. Phases of 2 minutes or less don't get one, since it would come almost
+ * right away.
+ */
+export function headsUpAt(state: TimerState, settings: Settings): number | null {
+  if (!settings.headsUp || state.status !== 'running' || state.endTime === null) return null;
+  if (phaseLengthMs(state, settings) <= 2 * HEADS_UP_MS) return null;
+  return state.endTime - HEADS_UP_MS;
+}
+
+/** True during the last minute of a running phase that gets a heads-up. */
+export function inHeadsUp(state: TimerState, settings: Settings, now: number): boolean {
+  const at = headsUpAt(state, settings);
+  return at !== null && now >= at && now < state.endTime!;
 }
 
 /** Whether to offer "Keep going": on a break that a finished focus session led to. */
@@ -337,5 +360,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     breakIdeas: input.breakIdeas ?? d.breakIdeas,
     justStart: input.justStart ?? d.justStart,
     keepGoing: input.keepGoing ?? d.keepGoing,
+    headsUp: input.headsUp ?? d.headsUp,
   };
 }

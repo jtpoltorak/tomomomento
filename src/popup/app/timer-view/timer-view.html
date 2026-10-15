@@ -15,7 +15,7 @@
   }
 </div>
 
-<section class="dial">
+<section class="dial" [class.heads-up]="headsUp()">
   <div class="clock" role="timer" [attr.aria-label]="clock() + ' left'">{{ clock() }}</div>
   <div
     class="bar"

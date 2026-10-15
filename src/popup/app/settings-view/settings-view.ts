@@ -16,6 +16,7 @@ import { MAX_BLOCKED_SITES, normalizeSite, SUGGESTED_SITES } from '../../../shar
 import { playSound } from '../../../shared/sounds';
 import {
   DEFAULT_SETTINGS,
+  JUST_START_MINUTES,
   sanitizeSettings,
   SOUND_LABELS,
   THEME_LABELS,
@@ -42,6 +43,7 @@ export class SettingsView {
   protected readonly sounds = Object.entries(SOUND_LABELS) as [SoundId, string][];
   protected readonly themes = Object.entries(THEME_LABELS) as [ThemeId, string][];
   protected readonly saved = signal(false);
+  protected readonly justStartMinutes = JUST_START_MINUTES;
 
   // The blocker lives outside the form because turning it on waits on Chrome's permission prompt.
   protected readonly blockSites = signal(this.store.settings().blockSites);
@@ -81,6 +83,7 @@ export class SettingsView {
     planPrompt: [true],
     parkingLot: [false],
     breakIdeas: [false],
+    justStart: [false],
   });
 
   constructor() {

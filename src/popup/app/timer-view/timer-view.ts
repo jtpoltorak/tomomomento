@@ -16,7 +16,13 @@ import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
 import { breakIdea } from '../../../shared/break-ideas';
 import { MAX_THOUGHT_LENGTH, thoughtsText } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
-import { formatClock, PHASE_LABELS, type Phase } from '../../../shared/timer';
+import {
+  canJustStart,
+  formatClock,
+  JUST_START_MINUTES,
+  PHASE_LABELS,
+  type Phase,
+} from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
 
 @Component({
@@ -119,6 +125,12 @@ export class TimerView {
     if (status === 'paused') return 'Paused';
     return phase === 'work' ? 'Ready to focus' : 'Time for a break';
   });
+
+  /** A short first session for when a full one feels like too much to begin. */
+  protected readonly justStartOffer = computed(() =>
+    canJustStart(this.store.state(), this.store.settings()),
+  );
+  protected readonly justStartMinutes = JUST_START_MINUTES;
 
   protected readonly primaryLabel = computed(() => {
     const status = this.store.state().status;
@@ -302,6 +314,12 @@ export class TimerView {
 
   protected toggle(): void {
     void this.store.send({ command: this.store.state().status === 'running' ? 'pause' : 'start' });
+  }
+
+  protected justStart(): void {
+    void this.store.send({ command: 'justStart' });
+    // The link goes away once the timer runs, so keep keyboard focus on the controls.
+    this.focusSoon('.primary-btn');
   }
 
   protected reset(): void {

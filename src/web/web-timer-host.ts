@@ -12,10 +12,12 @@ import { planDoneMessage, sanitizePlanData, type PlanData } from '../shared/plan
 import { recordPomodoro, sanitizeHistory, seedHistory, type History } from '../shared/stats';
 import {
   advance,
+  justStart,
   DEFAULT_SETTINGS,
   formatClock,
   initialState,
   pause,
+  phaseLengthMs,
   PHASE_LABELS,
   remainingMs,
   reset,
@@ -141,6 +143,8 @@ export class WebTimerHost implements TimerHost {
       switch (command.command) {
         case 'start':
           return this.commit(start(state, now));
+        case 'justStart':
+          return this.commit(justStart(state, settings, now));
         case 'pause':
           return this.commit(pause(state, now));
         case 'reset':
@@ -272,7 +276,14 @@ export class WebTimerHost implements TimerHost {
       const next = advance(state, settings, Date.now(), true, state.endTime);
       if (state.phase === 'work') {
         // Read before the state is saved, so a first history still sees today's old tally.
-        write(KEYS.history, recordPomodoro(loadHistory(), state.endTime, settings.workMinutes));
+        write(
+          KEYS.history,
+          recordPomodoro(
+            loadHistory(),
+            state.endTime,
+            Math.round(phaseLengthMs(state, settings) / 60_000),
+          ),
+        );
       }
       this.justFinished = next.status === 'idle';
       this.commit(next);

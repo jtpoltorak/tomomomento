@@ -1,9 +1,12 @@
 import {
   advance,
+  canJustStart,
   DEFAULT_SETTINGS,
   formatClock,
   initialState,
+  justStart,
   pause,
+  phaseLengthMs,
   remainingMs,
   reset,
   rollDay,
@@ -156,5 +159,50 @@ describe('timer state machine', () => {
   it('sanitizeSettings keeps quotes off unless turned on', () => {
     expect(sanitizeSettings({}).showQuotes).toBe(false);
     expect(sanitizeSettings({ showQuotes: true }).showQuotes).toBe(true);
+  });
+
+  describe('just start', () => {
+    const on = { ...s, justStart: true };
+
+    it('is offered only for a focus session that has not begun', () => {
+      const fresh = initialState(on, T0);
+      expect(canJustStart(fresh, on)).toBe(true);
+      expect(canJustStart(fresh, s)).toBe(false);
+      expect(canJustStart(start(fresh, T0), on)).toBe(false);
+      expect(canJustStart(pause(start(fresh, T0), T0 + MIN), on)).toBe(false);
+      expect(canJustStart(setPhase(fresh, 'shortBreak', on), on)).toBe(false);
+      // Nothing to shorten when focus is already 10 minutes or less.
+      const tenMinutes = { ...on, workMinutes: 10 };
+      expect(canJustStart(initialState(tenMinutes, T0), tenMinutes)).toBe(false);
+    });
+
+    it('runs a 10-minute focus session that counts like any other', () => {
+      const st = justStart(initialState(on, T0), on, T0);
+      expect(st).toMatchObject({ status: 'running', endTime: T0 + 10 * MIN });
+      expect(phaseLengthMs(st, on)).toBe(10 * MIN);
+      expect(remainingMs(st, T0 + 4 * MIN)).toBe(6 * MIN);
+
+      const next = advance(st, on, T0 + 10 * MIN, true);
+      expect(next).toMatchObject({ phase: 'shortBreak', completedToday: 1, completedInCycle: 1 });
+      expect(next.phaseMs).toBeUndefined();
+      expect(phaseLengthMs(next, on)).toBe(5 * MIN);
+    });
+
+    it('goes back to the usual length on reset or a phase change', () => {
+      const st = pause(justStart(initialState(on, T0), on, T0), T0 + MIN);
+      expect(reset(st, on)).toMatchObject({ remainingMs: 25 * MIN });
+      expect(reset(st, on).phaseMs).toBeUndefined();
+      expect(setPhase(st, 'shortBreak', on).phaseMs).toBeUndefined();
+    });
+
+    it('does nothing when not offered', () => {
+      const st = initialState(s, T0);
+      expect(justStart(st, s, T0)).toBe(st);
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).justStart).toBe(false);
+      expect(sanitizeSettings({ justStart: true }).justStart).toBe(true);
+    });
   });
 });

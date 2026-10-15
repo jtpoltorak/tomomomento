@@ -69,6 +69,11 @@
   color: var(--muted);
   font-size: 1.3125rem;
 }
+/* "Ready to focus" with the "just start" link beside it. */
+.just-start.link {
+  font-size: 1.0625rem;
+  padding-inline: 0.25rem;
+}
 /* A break idea can be swapped for another with the small button beside it. */
 .status-row {
   display: flex;

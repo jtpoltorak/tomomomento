@@ -15,7 +15,7 @@ import type { History } from '../../shared/stats';
 import {
   DEFAULT_SETTINGS,
   initialState,
-  phaseDurationMs,
+  phaseLengthMs,
   remainingMs,
   rollDay,
   type Settings,
@@ -49,7 +49,7 @@ export class PomodoroStore {
   private readonly now = signal(Date.now());
 
   readonly remainingMs = computed(() => remainingMs(this.state(), this.now()));
-  readonly totalMs = computed(() => phaseDurationMs(this.state().phase, this.settings()));
+  readonly totalMs = computed(() => phaseLengthMs(this.state(), this.settings()));
   /** 0 at the start of a phase, 1 when it ends. */
   readonly progress = computed(() => {
     const total = this.totalMs();

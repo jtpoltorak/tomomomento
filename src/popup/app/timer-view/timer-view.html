@@ -16,7 +16,13 @@
 </div>
 
 <section class="dial" [class.heads-up]="headsUp()">
-  <div class="clock" role="timer" [attr.aria-label]="clock() + ' left'">{{ clock() }}</div>
+  @if (calmClock(); as minutes) {
+    <div class="clock calm" role="timer" [attr.aria-label]="minutesText(minutes) + ' left'">
+      {{ minutes }}<span class="unit" aria-hidden="true">min</span>
+    </div>
+  } @else {
+    <div class="clock" role="timer" [attr.aria-label]="clock() + ' left'">{{ clock() }}</div>
+  }
   <div
     class="bar"
     role="progressbar"

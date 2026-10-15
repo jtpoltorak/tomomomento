@@ -48,6 +48,14 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
+/* The calm clock: whole minutes, with a small unit beside them. */
+.clock.calm .unit {
+  margin-left: 0.25em;
+  font-size: 0.32em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--muted);
+}
 /* The bar empties from right to left as the timer runs. */
 .bar {
   width: 100%;

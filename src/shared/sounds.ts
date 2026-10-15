@@ -4,6 +4,9 @@
 
 import type { SoundId } from './timer';
 
+/** One of the alert sounds people pick from, or the quiet heads-up before one. */
+export type AlertSound = SoundId | 'headsUp';
+
 interface Note {
   freq: number;
   /** Seconds after the sound starts. */
@@ -12,7 +15,9 @@ interface Note {
   type: OscillatorType;
 }
 
-const SOUNDS: Record<SoundId, Note[]> = {
+const SOUNDS: Record<AlertSound, Note[]> = {
+  // A single soft, low tone: a minute to go, nothing to do yet.
+  headsUp: [{ freq: 587.33, at: 0, duration: 1.2, type: 'sine' }],
   // A soft bell: a fundamental plus a quieter overtone, with a long decay.
   bell: [
     { freq: 880, at: 0, duration: 1.6, type: 'sine' },
@@ -35,11 +40,12 @@ const SOUNDS: Record<SoundId, Note[]> = {
 };
 
 /** Plays a sound and resolves when it has finished. */
-export function playSound(ctx: AudioContext, sound: SoundId, volume: number): Promise<void> {
+export function playSound(ctx: AudioContext, sound: AlertSound, volume: number): Promise<void> {
   const notes = SOUNDS[sound];
   const start = ctx.currentTime + 0.05;
-  // Square waves are much louder than sines at the same gain.
-  const level = Math.max(0, Math.min(1, volume)) * (sound === 'digital' ? 0.12 : 0.35);
+  // Square waves are much louder than sines at the same gain, and the heads-up stays quiet.
+  const loudness = sound === 'digital' ? 0.12 : sound === 'headsUp' ? 0.2 : 0.35;
+  const level = Math.max(0, Math.min(1, volume)) * loudness;
 
   for (const note of notes) {
     const osc = ctx.createOscillator();

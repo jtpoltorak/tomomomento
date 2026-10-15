@@ -65,6 +65,18 @@
     transform 0.25s linear,
     background 0.3s;
 }
+/*
+ * The heads-up: the bar glows softly through the last minute. Little of the
+ * fill is left by then, so the glow goes around the whole bar.
+ */
+.heads-up .bar {
+  animation: breathe 2.4s ease-in-out infinite;
+}
+@keyframes breathe {
+  50% {
+    box-shadow: 0 0 0 0.375rem color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+}
 .status {
   color: var(--muted);
   font-size: 1.3125rem;

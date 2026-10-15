@@ -1,4 +1,5 @@
-import type { Phase, SoundId, TimerState } from './timer';
+import type { AlertSound } from './sounds';
+import type { Phase, TimerState } from './timer';
 
 export type Command =
   | { command: 'start' }
@@ -18,7 +19,7 @@ export type CommandMessage = { type: 'command' } & Command;
 export interface PlaySoundMessage {
   type: 'play-sound';
   target: 'offscreen';
-  sound: SoundId;
+  sound: AlertSound;
   volume: number;
 }
 

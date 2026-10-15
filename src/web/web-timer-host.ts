@@ -6,7 +6,7 @@
 
 import type { BackupData } from '../shared/backup';
 import type { Command, CommandResponse } from '../shared/messages';
-import { playSound } from '../shared/sounds';
+import { playSound, type AlertSound } from '../shared/sounds';
 import { sanitizeParkingLot, type ParkingLot } from '../shared/parking';
 import { planDoneMessage, sanitizePlanData, type PlanData } from '../shared/plan';
 import {
@@ -18,6 +18,7 @@ import {
 } from '../shared/stats';
 import {
   advance,
+  headsUpAt,
   justStart,
   keepGoing,
   DEFAULT_SETTINGS,
@@ -48,6 +49,8 @@ const KEYS = {
   history: 'tomomomento.history',
   plan: 'tomomomento.plan',
   parkingLot: 'tomomomento.parkingLot',
+  /** The end time of the phase whose heads-up already played, so only one tab plays it. */
+  headsUpFor: 'tomomomento.headsUpFor',
 };
 const LOCK_NAME = 'tomatick-timer';
 const NOTIFICATION_TAG = 'phase-complete';
@@ -101,6 +104,7 @@ export class WebTimerHost implements TimerHost {
   private readonly listeners = new Set<() => void>();
   private phaseTimer: ReturnType<typeof setTimeout> | undefined;
   private titleTimer: ReturnType<typeof setInterval> | undefined;
+  private headsUpTimer: ReturnType<typeof setTimeout> | undefined;
   private audio: AudioContext | undefined;
   private notification: Notification | undefined;
   /** Set when a phase ends on its own, for the "time's up" tab title. */
@@ -177,7 +181,10 @@ export class WebTimerHost implements TimerHost {
       // An idle timer should show the new length right away.
       const state = loadState();
       if (state.status === 'idle') this.commit(reset(state, loadSettings()));
-      else this.emit();
+      else {
+        this.schedule(state); // the heads-up may have been turned on or off
+        this.emit();
+      }
     });
   }
 
@@ -254,10 +261,15 @@ export class WebTimerHost implements TimerHost {
   private schedule(state: TimerState): void {
     clearTimeout(this.phaseTimer);
     clearInterval(this.titleTimer);
+    clearTimeout(this.headsUpTimer);
     if (state.status === 'running' && state.endTime !== null) {
       const delay = Math.max(0, state.endTime - Date.now());
       this.phaseTimer = setTimeout(() => void this.completeIfDue(true), delay + 50);
       this.titleTimer = setInterval(() => this.updateTitle(state), 1000);
+      const headsUp = headsUpAt(state, loadSettings());
+      if (headsUp !== null && headsUp > Date.now()) {
+        this.headsUpTimer = setTimeout(() => void this.headsUp(), headsUp - Date.now());
+      }
     }
     this.updateTitle(state);
   }
@@ -273,6 +285,23 @@ export class WebTimerHost implements TimerHost {
     } else {
       document.title = APP_TITLE;
     }
+  }
+
+  /** The quiet tone a minute before the phase ends, for people who turned sound on. */
+  private headsUp(): Promise<void> {
+    return withLock(() => {
+      const state = loadState();
+      const settings = loadSettings();
+      const at = headsUpAt(state, settings);
+      // A throttled background tab can fire late; skip it once the minute is mostly gone.
+      const now = Date.now();
+      if (at === null || now > at + 20_000 || !settings.soundEnabled) return;
+      if (read<number>(KEYS.headsUpFor) === state.endTime) return;
+      write(KEYS.headsUpFor, state.endTime);
+      this.playSound('headsUp', settings.volume).catch((err: unknown) =>
+        console.error('Heads-up failed', err),
+      );
+    });
   }
 
   /** Finishes the current phase if its end time has passed. */
@@ -325,9 +354,13 @@ export class WebTimerHost implements TimerHost {
   }
 
   private async playAlertSound(settings: Settings): Promise<void> {
+    await this.playSound(settings.sound, settings.volume);
+  }
+
+  private async playSound(sound: AlertSound, volume: number): Promise<void> {
     this.audio ??= new AudioContext();
     await this.audio.resume();
-    await playSound(this.audio, settings.sound, settings.volume);
+    await playSound(this.audio, sound, volume);
   }
 
   private async showNotification(

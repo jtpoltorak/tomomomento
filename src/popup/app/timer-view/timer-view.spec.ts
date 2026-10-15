@@ -413,4 +413,29 @@ describe('TimerView', () => {
       expect(el.querySelector('.status')?.textContent).toBe('Extra time. Your break is waiting');
     });
   });
+
+  describe('heads-up', () => {
+    const lastMinute = (phase: 'work' | 'shortBreak') => ({
+      phase,
+      status: 'running' as const,
+      endTime: Date.now() + 45_000,
+      remainingMs: 45_000,
+    });
+
+    it('says a minute is left and makes the bar glow', async () => {
+      const { el, fixture, store } = await setup(lastMinute('work'));
+      expect(el.querySelector('.heads-up')).toBeNull();
+      store.settings.update((s) => ({ ...s, headsUp: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.dial')?.classList).toContain('heads-up');
+      expect(el.querySelector('.status')?.textContent).toBe('1 minute left: find a stopping point');
+    });
+
+    it('has its own words for the end of a break', async () => {
+      const { el, fixture, store } = await setup(lastMinute('shortBreak'));
+      store.settings.update((s) => ({ ...s, headsUp: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.status')?.textContent).toBe('1 minute left on your break');
+    });
+  });
 });

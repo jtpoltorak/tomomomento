@@ -87,6 +87,7 @@ export class SettingsView {
     breakIdeas: [false],
     justStart: [false],
     keepGoing: [false],
+    headsUp: [false],
   });
 
   constructor() {

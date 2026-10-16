@@ -496,6 +496,43 @@ describe('TimerView', () => {
     });
   });
 
+  describe('minimal timer', () => {
+    it('shows just the clock, the bar and one button until asked for more', async () => {
+      const { el, fixture, store, button } = await setup({ completedToday: 2 });
+      store.settings.update((s) => ({ ...s, minimalMode: true, showQuotes: true }));
+      await fixture.whenStable();
+      expect(el.classList).toContain('minimal');
+      expect(el.querySelector('.clock')).toBeTruthy();
+      expect(el.querySelector('.bar')).toBeTruthy();
+      expect(el.querySelector('.status')?.textContent).toBe('Ready to focus');
+      expect(
+        Array.from(el.querySelectorAll('.controls button'), (b) => b.textContent?.trim()),
+      ).toEqual(['Start']);
+      for (const hidden of ['.phases', '.footer', '.quote']) {
+        expect(el.querySelector(hidden)).toBeNull();
+      }
+
+      button('Show more').click();
+      await fixture.whenStable();
+      expect(el.classList).not.toContain('minimal');
+      expect(el.querySelector('.phases')).toBeTruthy();
+      expect(el.querySelector('.footer')?.textContent).toContain('2 done today');
+      expect(el.querySelector('.more-toggle')).toBeNull();
+
+      // Starting the timer tidies it back up.
+      store.state.update((s) => ({ ...s, status: 'running', endTime: Date.now() + 25 * 60_000 }));
+      await fixture.whenStable();
+      expect(el.classList).toContain('minimal');
+      expect(el.querySelector('.phases')).toBeNull();
+    });
+
+    it('keeps the toggle out of the way when it is off', async () => {
+      const { el } = await setup();
+      expect(el.querySelector('.more-toggle')).toBeNull();
+      expect(el.querySelector('.phases')).toBeTruthy();
+    });
+  });
+
   describe('paused reminder', () => {
     it('asks whether to pick it back up after a long pause', async () => {
       const { el, fixture, store } = await setup({

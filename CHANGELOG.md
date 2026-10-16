@@ -14,6 +14,9 @@ these first.
 - **Focus sound (optional):** soft ticking or brown noise while focus runs,
   with its own volume. It stops for breaks and pauses, and the ticks fall in
   step with the clock. Pick one under Focus sound in Settings.
+- **Minimal timer (optional):** just the clock, the progress bar and one
+  button, with everything else a tap away under Show more. It tidies itself
+  back up when the timer starts. Turn it on under Appearance in Settings.
 
 ## 1.4.0 (2026-10-15)
 

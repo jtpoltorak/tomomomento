@@ -32,6 +32,7 @@ import { PomodoroStore } from '../pomodoro-store';
 
 @Component({
   selector: 'app-timer-view',
+  host: { '[class.minimal]': 'minimal()' },
   templateUrl: './timer-view.html',
   styleUrl: './timer-view.css',
 })
@@ -102,6 +103,14 @@ export class TimerView {
       !this.helpersCard()
     );
   });
+
+  /**
+   * With the minimal timer on, everything but the clock, bar and main button waits for
+   * "Show more". It tidies itself back up when the timer starts and when the popup reopens.
+   */
+  protected readonly showAll = signal(false);
+  protected readonly minimal = computed(() => this.store.settings().minimalMode && !this.showAll());
+  protected readonly full = computed(() => !this.minimal());
 
   protected readonly clock = computed(() => formatClock(this.store.remainingMs()));
   /**
@@ -263,6 +272,11 @@ export class TimerView {
 
   constructor() {
     afterNextRender(() => this.rendered.set(true));
+    // Only a change of status counts, so a running timer's other updates leave it open.
+    const status = computed(() => this.store.state().status);
+    effect(() => {
+      if (status() === 'running') untracked(() => this.showAll.set(false));
+    });
     // A new break starts back at its own idea.
     effect(() => {
       this.phase();

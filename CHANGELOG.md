@@ -11,6 +11,9 @@ these first.
 - **Animated digits (optional):** each number on the clock rolls gently into
   place as it changes. It stays still if your device is set to reduce motion.
   Turn it on under Appearance in Settings.
+- **Focus sound (optional):** soft ticking or brown noise while focus runs,
+  with its own volume. It stops for breaks and pauses, and the ticks fall in
+  step with the clock. Pick one under Focus sound in Settings.
 
 ## 1.4.0 (2026-10-15)
 

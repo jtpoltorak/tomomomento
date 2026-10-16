@@ -65,6 +65,48 @@
   </section>
 
   <section>
+    <h2>Focus sound</h2>
+    <div class="row">
+      <label for="focus-sound">Sound</label>
+      <div class="inline">
+        <select id="focus-sound" formControlName="focusSound">
+          @for (s of focusSounds; track s[0]) {
+            <option [value]="s[0]">{{ s[1] }}</option>
+          }
+        </select>
+        @if (form.controls.focusSound.value !== 'off') {
+          <button
+            type="button"
+            class="icon-btn small"
+            (click)="previewFocusSound()"
+            aria-label="Play sample"
+            title="Play sample"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+          </button>
+        }
+      </div>
+    </div>
+    @if (form.controls.focusSound.value !== 'off') {
+      <div class="row">
+        <label for="focus-volume">Volume</label>
+        <input
+          type="range"
+          id="focus-volume"
+          formControlName="focusVolumePercent"
+          min="0"
+          max="100"
+          step="5"
+        />
+      </div>
+    }
+    <p class="note">
+      Plays quietly while focus runs and stops for breaks. Some people find a steady sound makes it
+      easier to settle in.
+    </p>
+  </section>
+
+  <section>
     <h2>When time's up</h2>
     <label class="switch-row">
       <span>Play a sound</span>

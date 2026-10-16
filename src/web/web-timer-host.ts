@@ -5,6 +5,7 @@
 // chrome.alarms.
 
 import type { BackupData } from '../shared/backup';
+import { FocusSoundPlayer } from '../shared/focus-sounds';
 import type { Command, CommandResponse } from '../shared/messages';
 import { playSound, type AlertSound } from '../shared/sounds';
 import { sanitizeParkingLot, type ParkingLot } from '../shared/parking';
@@ -19,6 +20,7 @@ import {
 import {
   advance,
   calmMinutes,
+  focusSoundNow,
   headsUpAt,
   justStart,
   keepGoing,
@@ -55,6 +57,11 @@ const KEYS = {
   headsUpFor: 'tomomomento.headsUpFor',
   /** When the paused timer's reminder already showed, so only one tab shows it. */
   pauseNudgeFor: 'tomomomento.pauseNudgeFor',
+  /**
+   * The tab that plays the focus sound: the last one you used, since browsers
+   * only let a tab play sound after a click in it.
+   */
+  focusSoundTab: 'tomomomento.focusSoundTab',
 };
 const LOCK_NAME = 'tomatick-timer';
 const NOTIFICATION_TAG = 'phase-complete';
@@ -112,6 +119,8 @@ export class WebTimerHost implements TimerHost {
   private headsUpTimer: ReturnType<typeof setTimeout> | undefined;
   private nudgeTimer: ReturnType<typeof setTimeout> | undefined;
   private audio: AudioContext | undefined;
+  private focusPlayer: FocusSoundPlayer | undefined;
+  private readonly tabId = crypto.randomUUID();
   private notification: Notification | undefined;
   private pauseNotification: Notification | undefined;
   /** Set when a phase ends on its own, for the "time's up" tab title. */
@@ -127,6 +136,11 @@ export class WebTimerHost implements TimerHost {
     });
     // Timers in hidden tabs can be delayed, so check again when the tab comes back.
     document.addEventListener('visibilitychange', () => void this.completeIfDue(true));
+    // A closing tab hands the focus sound back, so a stale id doesn't linger.
+    window.addEventListener('pagehide', () => {
+      if (read<string>(KEYS.focusSoundTab) === this.tabId)
+        localStorage.removeItem(KEYS.focusSoundTab);
+    });
     this.schedule(loadState());
     // A phase may have ended while the page was closed. Catch up quietly.
     void this.completeIfDue(false);
@@ -152,7 +166,7 @@ export class WebTimerHost implements TimerHost {
 
   send(command: Command): Promise<CommandResponse> {
     // Browsers only allow sound after a click, and this runs during one.
-    if (loadSettings().soundEnabled) this.unlockAudio();
+    this.unlockSounds(loadSettings());
     // Whatever you just did answers "still paused?".
     void this.closeNotification(PAUSE_NOTIFICATION_TAG);
     return withLock(() => {
@@ -184,7 +198,7 @@ export class WebTimerHost implements TimerHost {
   }
 
   async saveSettings(settings: Settings): Promise<void> {
-    if (settings.soundEnabled) this.unlockAudio();
+    this.unlockSounds(settings);
     await withLock(() => {
       write(KEYS.settings, sanitizeSettings(settings));
       // An idle timer should show the new length right away.
@@ -286,6 +300,21 @@ export class WebTimerHost implements TimerHost {
       }
     }
     this.updateTitle(state);
+    this.syncFocusSound(state);
+  }
+
+  /** Plays the focus sound in this tab while focus runs, if this is the tab that plays it. */
+  private syncFocusSound(state: TimerState): void {
+    const settings = loadSettings();
+    const sound = focusSoundNow(state, settings);
+    if (!sound || read<string>(KEYS.focusSoundTab) !== this.tabId) {
+      this.focusPlayer?.stop();
+      return;
+    }
+    this.audio ??= new AudioContext();
+    this.focusPlayer ??= new FocusSoundPlayer(this.audio);
+    void this.audio.resume();
+    this.focusPlayer.play(sound, settings.focusVolume, state.endTime);
   }
 
   private updateTitle(state: TimerState): void {
@@ -407,6 +436,12 @@ export class WebTimerHost implements TimerHost {
     }
     const results = await Promise.allSettled(tasks);
     for (const r of results) if (r.status === 'rejected') console.error('Alert failed', r.reason);
+  }
+
+  /** Called during a click: wakes up audio, and makes this the tab that plays the focus sound. */
+  private unlockSounds(settings: Settings): void {
+    if (settings.soundEnabled || settings.focusSound !== 'off') this.unlockAudio();
+    if (settings.focusSound !== 'off') write(KEYS.focusSoundTab, this.tabId);
   }
 
   private unlockAudio(): void {

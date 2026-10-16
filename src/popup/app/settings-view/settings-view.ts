@@ -13,6 +13,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { debounceTime } from 'rxjs';
 import { backupFileName, createBackup, parseBackup, type BackupData } from '../../../shared/backup';
 import { MAX_BLOCKED_SITES, normalizeSite, SUGGESTED_SITES } from '../../../shared/blocker';
+import { FocusSoundPlayer } from '../../../shared/focus-sounds';
 import { playSound } from '../../../shared/sounds';
 import {
   DEFAULT_SETTINGS,
@@ -24,6 +25,8 @@ import {
   THEME_LABELS,
   type Settings,
   type SoundId,
+  FOCUS_SOUND_LABELS,
+  type FocusSoundId,
   type ThemeId,
 } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
@@ -43,6 +46,7 @@ export class SettingsView {
   private audio?: AudioContext;
 
   protected readonly sounds = Object.entries(SOUND_LABELS) as [SoundId, string][];
+  protected readonly focusSounds = Object.entries(FOCUS_SOUND_LABELS) as [FocusSoundId, string][];
   protected readonly themes = Object.entries(THEME_LABELS) as [ThemeId, string][];
   protected readonly saved = signal(false);
   protected readonly justStartMinutes = JUST_START_MINUTES;
@@ -93,6 +97,8 @@ export class SettingsView {
     calmClock: [false],
     animateDigits: [false],
     pauseNudge: [false],
+    focusSound: ['off' as FocusSoundId],
+    focusVolumePercent: [40],
   });
 
   constructor() {
@@ -100,6 +106,7 @@ export class SettingsView {
 
     inject(DestroyRef).onDestroy(() => {
       clearTimeout(this.savedTimer);
+      clearTimeout(this.focusPreviewTimer);
       void this.audio?.close();
     });
 
@@ -185,6 +192,21 @@ export class SettingsView {
     await playSound(this.audio, sound, volumePercent / 100);
   }
 
+  private focusPreview: FocusSoundPlayer | undefined;
+  private focusPreviewTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /** A few seconds of the focus sound, at the chosen volume. */
+  protected async previewFocusSound(): Promise<void> {
+    const { focusSound, focusVolumePercent } = this.form.getRawValue();
+    if (focusSound === 'off') return;
+    this.audio ??= new AudioContext();
+    await this.audio.resume();
+    this.focusPreview ??= new FocusSoundPlayer(this.audio);
+    this.focusPreview.play(focusSound, focusVolumePercent / 100);
+    clearTimeout(this.focusPreviewTimer);
+    this.focusPreviewTimer = setTimeout(() => this.focusPreview?.stop(), 4000);
+  }
+
   protected backUp(): void {
     const now = Date.now();
     const json = JSON.stringify(createBackup(this.store.backupData(), now), null, 2);
@@ -264,15 +286,20 @@ export class SettingsView {
   }
 
   private toForm(s: Settings) {
-    const { volume, blockSites, blockedSites, ...rest } = s;
-    return { ...rest, volumePercent: Math.round(volume * 100) };
+    const { volume, focusVolume, blockSites, blockedSites, ...rest } = s;
+    return {
+      ...rest,
+      volumePercent: Math.round(volume * 100),
+      focusVolumePercent: Math.round(focusVolume * 100),
+    };
   }
 
   private fromForm(): Settings {
-    const { volumePercent, ...rest } = this.form.getRawValue();
+    const { volumePercent, focusVolumePercent, ...rest } = this.form.getRawValue();
     return sanitizeSettings({
       ...rest,
       volume: volumePercent / 100,
+      focusVolume: focusVolumePercent / 100,
       blockSites: this.blockSites(),
       blockedSites: this.blockedSites(),
     });

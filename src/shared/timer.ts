@@ -7,6 +7,8 @@ export type Phase = 'work' | 'shortBreak' | 'longBreak';
 export type Status = 'idle' | 'running' | 'paused';
 export type SoundId = 'bell' | 'chime' | 'digital';
 export type ThemeId = 'system' | 'light' | 'dark';
+/** A quiet sound that plays during focus sessions, or 'off'. */
+export type FocusSoundId = 'off' | 'tick' | 'brown';
 
 export interface Settings {
   workMinutes: number;
@@ -49,6 +51,10 @@ export interface Settings {
   animateDigits: boolean;
   /** A quiet reminder when the timer has sat paused for a while. */
   pauseNudge: boolean;
+  /** A background sound while focus runs: soft ticking or brown noise. */
+  focusSound: FocusSoundId;
+  /** 0 to 1, separate from the alert volume. */
+  focusVolume: number;
 }
 
 export interface TimerState {
@@ -105,6 +111,8 @@ export const DEFAULT_SETTINGS: Settings = {
   calmClock: false,
   animateDigits: false,
   pauseNudge: false,
+  focusSound: 'off',
+  focusVolume: 0.4,
 };
 
 /** How long a "Just start" focus session runs. */
@@ -129,6 +137,12 @@ export const SOUND_LABELS: Record<SoundId, string> = {
   bell: 'Bell',
   chime: 'Chime',
   digital: 'Digital beep',
+};
+
+export const FOCUS_SOUND_LABELS: Record<FocusSoundId, string> = {
+  off: 'Off',
+  tick: 'Soft ticking',
+  brown: 'Brown noise',
 };
 
 export const PHASE_LABELS: Record<Phase, string> = {
@@ -257,6 +271,17 @@ export function headsUpAt(state: TimerState, settings: Settings): number | null 
   if (!settings.headsUp || state.status !== 'running' || state.endTime === null) return null;
   if (phaseLengthMs(state, settings) <= 2 * HEADS_UP_MS) return null;
   return state.endTime - HEADS_UP_MS;
+}
+
+/** The focus sound that should be playing right now, or null for silence. */
+export function focusSoundNow(
+  state: TimerState,
+  settings: Settings,
+): Exclude<FocusSoundId, 'off'> | null {
+  if (settings.focusSound === 'off' || state.phase !== 'work' || state.status !== 'running') {
+    return null;
+  }
+  return settings.focusSound;
 }
 
 /** True during the last minute of a running phase that gets a heads-up. */
@@ -404,5 +429,10 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     calmClock: input.calmClock ?? d.calmClock,
     animateDigits: input.animateDigits ?? d.animateDigits,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
+    focusSound:
+      input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,
+    focusVolume: Number.isFinite(Number(input.focusVolume))
+      ? Math.min(1, Math.max(0, Number(input.focusVolume)))
+      : d.focusVolume,
   };
 }

@@ -8,6 +8,7 @@ import type {
   Command,
   CommandMessage,
   CommandResponse,
+  FocusSoundMessage,
   PlaySoundMessage,
 } from '../shared/messages';
 import { BLOCKER_PERMISSIONS, hostMatches, shouldBlock, SUGGESTED_SITES } from '../shared/blocker';
@@ -25,6 +26,7 @@ import {
 } from '../shared/storage';
 import {
   advance,
+  focusSoundNow,
   headsUpAt,
   canKeepGoing,
   justStart,
@@ -71,6 +73,7 @@ async function commit(state: TimerState): Promise<TimerState> {
   await syncAlarms(state);
   await updateBadge(state);
   await syncBlocking(state);
+  await syncFocusSound(state);
   return state;
 }
 
@@ -207,17 +210,25 @@ async function updateBadge(state: TimerState, justFinished = false): Promise<voi
 
 const OFFSCREEN_URL = 'offscreen.html';
 
-async function playAlertSound(sound: AlertSound, volume: number): Promise<void> {
+/** The hidden page that plays sounds, since service workers have no audio output. */
+async function hasOffscreen(): Promise<boolean> {
   const existing = await chrome.runtime.getContexts({
     contextTypes: [chrome.runtime.ContextType.OFFSCREEN_DOCUMENT],
   });
-  if (existing.length === 0) {
-    await chrome.offscreen.createDocument({
-      url: OFFSCREEN_URL,
-      reasons: [chrome.offscreen.Reason.AUDIO_PLAYBACK],
-      justification: 'Play the alert sounds the user turned on for when a timer ends.',
-    });
-  }
+  return existing.length > 0;
+}
+
+async function ensureOffscreen(): Promise<void> {
+  if (await hasOffscreen()) return;
+  await chrome.offscreen.createDocument({
+    url: OFFSCREEN_URL,
+    reasons: [chrome.offscreen.Reason.AUDIO_PLAYBACK],
+    justification: 'Play the alert and focus sounds the user turned on.',
+  });
+}
+
+async function playAlertSound(sound: AlertSound, volume: number): Promise<void> {
+  await ensureOffscreen();
   const message: PlaySoundMessage = {
     type: 'play-sound',
     target: 'offscreen',
@@ -225,6 +236,27 @@ async function playAlertSound(sound: AlertSound, volume: number): Promise<void> 
     volume,
   };
   await chrome.runtime.sendMessage(message);
+}
+
+/** Plays the focus sound while focus runs, and stops it otherwise. */
+async function syncFocusSound(state: TimerState, settings?: Settings): Promise<void> {
+  settings ??= await loadSettings();
+  const sound = focusSoundNow(state, settings);
+  // Nothing is playing without the page, so there's nothing to stop.
+  if (!sound && !(await hasOffscreen())) return;
+  try {
+    if (sound) await ensureOffscreen();
+    const message: FocusSoundMessage = {
+      type: 'focus-sound',
+      target: 'offscreen',
+      sound,
+      volume: settings.focusVolume,
+      endTime: state.endTime,
+    };
+    await chrome.runtime.sendMessage(message);
+  } catch (err) {
+    console.error('Focus sound failed', err);
+  }
 }
 
 async function alertPhaseComplete(
@@ -393,6 +425,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
     else {
       await syncBlocking(state, settings);
       await syncAlarms(state, settings);
+      await syncFocusSound(state, settings);
     }
     // Turning the blocker off hands back its site access.
     if (!settings.blockSites && (await chrome.permissions.contains(BLOCKER_PERMISSIONS))) {
@@ -429,6 +462,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // The browser may have been closed when a phase ended; catch up on launch.
+// A focus session still running picks its sound back up.
 chrome.runtime.onStartup.addListener(() => {
-  void completeIfDue();
+  void completeIfDue().then(() => serialized(async () => syncFocusSound(await loadState())));
 });

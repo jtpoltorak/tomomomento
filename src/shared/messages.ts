@@ -1,3 +1,4 @@
+import type { FocusSound } from './focus-sounds';
 import type { AlertSound } from './sounds';
 import type { Phase, TimerState } from './timer';
 
@@ -21,6 +22,16 @@ export interface PlaySoundMessage {
   target: 'offscreen';
   sound: AlertSound;
   volume: number;
+}
+
+/** Background -> offscreen document: start, adjust, or stop (null) the focus sound. */
+export interface FocusSoundMessage {
+  type: 'focus-sound';
+  target: 'offscreen';
+  sound: FocusSound | null;
+  volume: number;
+  /** When focus ends, so ticking can line up with the clock's seconds. */
+  endTime: number | null;
 }
 
 export type CommandResponse = { ok: true; state: TimerState } | { ok: false; error: string };

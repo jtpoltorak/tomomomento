@@ -21,6 +21,30 @@
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Atkinson Hyperlegible Next (SIL Open Font License, see fonts/OFL-atkinson-hyperlegible-next.txt),
+   designed for low vision. Only downloaded when the easy-read font is on. */
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('/fonts/atkinson-next-latin-ext.woff2') format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('/fonts/atkinson-next-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   color-scheme: light;
   --bg: #ffffff;
@@ -33,7 +57,8 @@
   --border: #d0d7de;
   /* Edges of controls (inputs, switches, empty cycle dots): at least 3:1 on --bg. */
   --control: #868e96;
-  --accent: #c2410c;
+  /* The accent follows the current phase (see data-phase below). */
+  --accent: var(--focus-accent);
   /* The Focus orange, for screens that keep one color whatever the phase (Stats). */
   --focus-accent: #c2410c;
   /* Break colors that don't follow the phase, for the plan's timeline. */
@@ -54,7 +79,6 @@
     --surface: #262b32;
     --border: #3d444d;
     --control: #7d8590;
-    --accent: #ff7a45;
     --focus-accent: #ff7a45;
     --short-accent: #51cf66;
     --long-accent: #4dabf7;
@@ -71,7 +95,6 @@
   --surface: #262b32;
   --border: #3d444d;
   --control: #7d8590;
-  --accent: #ff7a45;
   --focus-accent: #ff7a45;
   --short-accent: #51cf66;
   --long-accent: #4dabf7;
@@ -81,24 +104,105 @@
 
 /* The accent follows the current phase: orange for focus, green and blue for breaks. */
 :root[data-phase='shortBreak'] {
-  --accent: #2b7a3b;
+  --accent: var(--short-accent);
 }
 :root[data-phase='longBreak'] {
-  --accent: #1971c2;
+  --accent: var(--long-accent);
+}
+
+/*
+ * Accessibility settings, as <html> data attributes (see theme.ts). Each theme
+ * gets its own values, and the dark ones repeat for the system and the
+ * Settings choice, like the themes above.
+ *
+ * Color-blind safe (data-palette): orange, blue and purple from the Okabe-Ito
+ * palette, which stay distinct with every common kind of color blindness.
+ */
+:root[data-palette='safe'] {
+  --focus-accent: #b84a00;
+  --short-accent: #0067a5;
+  --long-accent: #9c3c78;
 }
 @media (prefers-color-scheme: dark) {
-  :root[data-phase='shortBreak']:not([data-theme='light']) {
-    --accent: #51cf66;
-  }
-  :root[data-phase='longBreak']:not([data-theme='light']) {
-    --accent: #4dabf7;
+  :root[data-palette='safe']:not([data-theme='light']) {
+    --focus-accent: #ff8a4c;
+    --short-accent: #56b4e9;
+    --long-accent: #e48ac6;
   }
 }
-:root[data-phase='shortBreak'][data-theme='dark'] {
-  --accent: #51cf66;
+:root[data-palette='safe'][data-theme='dark'] {
+  --focus-accent: #ff8a4c;
+  --short-accent: #56b4e9;
+  --long-accent: #e48ac6;
 }
-:root[data-phase='longBreak'][data-theme='dark'] {
-  --accent: #4dabf7;
+
+/* High contrast (data-contrast): text and accents at 7:1 or more, firmer edges. */
+:root[data-contrast='high'] {
+  --fg: #000000;
+  --muted: #24292f;
+  --border: #57606a;
+  --control: #424a53;
+  --track: #d0d7de;
+  --focus-accent: #9a3412;
+  --short-accent: #1b5e20;
+  --long-accent: #0d47a1;
+  --error: #a51d1d;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast='high']:not([data-theme='light']) {
+    --bg: #000000;
+    --fg: #ffffff;
+    --muted: #e6edf3;
+    --surface: #161b22;
+    --border: #8b949e;
+    --control: #b1bac4;
+    --track: #30363d;
+    --focus-accent: #ffa36e;
+    --short-accent: #7ee08a;
+    --long-accent: #79c0ff;
+    --on-accent: #000000;
+    --error: #ffa3a3;
+  }
+}
+:root[data-contrast='high'][data-theme='dark'] {
+  --bg: #000000;
+  --fg: #ffffff;
+  --muted: #e6edf3;
+  --surface: #161b22;
+  --border: #8b949e;
+  --control: #b1bac4;
+  --track: #30363d;
+  --focus-accent: #ffa36e;
+  --short-accent: #7ee08a;
+  --long-accent: #79c0ff;
+  --on-accent: #000000;
+  --error: #ffa3a3;
+}
+/* Both together: the color-blind safe hues, at high contrast. */
+:root[data-contrast='high'][data-palette='safe'] {
+  --focus-accent: #8a3600;
+  --short-accent: #005a8c;
+  --long-accent: #7d2a62;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast='high'][data-palette='safe']:not([data-theme='light']) {
+    --focus-accent: #ffb37e;
+    --short-accent: #8fd0f5;
+    --long-accent: #f2a8dc;
+  }
+}
+:root[data-contrast='high'][data-palette='safe'][data-theme='dark'] {
+  --focus-accent: #ffb37e;
+  --short-accent: #8fd0f5;
+  --long-accent: #f2a8dc;
+}
+
+/* Text size (data-text): everything is in rem, so the whole UI grows with it. */
+:root[data-text='large'] {
+  font-size: 112.5%;
+}
+:root[data-text='xlarge'] {
+  font-size: 125%;
 }
 
 * {
@@ -122,6 +226,16 @@ body {
   color: var(--fg);
   font:
     1.375rem/1.45 Rubik,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+/* The easy-read font (data-font). */
+:root[data-font='easy'] body {
+  font-family:
+    'Atkinson Hyperlegible Next',
     system-ui,
     -apple-system,
     'Segoe UI',
@@ -176,6 +290,7 @@ button {
   white-space: nowrap;
 }
 
+/* Reduced motion, asked for by the device or by Settings (data-motion). */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -183,4 +298,10 @@ button {
     transition: none !important;
     animation: none !important;
   }
+}
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] ::before,
+:root[data-motion='reduce'] ::after {
+  transition: none !important;
+  animation: none !important;
 }

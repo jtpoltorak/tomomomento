@@ -17,6 +17,10 @@ these first.
 - **Minimal timer (optional):** just the clock, the progress bar and one
   button, with everything else a tap away under Show more. It tidies itself
   back up when the timer starts. Turn it on under Appearance in Settings.
+- **Accessibility settings:** a new section in Settings with larger text
+  sizes, high contrast, color-blind friendly colors, an easy-read font (Atkinson
+  Hyperlegible Next, bundled) and a reduce-motion switch. All are off until you
+  turn them on.
 
 ## 1.4.0 (2026-10-15)
 

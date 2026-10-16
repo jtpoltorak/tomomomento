@@ -7,6 +7,7 @@ export type Phase = 'work' | 'shortBreak' | 'longBreak';
 export type Status = 'idle' | 'running' | 'paused';
 export type SoundId = 'bell' | 'chime' | 'digital';
 export type ThemeId = 'system' | 'light' | 'dark';
+export type TextSizeId = 'normal' | 'large' | 'xlarge';
 /** A quiet sound that plays during focus sessions, or 'off'. */
 export type FocusSoundId = 'off' | 'tick' | 'brown';
 
@@ -57,6 +58,16 @@ export interface Settings {
   focusSound: FocusSoundId;
   /** 0 to 1, separate from the alert volume. */
   focusVolume: number;
+  /** Stronger text, edges and colors. */
+  highContrast: boolean;
+  /** Phase colors that stay distinct with every common kind of color blindness. */
+  colorSafe: boolean;
+  /** Scales all text (and the popup with it). */
+  textSize: TextSizeId;
+  /** Atkinson Hyperlegible Next, designed for low vision, instead of Rubik. */
+  easyFont: boolean;
+  /** No animations, even when the device doesn't ask for reduced motion. */
+  reduceMotion: boolean;
 }
 
 export interface TimerState {
@@ -116,6 +127,11 @@ export const DEFAULT_SETTINGS: Settings = {
   pauseNudge: false,
   focusSound: 'off',
   focusVolume: 0.4,
+  highContrast: false,
+  colorSafe: false,
+  textSize: 'normal',
+  easyFont: false,
+  reduceMotion: false,
 };
 
 /** How long a "Just start" focus session runs. */
@@ -146,6 +162,12 @@ export const FOCUS_SOUND_LABELS: Record<FocusSoundId, string> = {
   off: 'Off',
   tick: 'Soft ticking',
   brown: 'Brown noise',
+};
+
+export const TEXT_SIZE_LABELS: Record<TextSizeId, string> = {
+  normal: 'Normal',
+  large: 'Large',
+  xlarge: 'Extra large',
 };
 
 export const PHASE_LABELS: Record<Phase, string> = {
@@ -438,5 +460,10 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     focusVolume: Number.isFinite(Number(input.focusVolume))
       ? Math.min(1, Math.max(0, Number(input.focusVolume)))
       : d.focusVolume,
+    highContrast: input.highContrast ?? d.highContrast,
+    colorSafe: input.colorSafe ?? d.colorSafe,
+    textSize: input.textSize && input.textSize in TEXT_SIZE_LABELS ? input.textSize : d.textSize,
+    easyFont: input.easyFont ?? d.easyFont,
+    reduceMotion: input.reduceMotion ?? d.reduceMotion,
   };
 }

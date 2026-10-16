@@ -16,7 +16,7 @@ import { ParkingView } from './parking-view/parking-view';
 import { PlanView } from './plan-view/plan-view';
 import { SettingsView } from './settings-view/settings-view';
 import { StatsView } from './stats-view/stats-view';
-import { applyTheme } from './theme';
+import { applyA11y, applyTheme } from './theme';
 import { TimerView } from './timer-view/timer-view';
 
 type View = 'timer' | 'settings' | 'help' | 'stats' | 'plan' | 'parking';
@@ -54,6 +54,9 @@ export class App {
     });
     effect(() => {
       if (this.store.loaded()) applyTheme(this.store.settings().theme);
+    });
+    effect(() => {
+      if (this.store.loaded()) applyA11y(this.store.settings());
     });
   }
 

@@ -511,3 +511,15 @@
 .quick-park .pill-btn {
   font-size: 1.125rem;
 }
+
+/* The minimal timer: a bigger clock with room to breathe, and a quiet way to the rest. */
+:host(.minimal) {
+  gap: 2rem;
+  padding-top: 2rem;
+}
+:host(.minimal) .clock {
+  font-size: min(7.5rem, 26vw); /* stays inside narrow phones */
+}
+.more-toggle {
+  align-self: center;
+}

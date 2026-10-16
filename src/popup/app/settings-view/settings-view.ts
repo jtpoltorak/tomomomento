@@ -96,6 +96,7 @@ export class SettingsView {
     headsUp: [false],
     calmClock: [false],
     animateDigits: [false],
+    minimalMode: [false],
     pauseNudge: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],

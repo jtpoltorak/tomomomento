@@ -1,19 +1,21 @@
-<div class="phases" role="group" aria-label="Choose a timer">
-  @for (p of phases; track p.id) {
-    <button
-      class="phase-pill"
-      [class.active]="store.state().phase === p.id"
-      [attr.aria-pressed]="store.state().phase === p.id"
-      [disabled]="store.state().status === 'running' && store.state().phase !== p.id"
-      [title]="
-        store.state().status === 'running' ? 'Pause the timer to switch' : 'Switch to ' + p.label
-      "
-      (click)="choosePhase(p.id)"
-    >
-      {{ p.label }}
-    </button>
-  }
-</div>
+@if (full()) {
+  <div class="phases" role="group" aria-label="Choose a timer">
+    @for (p of phases; track p.id) {
+      <button
+        class="phase-pill"
+        [class.active]="store.state().phase === p.id"
+        [attr.aria-pressed]="store.state().phase === p.id"
+        [disabled]="store.state().status === 'running' && store.state().phase !== p.id"
+        [title]="
+          store.state().status === 'running' ? 'Pause the timer to switch' : 'Switch to ' + p.label
+        "
+        (click)="choosePhase(p.id)"
+      >
+        {{ p.label }}
+      </button>
+    }
+  </div>
+}
 
 <section class="dial" [class.heads-up]="headsUp()">
   <!-- One element per character: a changed digit gets a new key, so animated digits can roll it in. -->
@@ -54,12 +56,12 @@
   </div>
   <div class="status-row">
     <div class="status" aria-live="polite">{{ status() }}</div>
-    @if (justStartOffer()) {
+    @if (full() && justStartOffer()) {
       <button type="button" class="link just-start" (click)="justStart()">
         or just start: {{ justStartMinutes }} min
       </button>
     }
-    @if (idea()) {
+    @if (full() && idea()) {
       <button
         type="button"
         class="icon-btn ghost another"
@@ -76,7 +78,7 @@
     }
   </div>
   <!-- The helpers card is short-lived, so it borrows this line's room while it shows. -->
-  @if (!helpersCard() && planLabelNow(); as now) {
+  @if (full() && !helpersCard() && planLabelNow(); as now) {
     <p class="plan-now">
       {{ now.prefix }}: <strong>{{ now.label }}</strong>
     </p>
@@ -84,187 +86,200 @@
 </section>
 
 <div class="controls">
-  <button
-    class="icon-btn"
-    (click)="reset()"
-    title="Restart this timer"
-    aria-label="Restart this timer"
-  >
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" />
-    </svg>
-  </button>
+  @if (full()) {
+    <button
+      class="icon-btn"
+      (click)="reset()"
+      title="Restart this timer"
+      aria-label="Restart this timer"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" />
+      </svg>
+    </button>
+  }
   <button class="primary-btn" (click)="toggle()">{{ primaryLabel() }}</button>
-  <button
-    class="icon-btn"
-    (click)="skip()"
-    title="Skip to the next timer"
-    aria-label="Skip to the next timer"
-  >
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z" /></svg>
-  </button>
+  @if (full()) {
+    <button
+      class="icon-btn"
+      (click)="skip()"
+      title="Skip to the next timer"
+      aria-label="Skip to the next timer"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z" />
+      </svg>
+    </button>
+  }
 </div>
 
-@if (store.showPlanPrompt()) {
-  <aside class="plan-card" aria-labelledby="plan-card-title">
-    <p id="plan-card-title">Plan today?</p>
-    <div class="plan-card-actions">
-      <button type="button" class="pill-btn solid" data-view="plan" (click)="openPlan.emit()">
-        Plan my day
-      </button>
-      <button type="button" class="pill-btn" (click)="skipPlan()">Not today</button>
-    </div>
-  </aside>
-} @else if (plan(); as p) {
-  <button
-    type="button"
-    class="plan-strip"
-    data-view="plan"
-    (click)="openPlan.emit()"
-    [attr.aria-label]="planLabel()"
-  >
-    @if (planDone() === p.pomodoros) {
-      <span class="plan-row cheer"><strong>Plan done!</strong> Anything more is a bonus.</span>
-    } @else {
-      <span class="plan-row">
-        <strong>{{ planShown() }} of {{ p.pomodoros }} planned</strong>
-        <span>{{ planNote() }}</span>
-      </span>
-    }
-    <span class="segments" aria-hidden="true">
-      @for (s of planSegments(); track $index) {
-        <span class="seg" [class]="s"></span>
-      }
-    </span>
-  </button>
-} @else if (store.settings().planEnabled) {
-  <button type="button" class="plan-add" data-view="plan" (click)="openPlan.emit()">
-    + Plan today
-  </button>
-}
-
-@if (helpersCard()) {
-  <aside class="helpers-card" aria-labelledby="helpers-title">
-    <p id="helpers-title">New: park stray thoughts and get break ideas.</p>
-    <div class="helpers-actions">
-      @if (store.settings().parkingLot) {
-        <span class="helper-on">✓ Parking lot</span>
-      } @else {
-        <button
-          type="button"
-          class="pill-btn solid"
-          aria-label="Turn on the parking lot"
-          (click)="turnOn('parkingLot')"
-        >
-          + Parking lot
+@if (full()) {
+  @if (store.showPlanPrompt()) {
+    <aside class="plan-card" aria-labelledby="plan-card-title">
+      <p id="plan-card-title">Plan today?</p>
+      <div class="plan-card-actions">
+        <button type="button" class="pill-btn solid" data-view="plan" (click)="openPlan.emit()">
+          Plan my day
         </button>
-      }
-      @if (store.settings().breakIdeas) {
-        <span class="helper-on">✓ Break ideas</span>
-      } @else {
-        <button
-          type="button"
-          class="pill-btn solid"
-          aria-label="Turn on break ideas"
-          (click)="turnOn('breakIdeas')"
-        >
-          + Break ideas
-        </button>
-      }
-      <button type="button" class="link no-thanks" (click)="noThanks()">No thanks</button>
-    </div>
-  </aside>
-}
-
-@if (parkedCard()) {
-  <aside class="parked-card" aria-labelledby="parked-card-title">
-    <p id="parked-card-title">{{ parkedText() }} parked</p>
-    <div class="parked-card-actions">
-      <button type="button" class="pill-btn solid" (click)="openParking.emit()">Look now</button>
-      <button type="button" class="pill-btn" (click)="parkLater()">Later</button>
-    </div>
-  </aside>
-}
-
-@if (quote(); as q) {
-  <figure class="quote">
-    <blockquote>
-      <p>{{ q.text }}</p>
-    </blockquote>
-    <figcaption [title]="q.source">{{ q.author }}</figcaption>
-  </figure>
-}
-
-@if (parkOpen()) {
-  <div class="quick-park" role="group" aria-label="Park a thought">
-    <input
-      #quick
-      type="text"
-      id="quick-thought"
-      [maxLength]="maxThought"
-      placeholder="Park a thought…"
-      aria-label="Thought to park"
-      autocomplete="off"
-      (keydown.enter)="park(quick)"
-      (keydown.escape)="closePark()"
-    />
-    <button type="button" class="pill-btn solid" (click)="park(quick)">Park</button>
+        <button type="button" class="pill-btn" (click)="skipPlan()">Not today</button>
+      </div>
+    </aside>
+  } @else if (plan(); as p) {
     <button
       type="button"
-      class="icon-btn ghost close"
-      (click)="closePark()"
-      aria-label="Cancel"
-      title="Cancel"
+      class="plan-strip"
+      data-view="plan"
+      (click)="openPlan.emit()"
+      [attr.aria-label]="planLabel()"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M18.3 7.1 16.9 5.7 12 10.6 7.1 5.7 5.7 7.1l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z"
-        />
-      </svg>
-    </button>
-  </div>
-} @else {
-  <footer class="footer">
-    <div class="cycle" role="img" [attr.aria-label]="cycleText()" [title]="cycleText()">
-      @for (done of cycleDots(); track $index) {
-        <span class="dot" [class.done]="done"></span>
+      @if (planDone() === p.pomodoros) {
+        <span class="plan-row cheer"><strong>Plan done!</strong> Anything more is a bonus.</span>
+      } @else {
+        <span class="plan-row">
+          <strong>{{ planShown() }} of {{ p.pomodoros }} planned</strong>
+          <span>{{ planNote() }}</span>
+        </span>
       }
-    </div>
-    @if (quickPark()) {
-      <span class="park-slot" aria-live="polite">
-        @if (justParked()) {
-          <span class="parked-note">✓ Parked</span>
-        } @else {
-          <button type="button" class="link park-link" (click)="openPark()">
-            + Park a thought
-          </button>
+      <span class="segments" aria-hidden="true">
+        @for (s of planSegments(); track $index) {
+          <span class="seg" [class]="s"></span>
         }
       </span>
-    }
-    @if (keepGoingOffer()) {
-      <button type="button" class="link keep-going" (click)="keepGoing()">
-        +{{ keepGoingMinutes }} min focus
+    </button>
+  } @else if (store.settings().planEnabled) {
+    <button type="button" class="plan-add" data-view="plan" (click)="openPlan.emit()">
+      + Plan today
+    </button>
+  }
+
+  @if (helpersCard()) {
+    <aside class="helpers-card" aria-labelledby="helpers-title">
+      <p id="helpers-title">New: park stray thoughts and get break ideas.</p>
+      <div class="helpers-actions">
+        @if (store.settings().parkingLot) {
+          <span class="helper-on">✓ Parking lot</span>
+        } @else {
+          <button
+            type="button"
+            class="pill-btn solid"
+            aria-label="Turn on the parking lot"
+            (click)="turnOn('parkingLot')"
+          >
+            + Parking lot
+          </button>
+        }
+        @if (store.settings().breakIdeas) {
+          <span class="helper-on">✓ Break ideas</span>
+        } @else {
+          <button
+            type="button"
+            class="pill-btn solid"
+            aria-label="Turn on break ideas"
+            (click)="turnOn('breakIdeas')"
+          >
+            + Break ideas
+          </button>
+        }
+        <button type="button" class="link no-thanks" (click)="noThanks()">No thanks</button>
+      </div>
+    </aside>
+  }
+
+  @if (parkedCard()) {
+    <aside class="parked-card" aria-labelledby="parked-card-title">
+      <p id="parked-card-title">{{ parkedText() }} parked</p>
+      <div class="parked-card-actions">
+        <button type="button" class="pill-btn solid" (click)="openParking.emit()">Look now</button>
+        <button type="button" class="pill-btn" (click)="parkLater()">Later</button>
+      </div>
+    </aside>
+  }
+
+  @if (quote(); as q) {
+    <figure class="quote">
+      <blockquote>
+        <p>{{ q.text }}</p>
+      </blockquote>
+      <figcaption [title]="q.source">{{ q.author }}</figcaption>
+    </figure>
+  }
+
+  @if (parkOpen()) {
+    <div class="quick-park" role="group" aria-label="Park a thought">
+      <input
+        #quick
+        type="text"
+        id="quick-thought"
+        [maxLength]="maxThought"
+        placeholder="Park a thought…"
+        aria-label="Thought to park"
+        autocomplete="off"
+        (keydown.enter)="park(quick)"
+        (keydown.escape)="closePark()"
+      />
+      <button type="button" class="pill-btn solid" (click)="park(quick)">Park</button>
+      <button
+        type="button"
+        class="icon-btn ghost close"
+        (click)="closePark()"
+        aria-label="Cancel"
+        title="Cancel"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M18.3 7.1 16.9 5.7 12 10.6 7.1 5.7 5.7 7.1l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z"
+          />
+        </svg>
       </button>
-    }
-    <div class="today">{{ store.state().completedToday }} done today</div>
-  </footer>
+    </div>
+  } @else {
+    <footer class="footer">
+      <div class="cycle" role="img" [attr.aria-label]="cycleText()" [title]="cycleText()">
+        @for (done of cycleDots(); track $index) {
+          <span class="dot" [class.done]="done"></span>
+        }
+      </div>
+      @if (quickPark()) {
+        <span class="park-slot" aria-live="polite">
+          @if (justParked()) {
+            <span class="parked-note">✓ Parked</span>
+          } @else {
+            <button type="button" class="link park-link" (click)="openPark()">
+              + Park a thought
+            </button>
+          }
+        </span>
+      }
+      @if (keepGoingOffer()) {
+        <button type="button" class="link keep-going" (click)="keepGoing()">
+          +{{ keepGoingMinutes }} min focus
+        </button>
+      }
+      <div class="today">{{ store.state().completedToday }} done today</div>
+    </footer>
+  }
+
+  @if (showAlertHint()) {
+    <aside class="hint">
+      <span>Get an alert when time's up?</span>
+      <button class="link" (click)="openSettings.emit()">Turn on</button>
+      <button
+        class="icon-btn ghost close"
+        (click)="store.dismissAlertHint()"
+        aria-label="Dismiss"
+        title="Dismiss"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M18.3 7.1 16.9 5.7 12 10.6 7.1 5.7 5.7 7.1l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z"
+          />
+        </svg>
+      </button>
+    </aside>
+  }
 }
 
-@if (showAlertHint()) {
-  <aside class="hint">
-    <span>Get an alert when time's up?</span>
-    <button class="link" (click)="openSettings.emit()">Turn on</button>
-    <button
-      class="icon-btn ghost close"
-      (click)="store.dismissAlertHint()"
-      aria-label="Dismiss"
-      title="Dismiss"
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M18.3 7.1 16.9 5.7 12 10.6 7.1 5.7 5.7 7.1l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z"
-        />
-      </svg>
-    </button>
-  </aside>
+<!-- Minimal timer: everything else waits behind this until asked for. -->
+@if (minimal()) {
+  <button type="button" class="link more-toggle" (click)="showAll.set(true)">Show more</button>
 }

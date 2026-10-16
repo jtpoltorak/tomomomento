@@ -49,6 +49,8 @@ export interface Settings {
   calmClock: boolean;
   /** Each digit of the clock rolls in gently as it changes. */
   animateDigits: boolean;
+  /** Just the clock, the progress bar and one button; the rest waits behind "Show more". */
+  minimalMode: boolean;
   /** A quiet reminder when the timer has sat paused for a while. */
   pauseNudge: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
@@ -110,6 +112,7 @@ export const DEFAULT_SETTINGS: Settings = {
   headsUp: false,
   calmClock: false,
   animateDigits: false,
+  minimalMode: false,
   pauseNudge: false,
   focusSound: 'off',
   focusVolume: 0.4,
@@ -428,6 +431,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     headsUp: input.headsUp ?? d.headsUp,
     calmClock: input.calmClock ?? d.calmClock,
     animateDigits: input.animateDigits ?? d.animateDigits,
+    minimalMode: input.minimalMode ?? d.minimalMode,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,

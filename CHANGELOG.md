@@ -4,7 +4,7 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
-## Unreleased
+## 1.5.0 (2026-10-16)
 
 ### New
 

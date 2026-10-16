@@ -4,6 +4,14 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Animated digits (optional):** each number on the clock rolls gently into
+  place as it changes. It stays still if your device is set to reduce motion.
+  Turn it on under Appearance in Settings.
+
 ## 1.4.0 (2026-10-15)
 
 ### New

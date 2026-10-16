@@ -48,6 +48,20 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
+/* Animated digits: a changed digit is a new element, so it plays this once as it appears.
+   Reduced motion turns it off (see styles.css). */
+.clock .digit {
+  display: inline-block;
+}
+.clock.rolling .digit {
+  animation: digit-in 0.3s ease-out;
+}
+@keyframes digit-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25em);
+  }
+}
 /* The calm clock: whole minutes, with a small unit beside them. */
 .clock.calm .unit {
   margin-left: 0.25em;

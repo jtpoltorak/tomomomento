@@ -111,6 +111,16 @@ export class TimerView {
   protected readonly calmClock = computed(() =>
     this.store.settings().calmClock ? calmMinutes(this.store.remainingMs()) : null,
   );
+  /** The clock split into characters, so each digit can roll in on its own when it changes. */
+  protected readonly clockChars = computed(() => {
+    const minutes = this.calmClock();
+    return [...(minutes === null ? this.clock() : String(minutes))];
+  });
+  /** Only after the first render, so opening the timer doesn't roll every digit at once. */
+  private readonly rendered = signal(false);
+  protected readonly rolling = computed(
+    () => this.rendered() && this.store.settings().animateDigits,
+  );
   protected minutesText(n: number): string {
     return `${n} ${n === 1 ? 'minute' : 'minutes'}`;
   }
@@ -252,6 +262,7 @@ export class TimerView {
   });
 
   constructor() {
+    afterNextRender(() => this.rendered.set(true));
     // A new break starts back at its own idea.
     effect(() => {
       this.phase();

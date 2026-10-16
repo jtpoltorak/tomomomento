@@ -446,7 +446,9 @@ describe('TimerView', () => {
       store.settings.update((s) => ({ ...s, calmClock: true }));
       await fixture.whenStable();
       const clock = el.querySelector('.clock')!;
-      expect(clock.firstChild?.textContent?.trim()).toBe('25');
+      expect(Array.from(clock.querySelectorAll('.digit'), (d) => d.textContent).join('')).toBe(
+        '25',
+      );
       expect(clock.querySelector('.unit')?.textContent).toBe('min');
       expect(clock.getAttribute('aria-label')).toBe('25 minutes left');
     });
@@ -456,6 +458,41 @@ describe('TimerView', () => {
       store.settings.update((s) => ({ ...s, calmClock: true }));
       await fixture.whenStable();
       expect(el.querySelector('.clock')?.getAttribute('aria-label')).toBe('1 minute left');
+    });
+  });
+
+  describe('animated digits', () => {
+    it('rolls in only the digits that changed', async () => {
+      const { el, fixture, store } = await setup({ remainingMs: 24 * 60_000 + 30_000 });
+      expect(el.querySelector('.clock')?.classList).not.toContain('rolling');
+      store.settings.update((s) => ({ ...s, animateDigits: true }));
+      await fixture.whenStable();
+      const clock = el.querySelector('.clock')!;
+      const before = Array.from(clock.querySelectorAll('.digit'));
+      expect(before.map((d) => d.textContent)).toEqual(['2', '4', ':', '3', '0']);
+      expect(clock.getAttribute('aria-label')).toBe('24:30 left');
+
+      store.state.update((s) => ({ ...s, remainingMs: 24 * 60_000 + 29_000 }));
+      await fixture.whenStable();
+      const after = Array.from(clock.querySelectorAll('.digit'));
+      expect(after.map((d) => d.textContent)).toEqual(['2', '4', ':', '2', '9']);
+      // Unchanged digits stay put; the changed ones are new elements, which is what animates.
+      expect(after.slice(0, 3)).toEqual(before.slice(0, 3));
+      expect(after[3]).not.toBe(before[3]);
+      expect(after[4]).not.toBe(before[4]);
+      expect(clock.classList).toContain('rolling');
+    });
+
+    it('works with the calm clock too', async () => {
+      const { el, fixture, store } = await setup({ remainingMs: 9 * 60_000 + 30_000 });
+      store.settings.update((s) => ({ ...s, animateDigits: true, calmClock: true }));
+      await fixture.whenStable();
+      const clock = el.querySelector('.clock.calm')!;
+      expect(Array.from(clock.querySelectorAll('.digit')).map((d) => d.textContent)).toEqual([
+        '1',
+        '0',
+      ]);
+      expect(clock.querySelector('.unit')?.textContent).toBe('min');
     });
   });
 

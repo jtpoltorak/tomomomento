@@ -45,6 +45,8 @@ export interface Settings {
   headsUp: boolean;
   /** Show whole minutes instead of a ticking minutes-and-seconds clock. */
   calmClock: boolean;
+  /** Each digit of the clock rolls in gently as it changes. */
+  animateDigits: boolean;
   /** A quiet reminder when the timer has sat paused for a while. */
   pauseNudge: boolean;
 }
@@ -101,6 +103,7 @@ export const DEFAULT_SETTINGS: Settings = {
   keepGoing: false,
   headsUp: false,
   calmClock: false,
+  animateDigits: false,
   pauseNudge: false,
 };
 
@@ -399,6 +402,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     keepGoing: input.keepGoing ?? d.keepGoing,
     headsUp: input.headsUp ?? d.headsUp,
     calmClock: input.calmClock ?? d.calmClock,
+    animateDigits: input.animateDigits ?? d.animateDigits,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
   };
 }

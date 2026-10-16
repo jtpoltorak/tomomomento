@@ -91,6 +91,7 @@ export class SettingsView {
     keepGoing: [false],
     headsUp: [false],
     calmClock: [false],
+    animateDigits: [false],
     pauseNudge: [false],
   });
 

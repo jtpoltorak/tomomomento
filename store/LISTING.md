@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Everything to paste into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-for Tomomomento 1.4.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
+for Tomomomento 1.5.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
 `node scripts/store-images.mjs` after UI changes.
 
 ## Store listing tab
@@ -40,6 +40,10 @@ Features
 • An optional heads-up a minute before focus or a break ends
 • An optional calm clock that shows whole minutes instead of ticking seconds
 • An optional reminder when the timer sits paused for 10 minutes
+• An optional focus sound: soft ticking or brown noise while you work
+• An optional minimal timer: just the clock, the progress bar and one button
+• Optional animated digits that roll gently into place
+• Accessibility options: larger text, high contrast, color-blind friendly colors, an easy-read font, and reduced motion
 • A built-in guide to the technique and how to use it
 • Light and dark themes that follow your system, or pick one yourself
 • Optional quotes on the timer screen: focus quotes while you work, rest quotes on breaks
@@ -52,13 +56,12 @@ Tomomomento has no account, no ads, no analytics, and no tracking. It makes no n
 Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Not using Chrome? The same timer runs in any browser on the website below.
 
-What's new in 1.4
-Five new options for getting started, staying in the flow, and switching gears. All are off until you turn them on in Settings.
-• Just start: on days when 25 minutes feels like too much, start with 10. It counts like any other session.
-• Keep going: still in the flow when focus ends? Add five more minutes before your break.
-• Heads-up: a gentle cue a minute before focus or a break ends, so the switch isn't a surprise.
-• Calm clock: whole minutes instead of ticking seconds, for when watching the countdown feels stressful.
-• Paused reminder: after 10 minutes on pause, a quiet notification asks whether to pick it back up.
+What's new in 1.5
+New ways to make the timer look, sound, and feel right for you. All are off until you turn them on in Settings.
+• Focus sound: soft ticking or brown noise while focus runs, to help you settle in. It stops for breaks.
+• Minimal timer: just the clock, the progress bar and one button, for when the screen feels like too much.
+• Animated digits: each number rolls gently into place as it changes.
+• Accessibility: larger text, high contrast, color-blind friendly colors, the Atkinson Hyperlegible font, and a reduce-motion switch.
 
 Links
 Website: https://tomomomento.com
@@ -109,7 +112,7 @@ one "Links" block, where they're easy to spot and copy.
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `alarms`                                         | Wakes the extension when a focus session or break ends, so the timer keeps working while the popup is closed.                                          |
 | `notifications`                                  | Shows the optional "time's up" notification, which is off until the user turns it on.                                                                  |
-| `offscreen`                                      | Plays the optional "time's up" sound. Service workers can't play audio, so a hidden offscreen document does it.                                        |
+| `offscreen`                                      | Plays the optional "time's up" sound and focus sound. Service workers can't play audio, so a hidden offscreen document does it.                        |
 | `storage`                                        | Remembers the timer and the user's settings.                                                                                                           |
 | `declarativeNetRequestWithHostAccess` (optional) | Used only when the user turns on the site blocker: redirects the sites on their list to the extension's "stay focused" page during focus sessions.     |
 | Host permission `<all_urls>` (optional)          | Requested only when the user turns on the site blocker, because the user can list any site; given back when they turn it off. No page content is read. |

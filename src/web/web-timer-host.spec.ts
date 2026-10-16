@@ -1,3 +1,4 @@
+import { FocusSoundPlayer } from '../shared/focus-sounds';
 import { DEFAULT_SETTINGS } from '../shared/timer';
 import { WebTimerHost } from './web-timer-host';
 
@@ -32,6 +33,42 @@ describe('WebTimerHost', () => {
     expect(state).toMatchObject({ phase: 'shortBreak', status: 'idle', completedToday: 1 });
     expect(document.title).toBe('✓ Time for your short break · Tomomomento');
     expect(changes).toHaveBeenCalled();
+  });
+
+  it('plays the focus sound in the tab you used, only while focus runs', async () => {
+    vi.stubGlobal(
+      'AudioContext',
+      class {
+        resume = () => Promise.resolve();
+      },
+    );
+    const play = vi.spyOn(FocusSoundPlayer.prototype, 'play').mockImplementation(() => {});
+    const stop = vi.spyOn(FocusSoundPlayer.prototype, 'stop').mockImplementation(() => {});
+    try {
+      const other = new WebTimerHost();
+      const host = new WebTimerHost();
+      await host.saveSettings({ ...DEFAULT_SETTINGS, focusSound: 'brown', focusVolume: 0.3 });
+      const res = await host.send({ command: 'start' });
+      const endTime = res.ok ? res.state.endTime : null;
+      expect(play).toHaveBeenCalledWith('brown', 0.3, endTime);
+      // Only the tab you clicked in plays it; the other tab stays quiet.
+      expect(play).toHaveBeenCalledTimes(new Set(play.mock.contexts).size);
+      other.load();
+
+      play.mockClear();
+      await host.send({ command: 'pause' });
+      expect(stop).toHaveBeenCalled();
+      expect(play).not.toHaveBeenCalled();
+
+      // Breaks are quiet.
+      await host.send({ command: 'skip' });
+      await host.send({ command: 'start' });
+      expect(play).not.toHaveBeenCalled();
+    } finally {
+      play.mockRestore();
+      stop.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('keeps the timer across reloads', async () => {

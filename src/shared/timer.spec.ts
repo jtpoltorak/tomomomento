@@ -4,6 +4,7 @@ import {
   canJustStart,
   canKeepGoing,
   DEFAULT_SETTINGS,
+  focusSoundNow,
   headsUpAt,
   inHeadsUp,
   formatClock,
@@ -19,6 +20,7 @@ import {
   sanitizeSettings,
   setPhase,
   start,
+  type Settings,
   type TimerState,
 } from './timer';
 
@@ -320,6 +322,30 @@ describe('timer state machine', () => {
 
     it('stays off unless turned on', () => {
       expect(sanitizeSettings({}).pauseNudge).toBe(false);
+    });
+  });
+
+  describe('focus sound', () => {
+    const running = (phase: TimerState['phase'], status: TimerState['status'] = 'running') => ({
+      ...initialState(DEFAULT_SETTINGS, 0),
+      phase,
+      status,
+      endTime: status === 'running' ? 1_000_000 : null,
+    });
+
+    it('plays only while focus runs, and is off by default', () => {
+      expect(focusSoundNow(running('work'), DEFAULT_SETTINGS)).toBeNull();
+      const settings = { ...DEFAULT_SETTINGS, focusSound: 'tick' as const };
+      expect(focusSoundNow(running('work'), settings)).toBe('tick');
+      expect(focusSoundNow(running('work', 'paused'), settings)).toBeNull();
+      expect(focusSoundNow(running('work', 'idle'), settings)).toBeNull();
+      expect(focusSoundNow(running('shortBreak'), settings)).toBeNull();
+    });
+
+    it('cleans up stored values', () => {
+      const bad = { focusSound: 'rain', focusVolume: 7 } as unknown as Partial<Settings>;
+      expect(sanitizeSettings(bad)).toMatchObject({ focusSound: 'off', focusVolume: 1 });
+      expect(sanitizeSettings({})).toMatchObject({ focusSound: 'off', focusVolume: 0.4 });
     });
   });
 });

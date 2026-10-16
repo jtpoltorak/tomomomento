@@ -58,6 +58,12 @@ const BADGE_COLORS: Record<Phase, string> = {
   shortBreak: '#2f9e44',
   longBreak: '#1971c2',
 };
+/** The color-blind safe palette's light colors, which carry white badge text. */
+const SAFE_BADGE_COLORS: Record<Phase, string> = {
+  work: '#b84a00',
+  shortBreak: '#0067a5',
+  longBreak: '#9c3c78',
+};
 const PAUSED_BADGE_COLOR = '#868e96';
 
 // Serialize every state mutation so a click and an alarm can't interleave.
@@ -183,9 +189,10 @@ function headsUp(): Promise<void> {
 }
 
 async function updateBadge(state: TimerState, justFinished = false): Promise<void> {
+  const colors = (await loadSettings()).colorSafe ? SAFE_BADGE_COLORS : BADGE_COLORS;
   if (state.status === 'idle' && justFinished) {
     // A quiet "time's up" cue for people who leave sounds and notifications off.
-    await chrome.action.setBadgeBackgroundColor({ color: BADGE_COLORS[state.phase] });
+    await chrome.action.setBadgeBackgroundColor({ color: colors[state.phase] });
     await chrome.action.setBadgeText({ text: '✓' });
     await chrome.action.setTitle({
       title: `Tomomomento: time for your ${PHASE_LABELS[state.phase].toLowerCase()}`,
@@ -198,7 +205,7 @@ async function updateBadge(state: TimerState, justFinished = false): Promise<voi
     return;
   }
   const minutesLeft = Math.ceil(remainingMs(state, Date.now()) / 60_000);
-  const color = state.status === 'paused' ? PAUSED_BADGE_COLOR : BADGE_COLORS[state.phase];
+  const color = state.status === 'paused' ? PAUSED_BADGE_COLOR : colors[state.phase];
   await chrome.action.setBadgeBackgroundColor({ color });
   await chrome.action.setBadgeTextColor?.({ color: '#ffffff' });
   await chrome.action.setBadgeText({ text: `${minutesLeft}m` });
@@ -426,6 +433,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
       await syncBlocking(state, settings);
       await syncAlarms(state, settings);
       await syncFocusSound(state, settings);
+      await updateBadge(state);
     }
     // Turning the blocker off hands back its site access.
     if (!settings.blockSites && (await chrome.permissions.contains(BLOCKER_PERMISSIONS))) {

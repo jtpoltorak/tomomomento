@@ -35,6 +35,56 @@
   --on-accent: #1c1f24;
 }
 
+/* Accessibility settings from the popup, as <html> data attributes (see theme.ts). */
+:root[data-palette='safe'] {
+  --accent: #b84a00;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='safe']:not([data-theme='light']) {
+    --accent: #ff8a4c;
+  }
+}
+:root[data-palette='safe'][data-theme='dark'] {
+  --accent: #ff8a4c;
+}
+:root[data-contrast='high'] {
+  --fg: #000000;
+  --muted: #24292f;
+  --accent: #9a3412;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast='high']:not([data-theme='light']) {
+    --bg: #000000;
+    --fg: #ffffff;
+    --muted: #e6edf3;
+    --accent: #ffa36e;
+    --on-accent: #000000;
+  }
+}
+:root[data-contrast='high'][data-theme='dark'] {
+  --bg: #000000;
+  --fg: #ffffff;
+  --muted: #e6edf3;
+  --accent: #ffa36e;
+  --on-accent: #000000;
+}
+:root[data-text='large'] body {
+  zoom: 1.125;
+}
+:root[data-text='xlarge'] body {
+  zoom: 1.25;
+}
+:root[data-font='easy'] body {
+  font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('fonts/atkinson-next-latin.woff2') format('woff2');
+}
+
 html {
   background: var(--bg);
 }

@@ -23,6 +23,8 @@ import {
   sanitizeSettings,
   SOUND_LABELS,
   THEME_LABELS,
+  TEXT_SIZE_LABELS,
+  type TextSizeId,
   type Settings,
   type SoundId,
   FOCUS_SOUND_LABELS,
@@ -48,6 +50,7 @@ export class SettingsView {
   protected readonly sounds = Object.entries(SOUND_LABELS) as [SoundId, string][];
   protected readonly focusSounds = Object.entries(FOCUS_SOUND_LABELS) as [FocusSoundId, string][];
   protected readonly themes = Object.entries(THEME_LABELS) as [ThemeId, string][];
+  protected readonly textSizes = Object.entries(TEXT_SIZE_LABELS) as [TextSizeId, string][];
   protected readonly saved = signal(false);
   protected readonly justStartMinutes = JUST_START_MINUTES;
   protected readonly keepGoingMinutes = KEEP_GOING_MINUTES;
@@ -100,6 +103,11 @@ export class SettingsView {
     pauseNudge: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],
+    highContrast: [false],
+    colorSafe: [false],
+    textSize: ['normal' as TextSizeId],
+    easyFont: [false],
+    reduceMotion: [false],
   });
 
   constructor() {

@@ -348,4 +348,19 @@ describe('timer state machine', () => {
       expect(sanitizeSettings({})).toMatchObject({ focusSound: 'off', focusVolume: 0.4 });
     });
   });
+
+  describe('accessibility settings', () => {
+    it('are all off by default and keep only known text sizes', () => {
+      expect(sanitizeSettings({})).toMatchObject({
+        highContrast: false,
+        colorSafe: false,
+        textSize: 'normal',
+        easyFont: false,
+        reduceMotion: false,
+      });
+      const bad = { textSize: 'huge' } as unknown as Partial<Settings>;
+      expect(sanitizeSettings(bad).textSize).toBe('normal');
+      expect(sanitizeSettings({ textSize: 'xlarge' }).textSize).toBe('xlarge');
+    });
+  });
 });

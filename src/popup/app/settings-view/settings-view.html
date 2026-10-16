@@ -334,6 +334,43 @@
     </p>
   </section>
 
+  <section>
+    <h2>Accessibility</h2>
+    <div class="row">
+      <label for="text-size">Text size</label>
+      <select id="text-size" formControlName="textSize">
+        @for (t of textSizes; track t[0]) {
+          <option [value]="t[0]">{{ t[1] }}</option>
+        }
+      </select>
+    </div>
+    <label class="switch-row">
+      <span>High contrast</span>
+      <input type="checkbox" role="switch" formControlName="highContrast" />
+    </label>
+    <p class="note">Darker text, firmer edges and stronger colors, in light and dark.</p>
+    <label class="switch-row">
+      <span>Color-blind friendly colors</span>
+      <input type="checkbox" role="switch" formControlName="colorSafe" />
+    </label>
+    <p class="note">
+      Focus is orange, short breaks blue and long breaks purple, colors that stay distinct with
+      every common kind of color blindness.
+    </p>
+    <label class="switch-row">
+      <span>Easy-read font</span>
+      <input type="checkbox" role="switch" formControlName="easyFont" />
+    </label>
+    <p class="note">
+      Atkinson Hyperlegible, designed so letters like I, l and 1 can't be mistaken for each other.
+    </p>
+    <label class="switch-row">
+      <span>Reduce motion</span>
+      <input type="checkbox" role="switch" formControlName="reduceMotion" />
+    </label>
+    <p class="note">Turns off animations, even if your device doesn't ask for less motion.</p>
+  </section>
+
   <section aria-labelledby="data-heading">
     <h2 id="data-heading">Back up and restore</h2>
     <div class="data-actions">

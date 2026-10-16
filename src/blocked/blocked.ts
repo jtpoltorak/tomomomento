@@ -4,6 +4,7 @@
 import { shouldBlock } from '../shared/blocker';
 import { loadSettings, loadState } from '../shared/storage';
 import { formatClock, remainingMs, type TimerState } from '../shared/timer';
+import { a11yAttributes } from '../popup/app/theme';
 
 const blockedUrl = parseBlockedUrl(location.hash.slice(1));
 const site = blockedUrl?.hostname.replace(/^www\./, '') ?? 'This site';
@@ -64,6 +65,11 @@ async function refresh(): Promise<void> {
   // Follow the Light / Dark / System choice from the popup's Settings.
   if (settings.theme === 'system') delete document.documentElement.dataset['theme'];
   else document.documentElement.dataset['theme'] = settings.theme;
+  // And the accessibility choices, the same way the popup applies them.
+  for (const [key, value] of Object.entries(a11yAttributes(settings))) {
+    if (value === undefined) delete document.documentElement.dataset[key];
+    else document.documentElement.dataset[key] = value;
+  }
   render(state, shouldBlock(state, settings));
 }
 

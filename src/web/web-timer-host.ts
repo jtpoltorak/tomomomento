@@ -36,7 +36,8 @@ import {
   rollDay,
   sanitizeSettings,
   setPhase,
-  start,
+  settleStart,
+  skipSettle,
   type Phase,
   type Settings,
   type TimerState,
@@ -176,12 +177,14 @@ export class WebTimerHost implements TimerHost {
       this.justFinished = false;
       switch (command.command) {
         case 'start':
-          return this.commit(start(state, now));
+          return this.commit(settleStart(state, settings, now));
         case 'justStart':
           return this.commit(justStart(state, settings, now));
         case 'keepGoing':
           void this.closeNotification();
           return this.commit(keepGoing(state, settings, now));
+        case 'skipSettle':
+          return this.commit(skipSettle(state, now));
         case 'pause':
           return this.commit(pause(state, now));
         case 'reset':

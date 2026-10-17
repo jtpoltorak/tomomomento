@@ -47,6 +47,8 @@ export class PomodoroStore {
 
   /** Ticks while the timer runs so the countdown re-renders. */
   private readonly now = signal(Date.now());
+  /** The current time, updated with the countdown. */
+  readonly tick = this.now.asReadonly();
 
   readonly remainingMs = computed(() => remainingMs(this.state(), this.now()));
   readonly totalMs = computed(() => phaseLengthMs(this.state(), this.settings()));

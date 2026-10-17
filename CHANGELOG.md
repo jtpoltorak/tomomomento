@@ -4,6 +4,14 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Settle in (optional):** pressing Start can begin with 30 seconds of slow
+  breathing before the focus clock runs, with the progress bar breathing
+  along. "Start now" skips it. Turn it on under Focus helpers in Settings.
+
 ## 1.5.0 (2026-10-16)
 
 ### New

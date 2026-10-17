@@ -53,6 +53,7 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
     parkedOnBreak: computed(() =>
       settings().parkingLot && state().phase !== 'work' ? unseenCount(parkingLot()) : 0,
     ),
+    tick: signal(now),
     remainingMs: computed(() => remainingMs(state(), now)),
     totalMs: computed(() => phaseLengthMs(state(), settings())),
     progress: computed(() => 0),

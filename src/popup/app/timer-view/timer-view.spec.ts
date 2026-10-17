@@ -346,6 +346,49 @@ describe('TimerView', () => {
     });
   });
 
+  describe('settle in', () => {
+    function breathing(secondsIn: number) {
+      const now = Date.now();
+      const start = now - secondsIn * 1000;
+      return setup({
+        status: 'running',
+        settleUntil: start + 30_000,
+        endTime: start + 30_000 + 25 * 60_000,
+      });
+    }
+
+    it('guides the breath while the clock waits', async () => {
+      const { el } = await breathing(1);
+      expect(el.querySelector('.status')?.textContent).toBe('Breathe in…');
+      expect(el.querySelector('.clock')?.textContent).toBe('25:00');
+      expect(el.querySelector('.bar-fill')?.classList).toContain('settling');
+      // One steady line for screen readers, not a new one with every breath.
+      expect(el.querySelector('.status')?.getAttribute('aria-live')).toBeNull();
+      expect(el.querySelector('.visually-hidden[aria-live]')?.textContent).toBe(
+        'Settling in. Focus starts in 30 seconds.',
+      );
+    });
+
+    it('breathes out after 4 seconds', async () => {
+      const { el } = await breathing(5);
+      expect(el.querySelector('.status')?.textContent).toBe('Breathe out…');
+    });
+
+    it('can start the clock right away', async () => {
+      const { store, fixture, button } = await breathing(1);
+      button('Start now').click();
+      await fixture.whenStable();
+      expect(store.sent).toEqual([{ command: 'skipSettle' }]);
+    });
+
+    it('steps aside once the breathing is over', async () => {
+      const { el, button } = await breathing(31);
+      expect(el.querySelector('.status')?.textContent).toBe('Stay focused');
+      expect(el.querySelector('.bar-fill')?.classList).not.toContain('settling');
+      expect(button('Start now')).toBeUndefined();
+    });
+  });
+
   describe('just start', () => {
     async function offered(overrides = {}) {
       const ctx = await setup(overrides);

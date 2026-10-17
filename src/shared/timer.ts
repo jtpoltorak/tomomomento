@@ -54,6 +54,8 @@ export interface Settings {
   minimalMode: boolean;
   /** A quiet reminder when the timer has sat paused for a while. */
   pauseNudge: boolean;
+  /** Thirty seconds of slow breathing before a focus session's clock starts. */
+  settleIn: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
   focusSound: FocusSoundId;
   /** 0 to 1, separate from the alert volume. */
@@ -94,6 +96,11 @@ export interface TimerState {
   afterFocus?: boolean;
   /** Epoch ms the timer was paused, for the "still paused?" reminder. Only while paused. */
   pausedAt?: number;
+  /**
+   * Epoch ms the settle-in breathing ends and the focus clock starts. `endTime`
+   * already includes it, so the phase ends at the right time with no extra step.
+   */
+  settleUntil?: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -125,6 +132,7 @@ export const DEFAULT_SETTINGS: Settings = {
   animateDigits: false,
   minimalMode: false,
   pauseNudge: false,
+  settleIn: false,
   focusSound: 'off',
   focusVolume: 0.4,
   highContrast: false,
@@ -145,6 +153,12 @@ export const HEADS_UP_MS = 60_000;
 
 /** How long the timer sits paused before the "still paused?" reminder. */
 export const PAUSE_NUDGE_MS = 10 * 60_000;
+
+/** How long the settle-in breathing lasts before focus. */
+export const SETTLE_MS = 30_000;
+/** One slow breath: in for 4 seconds, out for 6. */
+export const BREATH_IN_MS = 4_000;
+export const BREATH_MS = 10_000;
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -207,6 +221,7 @@ function usualLength(state: TimerState): TimerState {
     extending: _extra,
     afterFocus: _offer,
     pausedAt: _paused,
+    settleUntil: _settle,
     ...rest
   } = state;
   return rest;
@@ -226,7 +241,9 @@ export function initialState(settings: Settings, now: number): TimerState {
 
 export function remainingMs(state: TimerState, now: number): number {
   if (state.status === 'running' && state.endTime !== null) {
-    return Math.max(0, state.endTime - now);
+    // While settling in, the focus clock holds at its full length.
+    const left = state.endTime - Math.max(now, state.settleUntil ?? now);
+    return Math.max(0, left);
   }
   return state.remainingMs;
 }
@@ -250,13 +267,53 @@ export function start(state: TimerState, now: number): TimerState {
 
 export function pause(state: TimerState, now: number): TimerState {
   if (state.status !== 'running') return state;
+  const { settleUntil: _, ...rest } = state;
   return {
-    ...state,
+    ...rest,
     status: 'paused',
     endTime: null,
     remainingMs: remainingMs(state, now),
     pausedAt: now,
   };
+}
+
+/**
+ * Whether Start begins with the settle-in breathing: a focus session that
+ * hasn't begun yet. Resuming, extra time and "Just start" go straight in.
+ */
+export function canSettle(state: TimerState, settings: Settings): boolean {
+  return (
+    settings.settleIn &&
+    state.phase === 'work' &&
+    state.status === 'idle' &&
+    !state.extending &&
+    state.remainingMs === phaseLengthMs(state, settings)
+  );
+}
+
+/** Start, with the settle-in breathing first when it's on. */
+export function settleStart(state: TimerState, settings: Settings, now: number): TimerState {
+  const started = start(state, now);
+  if (!canSettle(state, settings)) return started;
+  return { ...started, endTime: started.endTime! + SETTLE_MS, settleUntil: now + SETTLE_MS };
+}
+
+/** True during the settle-in breathing. */
+export function settling(state: TimerState, now: number): boolean {
+  return state.status === 'running' && state.settleUntil !== undefined && now < state.settleUntil;
+}
+
+/** Ends the breathing early, and the focus clock starts now. */
+export function skipSettle(state: TimerState, now: number): TimerState {
+  if (!settling(state, now)) return state;
+  const { settleUntil, ...rest } = state;
+  return { ...rest, endTime: now + (state.endTime! - settleUntil!) };
+}
+
+/** "in" or "out", for the breath at `now` during the settle-in. */
+export function breathAt(state: TimerState, now: number): 'in' | 'out' {
+  const elapsed = now - (state.settleUntil ?? now) + SETTLE_MS;
+  return ((elapsed % BREATH_MS) + BREATH_MS) % BREATH_MS < BREATH_IN_MS ? 'in' : 'out';
 }
 
 /** When the "still paused?" reminder is due, or null when there isn't one. */
@@ -455,6 +512,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     animateDigits: input.animateDigits ?? d.animateDigits,
     minimalMode: input.minimalMode ?? d.minimalMode,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
+    settleIn: input.settleIn ?? d.settleIn,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,
     focusVolume: Number.isFinite(Number(input.focusVolume))

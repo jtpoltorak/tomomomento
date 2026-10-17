@@ -40,7 +40,8 @@ import {
   reset,
   rollDay,
   setPhase,
-  start,
+  settleStart,
+  skipSettle,
   type Phase,
   type Settings,
   type TimerState,
@@ -368,12 +369,14 @@ function runCommand(cmd: Command): Promise<TimerState> {
     const state = rollDay(stored, now);
     switch (cmd.command) {
       case 'start':
-        return commit(start(state, now));
+        return commit(settleStart(state, settings, now));
       case 'justStart':
         return commit(justStart(state, settings, now));
       case 'keepGoing':
         await chrome.notifications.clear(NOTIFICATION_ID);
         return commit(keepGoing(state, settings, now));
+      case 'skipSettle':
+        return commit(skipSettle(state, now));
       case 'pause':
         return commit(pause(state, now));
       case 'reset':

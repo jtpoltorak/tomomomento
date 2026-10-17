@@ -52,10 +52,20 @@
     [attr.aria-valuenow]="percentLeft()"
     [attr.aria-valuetext]="timeLeftText()"
   >
-    <div class="bar-fill" [style.transform]="'scaleX(' + (1 - store.progress()) + ')'"></div>
+    <div
+      class="bar-fill"
+      [class.settling]="breath()"
+      [style.animation-delay.ms]="breath() ? breathDelay() : null"
+      [style.transform]="'scaleX(' + (1 - store.progress()) + ')'"
+    ></div>
   </div>
   <div class="status-row">
-    <div class="status" aria-live="polite">{{ status() }}</div>
+    <!-- While settling in, the words change with every breath, so screen readers get one steady line instead. -->
+    <div class="status" [class.settle]="breath()" [attr.aria-live]="live()">{{ status() }}</div>
+    <span class="visually-hidden" aria-live="polite">{{ settleAnnouncement() }}</span>
+    @if (breath()) {
+      <button type="button" class="link just-start" (click)="skipSettle()">Start now</button>
+    }
     @if (full() && justStartOffer()) {
       <button type="button" class="link just-start" (click)="justStart()">
         or just start: {{ justStartMinutes }} min

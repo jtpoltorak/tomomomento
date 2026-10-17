@@ -101,6 +101,7 @@ export class SettingsView {
     animateDigits: [false],
     minimalMode: [false],
     pauseNudge: [false],
+    settleIn: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],
     highContrast: [false],

@@ -1,5 +1,8 @@
 import {
   advance,
+  breathAt,
+  canSettle,
+  careNudge,
   calmMinutes,
   canJustStart,
   canKeepGoing,
@@ -19,7 +22,12 @@ import {
   rollDay,
   sanitizeSettings,
   setPhase,
+  settleStart,
+  settling,
+  skipSettle,
   start,
+  stepAway,
+  wasWorking,
   type Settings,
   type TimerState,
 } from './timer';
@@ -167,6 +175,172 @@ describe('timer state machine', () => {
   it('sanitizeSettings keeps quotes off unless turned on', () => {
     expect(sanitizeSettings({}).showQuotes).toBe(false);
     expect(sanitizeSettings({ showQuotes: true }).showQuotes).toBe(true);
+  });
+
+  describe('settle in', () => {
+    const on = { ...s, settleIn: true };
+    const SETTLE = 30_000;
+
+    it('breathes for 30 seconds before the focus clock runs', () => {
+      const st = settleStart(initialState(on, T0), on, T0);
+      expect(st).toMatchObject({ status: 'running', endTime: T0 + SETTLE + 25 * MIN });
+      expect(settling(st, T0 + 10_000)).toBe(true);
+      // The clock holds at the full length while you breathe.
+      expect(remainingMs(st, T0 + 10_000)).toBe(25 * MIN);
+      expect(settling(st, T0 + SETTLE)).toBe(false);
+      expect(remainingMs(st, T0 + SETTLE + MIN)).toBe(24 * MIN);
+    });
+
+    it('breathes in for 4 seconds and out for 6', () => {
+      const st = settleStart(initialState(on, T0), on, T0);
+      expect(breathAt(st, T0)).toBe('in');
+      expect(breathAt(st, T0 + 3_900)).toBe('in');
+      expect(breathAt(st, T0 + 4_000)).toBe('out');
+      expect(breathAt(st, T0 + 9_900)).toBe('out');
+      expect(breathAt(st, T0 + 10_000)).toBe('in');
+    });
+
+    it('starts the clock right away on "Start now"', () => {
+      const st = skipSettle(settleStart(initialState(on, T0), on, T0), T0 + 5_000);
+      expect(st.settleUntil).toBeUndefined();
+      expect(st.endTime).toBe(T0 + 5_000 + 25 * MIN);
+      expect(remainingMs(st, T0 + 5_000 + MIN)).toBe(24 * MIN);
+    });
+
+    it('keeps the full length when paused mid-breath, and resumes without it', () => {
+      const paused = pause(settleStart(initialState(on, T0), on, T0), T0 + 5_000);
+      expect(paused).toMatchObject({ status: 'paused', remainingMs: 25 * MIN });
+      expect(paused.settleUntil).toBeUndefined();
+      // The time is the same, but the session has begun, so resuming goes straight in.
+      expect(canSettle(paused, on)).toBe(false);
+    });
+
+    it('only comes before a focus session that has not begun', () => {
+      const fresh = initialState(on, T0);
+      expect(canSettle(fresh, on)).toBe(true);
+      expect(canSettle(fresh, s)).toBe(false);
+      expect(canSettle(setPhase(fresh, 'shortBreak', on), on)).toBe(false);
+      expect(canSettle({ ...fresh, remainingMs: 20 * MIN }, on)).toBe(false);
+      const plain = settleStart(fresh, s, T0);
+      expect(plain).toEqual(start(fresh, T0));
+    });
+
+    it('counts a settled session like any other once it runs out', () => {
+      const st = settleStart(initialState(on, T0), on, T0);
+      const next = advance(st, on, st.endTime!, true);
+      expect(next).toMatchObject({ phase: 'shortBreak', completedToday: 1 });
+      expect(next.settleUntil).toBeUndefined();
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).settleIn).toBe(false);
+      expect(sanitizeSettings({ settleIn: true }).settleIn).toBe(true);
+    });
+  });
+
+  describe('step away', () => {
+    const on = { ...s, awayCheck: true, pauseNudge: true };
+    const running = start(initialState(on, T0), T0);
+
+    it('pauses focus as of when you left', () => {
+      const away = stepAway(running, on, T0 + 10 * MIN, T0 + 15 * MIN);
+      expect(away).toMatchObject({
+        status: 'paused',
+        away: true,
+        remainingMs: 15 * MIN,
+        pausedAt: T0 + 10 * MIN,
+      });
+      // Coming back asks, so the "still paused?" reminder stays out of it.
+      expect(pauseNudgeAt(away, on)).toBeNull();
+    });
+
+    it("can't count time from before the session began", () => {
+      const away = stepAway(running, on, T0 - 3 * MIN, T0 + 2 * MIN);
+      expect(away).toMatchObject({ remainingMs: 25 * MIN, pausedAt: T0 });
+    });
+
+    it('leaves breaks, paused timers, and anyone who turned it off alone', () => {
+      const brk = start(setPhase(running, 'shortBreak', on), T0);
+      expect(stepAway(brk, on, T0, T0 + MIN)).toBe(brk);
+      const paused = pause(running, T0 + MIN);
+      expect(stepAway(paused, on, T0, T0 + 2 * MIN)).toBe(paused);
+      expect(stepAway(running, s, T0, T0 + MIN)).toBe(running);
+    });
+
+    it('resumes where you left off', () => {
+      const away = stepAway(running, on, T0 + 10 * MIN, T0 + 15 * MIN);
+      const back = start(away, T0 + 30 * MIN);
+      expect(back).toMatchObject({ status: 'running', endTime: T0 + 45 * MIN });
+      expect(back.away).toBeUndefined();
+    });
+
+    it('counts the time away when you were working after all', () => {
+      const away = stepAway(running, on, T0 + 10 * MIN, T0 + 15 * MIN);
+      const back = wasWorking(away, T0 + 18 * MIN);
+      expect(back).toMatchObject({ status: 'running', endTime: T0 + 25 * MIN });
+      expect(back.away).toBeUndefined();
+      // Away longer than the session had left: it's done, and finishes right away.
+      expect(wasWorking(away, T0 + 50 * MIN).endTime).toBe(T0 + 50 * MIN);
+      // Only for an "away" pause.
+      const paused = pause(running, T0 + MIN);
+      expect(wasWorking(paused, T0 + 5 * MIN)).toBe(paused);
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).awayCheck).toBe(false);
+      expect(sanitizeSettings({ awayCheck: true }).awayCheck).toBe(true);
+    });
+  });
+
+  describe('take-care reminders', () => {
+    const on = { ...s, takeCare: true };
+    /** Runs focus sessions back to back with 5-minute breaks, starting at `from`. */
+    function sessions(n: number, from = T0, st = initialState(on, from)): TimerState {
+      let t = from;
+      for (let i = 0; i < n; i++) {
+        st = start(st.phase === 'work' ? st : advance(st, on, t, false), t);
+        t += 25 * MIN;
+        st = advance(st, on, t, true);
+        t += 5 * MIN;
+      }
+      return st;
+    }
+
+    it('counts focus sessions in a row', () => {
+      expect(sessions(1).inARow).toBe(1);
+      expect(sessions(4).inARow).toBe(4);
+    });
+
+    it('reminds you on the break after every third one, a different reminder each time', () => {
+      expect(careNudge(sessions(2), on)).toBeNull();
+      expect(careNudge(sessions(3), on)).toBe('3 in a row. Have a glass of water');
+      expect(careNudge(sessions(4), on)).toBeNull();
+      expect(careNudge(sessions(6), on)).toBe('6 in a row. Rest your eyes on something far away');
+      expect(careNudge(sessions(3), s)).toBeNull();
+    });
+
+    it('starts a new run after a long gap', () => {
+      const first = sessions(2);
+      // Back after lunch: an hour and a half later.
+      const later = sessions(1, T0 + 2 * 30 * MIN + 90 * MIN, first);
+      expect(later.inARow).toBe(1);
+      // A long break between sessions keeps the run going.
+      const afterLong = sessions(1, T0 + 2 * 30 * MIN + 15 * MIN, first);
+      expect(afterLong.inARow).toBe(3);
+    });
+
+    it("doesn't count skipped sessions or extra time", () => {
+      const st = sessions(2);
+      const skipped = advance(start(advance(st, on, T0, false), T0), on, T0 + MIN, false);
+      expect(skipped.inARow).toBe(2);
+      const extra = advance(keepGoing(st, { ...on, keepGoing: true }, T0), on, T0 + 5 * MIN, true);
+      expect(extra.inARow).toBe(2);
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).takeCare).toBe(false);
+      expect(sanitizeSettings({ takeCare: true }).takeCare).toBe(true);
+    });
   });
 
   describe('just start', () => {

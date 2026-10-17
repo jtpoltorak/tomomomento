@@ -19,6 +19,7 @@ import {
 } from '../shared/stats';
 import {
   advance,
+  careNudge,
   calmMinutes,
   focusSoundNow,
   headsUpAt,
@@ -36,7 +37,9 @@ import {
   rollDay,
   sanitizeSettings,
   setPhase,
-  start,
+  settleStart,
+  skipSettle,
+  wasWorking,
   type Phase,
   type Settings,
   type TimerState,
@@ -176,12 +179,16 @@ export class WebTimerHost implements TimerHost {
       this.justFinished = false;
       switch (command.command) {
         case 'start':
-          return this.commit(start(state, now));
+          return this.commit(settleStart(state, settings, now));
         case 'justStart':
           return this.commit(justStart(state, settings, now));
         case 'keepGoing':
           void this.closeNotification();
           return this.commit(keepGoing(state, settings, now));
+        case 'skipSettle':
+          return this.commit(skipSettle(state, now));
+        case 'wasWorking':
+          return this.commit(wasWorking(state, now));
         case 'pause':
           return this.commit(pause(state, now));
         case 'reset':
@@ -432,7 +439,9 @@ export class WebTimerHost implements TimerHost {
     if (settings.notificationsEnabled) {
       const planLine =
         finished === 'work' && !extended ? planDoneMessage(loadPlan(), settings, next) : null;
-      tasks.push(this.showNotification(finished, next, planLine, extended));
+      const care = careNudge(next, settings);
+      const lines = [planLine, care && `${care}.`].filter(Boolean).join(' ') || null;
+      tasks.push(this.showNotification(finished, next, lines, extended));
     }
     const results = await Promise.allSettled(tasks);
     for (const r of results) if (r.status === 'rejected') console.error('Alert failed', r.reason);

@@ -8,6 +8,10 @@ export type Command =
   | { command: 'justStart' }
   /** A few more minutes of focus before the break ("Keep going"). */
   | { command: 'keepGoing' }
+  /** End the settle-in breathing early and start the focus clock. */
+  | { command: 'skipSettle' }
+  /** Back from an "away" pause: the time away was focus, so count it. */
+  | { command: 'wasWorking' }
   | { command: 'pause' }
   | { command: 'reset' }
   | { command: 'skip' }

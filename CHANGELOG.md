@@ -4,6 +4,23 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Settle in (optional):** pressing Start can begin with 30 seconds of slow
+  breathing before the focus clock runs, with the progress bar breathing
+  along. "Start now" skips it. Turn it on under Focus helpers in Settings.
+- **Step away (optional):** if the computer sits untouched for 5 minutes
+  during focus, the timer pauses from the moment you left. When you're back,
+  resume where you were, or tap "I was working" to count the time. Turn on
+  "Pause when I step away" under Focus helpers in Settings. This adds Chrome's
+  "idle" permission, which shows no warning.
+- **Take-care reminders (optional):** after every 3 focus sessions in a row,
+  the break suggests one small thing for you: water, resting your eyes, a
+  stretch or a snack. It shows on the timer and in the "time's up"
+  notification. Turn it on under Focus helpers in Settings.
+
 ## 1.5.0 (2026-10-16)
 
 ### New

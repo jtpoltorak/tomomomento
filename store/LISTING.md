@@ -108,14 +108,15 @@ one "Links" block, where they're easy to spot and copy.
 
 **Permission justifications:**
 
-| Permission                                       | Justification                                                                                                                                          |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `alarms`                                         | Wakes the extension when a focus session or break ends, so the timer keeps working while the popup is closed.                                          |
-| `notifications`                                  | Shows the optional "time's up" notification, which is off until the user turns it on.                                                                  |
-| `offscreen`                                      | Plays the optional "time's up" sound and focus sound. Service workers can't play audio, so a hidden offscreen document does it.                        |
-| `storage`                                        | Remembers the timer and the user's settings.                                                                                                           |
-| `declarativeNetRequestWithHostAccess` (optional) | Used only when the user turns on the site blocker: redirects the sites on their list to the extension's "stay focused" page during focus sessions.     |
-| Host permission `<all_urls>` (optional)          | Requested only when the user turns on the site blocker, because the user can list any site; given back when they turn it off. No page content is read. |
+| Permission                                       | Justification                                                                                                                                                                 |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `alarms`                                         | Wakes the extension when a focus session or break ends, so the timer keeps working while the popup is closed.                                                                 |
+| `idle`                                           | Used only when the user turns on "Pause when I step away": pauses a focus session after 5 minutes without keyboard or mouse input. Only "active", "idle" or "locked" is read. |
+| `notifications`                                  | Shows the optional "time's up" notification, which is off until the user turns it on.                                                                                         |
+| `offscreen`                                      | Plays the optional "time's up" sound and focus sound. Service workers can't play audio, so a hidden offscreen document does it.                                               |
+| `storage`                                        | Remembers the timer and the user's settings.                                                                                                                                  |
+| `declarativeNetRequestWithHostAccess` (optional) | Used only when the user turns on the site blocker: redirects the sites on their list to the extension's "stay focused" page during focus sessions.                            |
+| Host permission `<all_urls>` (optional)          | Requested only when the user turns on the site blocker, because the user can list any site; given back when they turn it off. No page content is read.                        |
 
 **Are you using remote code?** No, I am not using remote code.
 

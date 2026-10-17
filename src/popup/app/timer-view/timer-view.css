@@ -103,6 +103,25 @@
   color: var(--muted);
   font-size: 1.3125rem;
 }
+/*
+ * Settle-in: the bar fills as you breathe in (4 s) and empties as you breathe
+ * out (6 s). With reduced motion it holds still and the words lead the way.
+ */
+.bar-fill.settling {
+  animation: breath 10s ease-in-out infinite;
+}
+@keyframes breath {
+  0%,
+  100% {
+    transform: scaleX(0.08);
+  }
+  40% {
+    transform: scaleX(1);
+  }
+}
+.status.settle {
+  min-width: 8.5rem;
+}
 /* "Ready to focus" with the "just start" link beside it. */
 .just-start.link {
   font-size: 1.0625rem;

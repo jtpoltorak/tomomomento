@@ -89,10 +89,13 @@ describe('HelpView', () => {
     expect(el.textContent).toContain("tab's title shows the time left");
   });
 
-  it('explains Just start, Heads-up, Paused reminder, Calm clock, Animated digits, Minimal timer, Accessibility, Focus sound, Keep going, Stats, Plan my day, the parking lot, break ideas and backups in the basics', () => {
+  it('explains Settle in, Step away, Take-care reminders, Just start, Heads-up, Paused reminder, Calm clock, Animated digits, Minimal timer, Accessibility, Focus sound, Keep going, Stats, Plan my day, the parking lot, break ideas and backups in the basics', () => {
     const el = setup();
     const headings = Array.from(el.querySelectorAll('h3')).map((h) => h.textContent?.trim());
     expect(headings).toEqual([
+      'Settle in',
+      'Step away',
+      'Take-care reminders',
       'Just start',
       'Heads-up',
       'Paused reminder',

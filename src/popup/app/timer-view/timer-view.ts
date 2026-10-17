@@ -17,7 +17,9 @@ import { breakIdea } from '../../../shared/break-ideas';
 import { MAX_THOUGHT_LENGTH, thoughtsText } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
 import {
+  breathAt,
   canJustStart,
+  careNudge,
   canKeepGoing,
   calmMinutes,
   formatClock,
@@ -26,6 +28,8 @@ import {
   JUST_START_MINUTES,
   KEEP_GOING_MINUTES,
   PHASE_LABELS,
+  SETTLE_MS,
+  settling,
   type Phase,
 } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
@@ -142,12 +146,18 @@ export class TimerView {
     return `${left} of ${total} ${total === 1 ? 'minute' : 'minutes'} left`;
   });
 
+  /** After a few focus sessions in a row, this break's line is a reminder to look after yourself. */
+  protected readonly care = computed(() => {
+    const state = this.store.state();
+    return state.status === 'paused' ? null : careNudge(state, this.store.settings());
+  });
+
   /** How many times "Another idea" was pressed on this break. */
   private readonly ideaOffset = signal(0);
   /** A screen-free suggestion for this break, the same each time the popup opens. */
   protected readonly idea = computed(() => {
     const { phase, status, todayKey, completedToday } = this.store.state();
-    if (!this.store.settings().breakIdeas || status === 'paused') return null;
+    if (!this.store.settings().breakIdeas || status === 'paused' || this.care()) return null;
     return breakIdea(phase, `${todayKey}:${completedToday}:${phase}`, this.ideaOffset());
   });
 
@@ -157,17 +167,39 @@ export class TimerView {
     return inHeadsUp(this.store.state(), this.store.settings(), Date.now());
   });
 
+  /** The settle-in breathing before focus, or null when it isn't happening. */
+  protected readonly breath = computed(() => {
+    const state = this.store.state();
+    const now = Math.max(this.store.tick(), Date.now());
+    return settling(state, now) ? breathAt(state, now) : null;
+  });
+  /** Starts the bar's breathing animation partway through when the popup opens mid-breath. */
+  protected readonly breathDelay = computed(() => {
+    const until = this.store.state().settleUntil ?? 0;
+    return until - SETTLE_MS - Date.now();
+  });
+
+  protected readonly live = computed(() => (this.breath() ? null : 'polite'));
+  protected readonly settleAnnouncement = computed(() =>
+    this.breath() ? 'Settling in. Focus starts in 30 seconds.' : '',
+  );
+
   protected readonly status = computed(() => {
     const { phase, status, extending } = this.store.state();
+    const breath = this.breath();
+    if (breath) return breath === 'in' ? 'Breathe in…' : 'Breathe out…';
     if (this.headsUp()) {
       return phase === 'work'
         ? '1 minute left: find a stopping point'
         : '1 minute left on your break';
     }
+    const care = this.care();
+    if (care) return care;
     const idea = this.idea();
     if (idea) return idea;
     if (extending && status === 'running') return 'Extra time. Your break is waiting';
     if (status === 'running') return phase === 'work' ? 'Stay focused' : 'Take a breather';
+    if (status === 'paused' && this.store.state().away) return 'Paused while you were away';
     if (status === 'paused')
       return this.stillPaused() ? 'Still paused. Pick it back up?' : 'Paused';
     return phase === 'work' ? 'Ready to focus' : 'Time for a break';
@@ -386,6 +418,22 @@ export class TimerView {
   protected justStart(): void {
     void this.store.send({ command: 'justStart' });
     // The link goes away once the timer runs, so keep keyboard focus on the controls.
+    this.focusSoon('.primary-btn');
+  }
+
+  /** Back from an "away" pause. Reading or thinking away from the keys still counts. */
+  protected readonly awayOffer = computed(() => {
+    const { status, away } = this.store.state();
+    return status === 'paused' && away === true;
+  });
+
+  protected wasWorking(): void {
+    void this.store.send({ command: 'wasWorking' });
+    this.focusSoon('.primary-btn');
+  }
+
+  protected skipSettle(): void {
+    void this.store.send({ command: 'skipSettle' });
     this.focusSoon('.primary-btn');
   }
 

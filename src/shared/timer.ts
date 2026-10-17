@@ -54,6 +54,12 @@ export interface Settings {
   minimalMode: boolean;
   /** A quiet reminder when the timer has sat paused for a while. */
   pauseNudge: boolean;
+  /** Thirty seconds of slow breathing before a focus session's clock starts. */
+  settleIn: boolean;
+  /** Pause focus when the computer sits untouched, and ask on return (extension only). */
+  awayCheck: boolean;
+  /** After every few focus sessions in a row, a break reminds you to look after yourself. */
+  takeCare: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
   focusSound: FocusSoundId;
   /** 0 to 1, separate from the alert volume. */
@@ -94,6 +100,17 @@ export interface TimerState {
   afterFocus?: boolean;
   /** Epoch ms the timer was paused, for the "still paused?" reminder. Only while paused. */
   pausedAt?: number;
+  /**
+   * Epoch ms the settle-in breathing ends and the focus clock starts. `endTime`
+   * already includes it, so the phase ends at the right time with no extra step.
+   */
+  settleUntil?: number;
+  /** Paused because you stepped away from the computer. `pausedAt` is when you left. */
+  away?: boolean;
+  /** Focus sessions finished one after another, with only breaks between them. */
+  inARow?: number;
+  /** Epoch ms the last counted focus session ended, to tell whether the next one follows it. */
+  lastFocusEnd?: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -125,6 +142,9 @@ export const DEFAULT_SETTINGS: Settings = {
   animateDigits: false,
   minimalMode: false,
   pauseNudge: false,
+  settleIn: false,
+  awayCheck: false,
+  takeCare: false,
   focusSound: 'off',
   focusVolume: 0.4,
   highContrast: false,
@@ -145,6 +165,30 @@ export const HEADS_UP_MS = 60_000;
 
 /** How long the timer sits paused before the "still paused?" reminder. */
 export const PAUSE_NUDGE_MS = 10 * 60_000;
+
+/** How long the settle-in breathing lasts before focus. */
+export const SETTLE_MS = 30_000;
+/** One slow breath: in for 4 seconds, out for 6. */
+export const BREATH_IN_MS = 4_000;
+export const BREATH_MS = 10_000;
+
+/** How long the computer sits untouched before focus pauses for "away". */
+export const AWAY_MS = 5 * 60_000;
+
+/** A take-care reminder comes on the break after every this many focus sessions in a row. */
+export const CARE_EVERY = 3;
+/**
+ * How much longer than a long break the gap between two focus sessions can be
+ * and still count as "in a row".
+ */
+export const IN_A_ROW_SLACK_MS = 15 * 60_000;
+/** Taken in turn, so each reminder is a different one. */
+export const CARE_TIPS = [
+  'Have a glass of water',
+  'Rest your eyes on something far away',
+  'Stand up and stretch',
+  "Grab a snack if you're hungry",
+] as const;
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -207,6 +251,8 @@ function usualLength(state: TimerState): TimerState {
     extending: _extra,
     afterFocus: _offer,
     pausedAt: _paused,
+    settleUntil: _settle,
+    away: _away,
     ...rest
   } = state;
   return rest;
@@ -226,7 +272,9 @@ export function initialState(settings: Settings, now: number): TimerState {
 
 export function remainingMs(state: TimerState, now: number): number {
   if (state.status === 'running' && state.endTime !== null) {
-    return Math.max(0, state.endTime - now);
+    // While settling in, the focus clock holds at its full length.
+    const left = state.endTime - Math.max(now, state.settleUntil ?? now);
+    return Math.max(0, left);
   }
   return state.remainingMs;
 }
@@ -244,14 +292,15 @@ export function rollDay(state: TimerState, now: number): TimerState {
 
 export function start(state: TimerState, now: number): TimerState {
   if (state.status === 'running') return state;
-  const { pausedAt: _, ...rest } = state;
+  const { pausedAt: _, away: _away, ...rest } = state;
   return { ...rest, status: 'running', endTime: now + state.remainingMs };
 }
 
 export function pause(state: TimerState, now: number): TimerState {
   if (state.status !== 'running') return state;
+  const { settleUntil: _, ...rest } = state;
   return {
-    ...state,
+    ...rest,
     status: 'paused',
     endTime: null,
     remainingMs: remainingMs(state, now),
@@ -259,9 +308,80 @@ export function pause(state: TimerState, now: number): TimerState {
   };
 }
 
+/**
+ * Whether Start begins with the settle-in breathing: a focus session that
+ * hasn't begun yet. Resuming, extra time and "Just start" go straight in.
+ */
+export function canSettle(state: TimerState, settings: Settings): boolean {
+  return (
+    settings.settleIn &&
+    state.phase === 'work' &&
+    state.status === 'idle' &&
+    !state.extending &&
+    state.remainingMs === phaseLengthMs(state, settings)
+  );
+}
+
+/** Start, with the settle-in breathing first when it's on. */
+export function settleStart(state: TimerState, settings: Settings, now: number): TimerState {
+  const started = start(state, now);
+  if (!canSettle(state, settings)) return started;
+  return { ...started, endTime: started.endTime! + SETTLE_MS, settleUntil: now + SETTLE_MS };
+}
+
+/** True during the settle-in breathing. */
+export function settling(state: TimerState, now: number): boolean {
+  return state.status === 'running' && state.settleUntil !== undefined && now < state.settleUntil;
+}
+
+/** Ends the breathing early, and the focus clock starts now. */
+export function skipSettle(state: TimerState, now: number): TimerState {
+  if (!settling(state, now)) return state;
+  const { settleUntil, ...rest } = state;
+  return { ...rest, endTime: now + (state.endTime! - settleUntil!) };
+}
+
+/** "in" or "out", for the breath at `now` during the settle-in. */
+export function breathAt(state: TimerState, now: number): 'in' | 'out' {
+  const elapsed = now - (state.settleUntil ?? now) + SETTLE_MS;
+  return ((elapsed % BREATH_MS) + BREATH_MS) % BREATH_MS < BREATH_IN_MS ? 'in' : 'out';
+}
+
+/**
+ * You stepped away during focus: pauses as of when you left, so the time away
+ * doesn't run down the clock. Breaks carry on, since stepping away is the point.
+ */
+export function stepAway(
+  state: TimerState,
+  settings: Settings,
+  leftAt: number,
+  now: number,
+): TimerState {
+  if (!settings.awayCheck || state.phase !== 'work' || state.status !== 'running') return state;
+  // You can't have left before this session began.
+  const began = state.endTime! - phaseLengthMs(state, settings);
+  return { ...pause(state, Math.min(Math.max(leftAt, began), now)), away: true };
+}
+
+/**
+ * "I was working": the time away was focus after all (reading, thinking), so
+ * it counts, and the clock picks up where it would have been.
+ */
+export function wasWorking(state: TimerState, now: number): TimerState {
+  if (state.status !== 'paused' || !state.away || state.pausedAt === undefined) return state;
+  const left = Math.max(0, state.remainingMs - (now - state.pausedAt));
+  return start({ ...state, remainingMs: left }, now);
+}
+
 /** When the "still paused?" reminder is due, or null when there isn't one. */
 export function pauseNudgeAt(state: TimerState, settings: Settings): number | null {
-  if (!settings.pauseNudge || state.status !== 'paused' || state.pausedAt === undefined) {
+  // Coming back asks about an "away" pause, so it doesn't need a reminder too.
+  if (
+    !settings.pauseNudge ||
+    state.status !== 'paused' ||
+    state.pausedAt === undefined ||
+    state.away
+  ) {
     return null;
   }
   return state.pausedAt + PAUSE_NUDGE_MS;
@@ -383,6 +503,13 @@ export function advance(
     const completedInCycle = counts ? s.completedInCycle + 1 : s.completedInCycle;
     const completedToday = counts ? s.completedToday + 1 : s.completedToday;
     s = { ...s, completedInCycle, completedToday };
+    if (counts) {
+      // A run carries on when this session began soon enough after the last one ended.
+      const began = finishedAt - phaseLengthMs(state, settings);
+      const gap = s.lastFocusEnd === undefined ? Infinity : began - s.lastFocusEnd;
+      const follows = gap <= settings.longBreakMinutes * 60_000 + IN_A_ROW_SLACK_MS;
+      s = { ...s, inARow: follows ? (s.inARow ?? 0) + 1 : 1, lastFocusEnd: finishedAt };
+    }
     next = completedInCycle >= settings.sessionsBeforeLongBreak ? 'longBreak' : 'shortBreak';
     s = rollDay(s, now);
   } else {
@@ -401,6 +528,17 @@ export function advance(
     remainingMs: duration,
     ...(ranOut ? { afterFocus: true } : {}),
   };
+}
+
+/**
+ * On the break after every few focus sessions in a row, a reminder to look
+ * after yourself ("3 in a row. Have a glass of water"), or null.
+ */
+export function careNudge(state: TimerState, settings: Settings): string | null {
+  const n = state.inARow ?? 0;
+  if (!settings.takeCare || state.phase === 'work' || !state.afterFocus) return null;
+  if (n < CARE_EVERY || n % CARE_EVERY !== 0) return null;
+  return `${n} in a row. ${CARE_TIPS[(n / CARE_EVERY - 1) % CARE_TIPS.length]}`;
 }
 
 /** Whole minutes left, rounded up, for the calm clock: "25" until 24:00, then "24". */
@@ -455,6 +593,9 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     animateDigits: input.animateDigits ?? d.animateDigits,
     minimalMode: input.minimalMode ?? d.minimalMode,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
+    settleIn: input.settleIn ?? d.settleIn,
+    awayCheck: input.awayCheck ?? d.awayCheck,
+    takeCare: input.takeCare ?? d.takeCare,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,
     focusVolume: Number.isFinite(Number(input.focusVolume))

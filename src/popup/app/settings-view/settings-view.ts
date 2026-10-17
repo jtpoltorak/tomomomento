@@ -16,6 +16,8 @@ import { MAX_BLOCKED_SITES, normalizeSite, SUGGESTED_SITES } from '../../../shar
 import { FocusSoundPlayer } from '../../../shared/focus-sounds';
 import { playSound } from '../../../shared/sounds';
 import {
+  AWAY_MS,
+  CARE_EVERY,
   DEFAULT_SETTINGS,
   JUST_START_MINUTES,
   KEEP_GOING_MINUTES,
@@ -55,6 +57,8 @@ export class SettingsView {
   protected readonly justStartMinutes = JUST_START_MINUTES;
   protected readonly keepGoingMinutes = KEEP_GOING_MINUTES;
   protected readonly pauseNudgeMinutes = PAUSE_NUDGE_MS / 60_000;
+  protected readonly awayMinutes = AWAY_MS / 60_000;
+  protected readonly careEvery = CARE_EVERY;
 
   // The blocker lives outside the form because turning it on waits on Chrome's permission prompt.
   protected readonly blockSites = signal(this.store.settings().blockSites);
@@ -101,6 +105,9 @@ export class SettingsView {
     animateDigits: [false],
     minimalMode: [false],
     pauseNudge: [false],
+    settleIn: [false],
+    awayCheck: [false],
+    takeCare: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],
     highContrast: [false],

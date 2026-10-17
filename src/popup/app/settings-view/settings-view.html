@@ -116,6 +116,14 @@
       Pressing Start begins with 30 seconds of slow breathing, so you arrive before the clock
       starts. "Start now" skips it.
     </p>
+    <label class="switch-row">
+      <span>Take-care reminders</span>
+      <input type="checkbox" role="switch" formControlName="takeCare" />
+    </label>
+    <p class="note">
+      After every {{ careEvery }} focus sessions in a row, the break reminds you to drink some
+      water, rest your eyes, stretch or have a snack.
+    </p>
     @if (!isWeb) {
       <label class="switch-row">
         <span>Pause when I step away</span>

@@ -26,6 +26,7 @@ import {
 } from '../shared/storage';
 import {
   advance,
+  careNudge,
   AWAY_MS,
   focusSoundNow,
   headsUpAt,
@@ -282,7 +283,9 @@ async function alertPhaseComplete(
   if (settings.notificationsEnabled) {
     const planLine =
       finished === 'work' && !extended ? planDoneMessage(await loadPlan(), settings, next) : null;
-    tasks.push(showNotification(finished, next, planLine, extended, canKeepGoing(next, settings)));
+    const care = careNudge(next, settings);
+    const lines = [planLine, care && `${care}.`].filter(Boolean).join(' ') || null;
+    tasks.push(showNotification(finished, next, lines, extended, canKeepGoing(next, settings)));
   }
   const results = await Promise.allSettled(tasks);
   for (const r of results) if (r.status === 'rejected') console.error('Alert failed', r.reason);

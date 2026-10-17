@@ -19,6 +19,7 @@ import {
 } from '../shared/stats';
 import {
   advance,
+  careNudge,
   calmMinutes,
   focusSoundNow,
   headsUpAt,
@@ -438,7 +439,9 @@ export class WebTimerHost implements TimerHost {
     if (settings.notificationsEnabled) {
       const planLine =
         finished === 'work' && !extended ? planDoneMessage(loadPlan(), settings, next) : null;
-      tasks.push(this.showNotification(finished, next, planLine, extended));
+      const care = careNudge(next, settings);
+      const lines = [planLine, care && `${care}.`].filter(Boolean).join(' ') || null;
+      tasks.push(this.showNotification(finished, next, lines, extended));
     }
     const results = await Promise.allSettled(tasks);
     for (const r of results) if (r.status === 'rejected') console.error('Alert failed', r.reason);

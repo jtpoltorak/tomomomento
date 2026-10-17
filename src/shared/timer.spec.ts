@@ -2,6 +2,7 @@ import {
   advance,
   breathAt,
   canSettle,
+  careNudge,
   calmMinutes,
   canJustStart,
   canKeepGoing,
@@ -288,6 +289,57 @@ describe('timer state machine', () => {
     it('stays off unless turned on', () => {
       expect(sanitizeSettings({}).awayCheck).toBe(false);
       expect(sanitizeSettings({ awayCheck: true }).awayCheck).toBe(true);
+    });
+  });
+
+  describe('take-care reminders', () => {
+    const on = { ...s, takeCare: true };
+    /** Runs focus sessions back to back with 5-minute breaks, starting at `from`. */
+    function sessions(n: number, from = T0, st = initialState(on, from)): TimerState {
+      let t = from;
+      for (let i = 0; i < n; i++) {
+        st = start(st.phase === 'work' ? st : advance(st, on, t, false), t);
+        t += 25 * MIN;
+        st = advance(st, on, t, true);
+        t += 5 * MIN;
+      }
+      return st;
+    }
+
+    it('counts focus sessions in a row', () => {
+      expect(sessions(1).inARow).toBe(1);
+      expect(sessions(4).inARow).toBe(4);
+    });
+
+    it('reminds you on the break after every third one, a different reminder each time', () => {
+      expect(careNudge(sessions(2), on)).toBeNull();
+      expect(careNudge(sessions(3), on)).toBe('3 in a row. Have a glass of water');
+      expect(careNudge(sessions(4), on)).toBeNull();
+      expect(careNudge(sessions(6), on)).toBe('6 in a row. Rest your eyes on something far away');
+      expect(careNudge(sessions(3), s)).toBeNull();
+    });
+
+    it('starts a new run after a long gap', () => {
+      const first = sessions(2);
+      // Back after lunch: an hour and a half later.
+      const later = sessions(1, T0 + 2 * 30 * MIN + 90 * MIN, first);
+      expect(later.inARow).toBe(1);
+      // A long break between sessions keeps the run going.
+      const afterLong = sessions(1, T0 + 2 * 30 * MIN + 15 * MIN, first);
+      expect(afterLong.inARow).toBe(3);
+    });
+
+    it("doesn't count skipped sessions or extra time", () => {
+      const st = sessions(2);
+      const skipped = advance(start(advance(st, on, T0, false), T0), on, T0 + MIN, false);
+      expect(skipped.inARow).toBe(2);
+      const extra = advance(keepGoing(st, { ...on, keepGoing: true }, T0), on, T0 + 5 * MIN, true);
+      expect(extra.inARow).toBe(2);
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).takeCare).toBe(false);
+      expect(sanitizeSettings({ takeCare: true }).takeCare).toBe(true);
     });
   });
 

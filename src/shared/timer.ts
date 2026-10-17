@@ -58,6 +58,8 @@ export interface Settings {
   settleIn: boolean;
   /** Pause focus when the computer sits untouched, and ask on return (extension only). */
   awayCheck: boolean;
+  /** After every few focus sessions in a row, a break reminds you to look after yourself. */
+  takeCare: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
   focusSound: FocusSoundId;
   /** 0 to 1, separate from the alert volume. */
@@ -105,6 +107,10 @@ export interface TimerState {
   settleUntil?: number;
   /** Paused because you stepped away from the computer. `pausedAt` is when you left. */
   away?: boolean;
+  /** Focus sessions finished one after another, with only breaks between them. */
+  inARow?: number;
+  /** Epoch ms the last counted focus session ended, to tell whether the next one follows it. */
+  lastFocusEnd?: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -138,6 +144,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pauseNudge: false,
   settleIn: false,
   awayCheck: false,
+  takeCare: false,
   focusSound: 'off',
   focusVolume: 0.4,
   highContrast: false,
@@ -167,6 +174,21 @@ export const BREATH_MS = 10_000;
 
 /** How long the computer sits untouched before focus pauses for "away". */
 export const AWAY_MS = 5 * 60_000;
+
+/** A take-care reminder comes on the break after every this many focus sessions in a row. */
+export const CARE_EVERY = 3;
+/**
+ * How much longer than a long break the gap between two focus sessions can be
+ * and still count as "in a row".
+ */
+export const IN_A_ROW_SLACK_MS = 15 * 60_000;
+/** Taken in turn, so each reminder is a different one. */
+export const CARE_TIPS = [
+  'Have a glass of water',
+  'Rest your eyes on something far away',
+  'Stand up and stretch',
+  "Grab a snack if you're hungry",
+] as const;
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -481,6 +503,13 @@ export function advance(
     const completedInCycle = counts ? s.completedInCycle + 1 : s.completedInCycle;
     const completedToday = counts ? s.completedToday + 1 : s.completedToday;
     s = { ...s, completedInCycle, completedToday };
+    if (counts) {
+      // A run carries on when this session began soon enough after the last one ended.
+      const began = finishedAt - phaseLengthMs(state, settings);
+      const gap = s.lastFocusEnd === undefined ? Infinity : began - s.lastFocusEnd;
+      const follows = gap <= settings.longBreakMinutes * 60_000 + IN_A_ROW_SLACK_MS;
+      s = { ...s, inARow: follows ? (s.inARow ?? 0) + 1 : 1, lastFocusEnd: finishedAt };
+    }
     next = completedInCycle >= settings.sessionsBeforeLongBreak ? 'longBreak' : 'shortBreak';
     s = rollDay(s, now);
   } else {
@@ -499,6 +528,17 @@ export function advance(
     remainingMs: duration,
     ...(ranOut ? { afterFocus: true } : {}),
   };
+}
+
+/**
+ * On the break after every few focus sessions in a row, a reminder to look
+ * after yourself ("3 in a row. Have a glass of water"), or null.
+ */
+export function careNudge(state: TimerState, settings: Settings): string | null {
+  const n = state.inARow ?? 0;
+  if (!settings.takeCare || state.phase === 'work' || !state.afterFocus) return null;
+  if (n < CARE_EVERY || n % CARE_EVERY !== 0) return null;
+  return `${n} in a row. ${CARE_TIPS[(n / CARE_EVERY - 1) % CARE_TIPS.length]}`;
 }
 
 /** Whole minutes left, rounded up, for the calm clock: "25" until 24:00, then "24". */
@@ -555,6 +595,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     settleIn: input.settleIn ?? d.settleIn,
     awayCheck: input.awayCheck ?? d.awayCheck,
+    takeCare: input.takeCare ?? d.takeCare,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,
     focusVolume: Number.isFinite(Number(input.focusVolume))

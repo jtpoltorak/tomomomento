@@ -19,6 +19,7 @@ import { pickQuote, type Quote } from '../../../shared/quotes';
 import {
   breathAt,
   canJustStart,
+  careNudge,
   canKeepGoing,
   calmMinutes,
   formatClock,
@@ -145,12 +146,18 @@ export class TimerView {
     return `${left} of ${total} ${total === 1 ? 'minute' : 'minutes'} left`;
   });
 
+  /** After a few focus sessions in a row, this break's line is a reminder to look after yourself. */
+  protected readonly care = computed(() => {
+    const state = this.store.state();
+    return state.status === 'paused' ? null : careNudge(state, this.store.settings());
+  });
+
   /** How many times "Another idea" was pressed on this break. */
   private readonly ideaOffset = signal(0);
   /** A screen-free suggestion for this break, the same each time the popup opens. */
   protected readonly idea = computed(() => {
     const { phase, status, todayKey, completedToday } = this.store.state();
-    if (!this.store.settings().breakIdeas || status === 'paused') return null;
+    if (!this.store.settings().breakIdeas || status === 'paused' || this.care()) return null;
     return breakIdea(phase, `${todayKey}:${completedToday}:${phase}`, this.ideaOffset());
   });
 
@@ -186,6 +193,8 @@ export class TimerView {
         ? '1 minute left: find a stopping point'
         : '1 minute left on your break';
     }
+    const care = this.care();
+    if (care) return care;
     const idea = this.idea();
     if (idea) return idea;
     if (extending && status === 'running') return 'Extra time. Your break is waiting';

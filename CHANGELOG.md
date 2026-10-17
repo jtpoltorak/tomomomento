@@ -16,6 +16,10 @@ these first.
   resume where you were, or tap "I was working" to count the time. Turn on
   "Pause when I step away" under Focus helpers in Settings. This adds Chrome's
   "idle" permission, which shows no warning.
+- **Take-care reminders (optional):** after every 3 focus sessions in a row,
+  the break suggests one small thing for you: water, resting your eyes, a
+  stretch or a snack. It shows on the timer and in the "time's up"
+  notification. Turn it on under Focus helpers in Settings.
 
 ## 1.5.0 (2026-10-16)
 

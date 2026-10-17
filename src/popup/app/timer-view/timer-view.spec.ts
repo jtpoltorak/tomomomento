@@ -410,6 +410,22 @@ describe('TimerView', () => {
     });
   });
 
+  describe('take-care reminders', () => {
+    it('shows on the break after a few sessions in a row, ahead of break ideas', async () => {
+      const { el, store, fixture } = await setup({
+        phase: 'shortBreak',
+        status: 'running',
+        endTime: Date.now() + 5 * 60_000,
+        afterFocus: true,
+        inARow: 3,
+      });
+      store.settings.update((s) => ({ ...s, takeCare: true, breakIdeas: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.status')?.textContent).toBe('3 in a row. Have a glass of water');
+      expect(el.querySelector('.another')).toBeNull();
+    });
+  });
+
   describe('just start', () => {
     async function offered(overrides = {}) {
       const ctx = await setup(overrides);

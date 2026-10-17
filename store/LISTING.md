@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Everything to paste into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-for Tomomomento 1.5.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
+for Tomomomento 1.6.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
 `node scripts/store-images.mjs` after UI changes.
 
 ## Store listing tab
@@ -44,6 +44,9 @@ Features
 • An optional minimal timer: just the clock, the progress bar and one button
 • Optional animated digits that roll gently into place
 • Accessibility options: larger text, high contrast, color-blind friendly colors, an easy-read font, and reduced motion
+• Optional "Settle in": 30 seconds of slow breathing before a focus session starts
+• Optional "Step away" check: focus pauses when you leave the computer, and asks when you're back
+• Optional take-care reminders: water, a stretch, or resting your eyes after a few sessions in a row
 • A built-in guide to the technique and how to use it
 • Light and dark themes that follow your system, or pick one yourself
 • Optional quotes on the timer screen: focus quotes while you work, rest quotes on breaks
@@ -56,12 +59,11 @@ Tomomomento has no account, no ads, no analytics, and no tracking. It makes no n
 Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Not using Chrome? The same timer runs in any browser on the website below.
 
-What's new in 1.5
-New ways to make the timer look, sound, and feel right for you. All are off until you turn them on in Settings.
-• Focus sound: soft ticking or brown noise while focus runs, to help you settle in. It stops for breaks.
-• Minimal timer: just the clock, the progress bar and one button, for when the screen feels like too much.
-• Animated digits: each number rolls gently into place as it changes.
-• Accessibility: larger text, high contrast, color-blind friendly colors, the Atkinson Hyperlegible font, and a reduce-motion switch.
+What's new in 1.6
+Three new focus helpers for starting gently, wandering off, and looking after yourself. All are off until you turn them on in Settings.
+• Settle in: pressing Start can begin with 30 seconds of slow breathing, with the progress bar breathing along. "Start now" skips it.
+• Step away: if the computer sits untouched for 5 minutes during focus, the timer pauses from when you left. Back again? Resume, or tap "I was working" to count the time.
+• Take-care reminders: after every 3 focus sessions in a row, your break suggests a glass of water, resting your eyes, a stretch, or a snack.
 
 Links
 Website: https://tomomomento.com

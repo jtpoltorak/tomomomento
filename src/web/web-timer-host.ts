@@ -38,6 +38,7 @@ import {
   setPhase,
   settleStart,
   skipSettle,
+  wasWorking,
   type Phase,
   type Settings,
   type TimerState,
@@ -185,6 +186,8 @@ export class WebTimerHost implements TimerHost {
           return this.commit(keepGoing(state, settings, now));
         case 'skipSettle':
           return this.commit(skipSettle(state, now));
+        case 'wasWorking':
+          return this.commit(wasWorking(state, now));
         case 'pause':
           return this.commit(pause(state, now));
         case 'reset':

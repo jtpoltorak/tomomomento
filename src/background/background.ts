@@ -26,6 +26,7 @@ import {
 } from '../shared/storage';
 import {
   advance,
+  AWAY_MS,
   focusSoundNow,
   headsUpAt,
   canKeepGoing,
@@ -42,6 +43,8 @@ import {
   setPhase,
   settleStart,
   skipSettle,
+  stepAway,
+  wasWorking,
   type Phase,
   type Settings,
   type TimerState,
@@ -53,6 +56,7 @@ const HEADS_UP_ALARM = 'heads-up';
 const PAUSE_NUDGE_ALARM = 'pause-nudge';
 const NOTIFICATION_ID = 'phase-complete';
 const PAUSE_NOTIFICATION_ID = 'still-paused';
+const AWAY_NOTIFICATION_ID = 'welcome-back';
 
 const BADGE_COLORS: Record<Phase, string> = {
   work: '#d9480f',
@@ -337,7 +341,13 @@ function completeIfDue(): Promise<TimerState> {
       await updateBadge(state);
       return state;
     }
-    const next = advance(state, settings, now, true, state.endTime);
+    let next = advance(state, settings, now, true, state.endTime);
+    // Focus that starts on its own while nobody is at the computer waits for them.
+    if (settings.awayCheck && next.phase === 'work' && next.status === 'running') {
+      if ((await chrome.idle.queryState(AWAY_MS / 1000)) !== 'active') {
+        next = stepAway(next, settings, now, now);
+      }
+    }
     if (state.phase === 'work') {
       // Read before the state is saved, so a first history still sees today's old tally.
       const history = await loadHistory();
@@ -361,8 +371,9 @@ function focusMinutes(state: TimerState, settings: Settings): number {
 }
 
 function runCommand(cmd: Command): Promise<TimerState> {
-  // Whatever you just did answers "still paused?".
+  // Whatever you just did answers "still paused?" and "welcome back".
   void chrome.notifications.clear(PAUSE_NOTIFICATION_ID);
+  void chrome.notifications.clear(AWAY_NOTIFICATION_ID);
   return serialized(async () => {
     const [stored, settings] = await Promise.all([loadState(), loadSettings()]);
     const now = Date.now();
@@ -377,6 +388,8 @@ function runCommand(cmd: Command): Promise<TimerState> {
         return commit(keepGoing(state, settings, now));
       case 'skipSettle':
         return commit(skipSettle(state, now));
+      case 'wasWorking':
+        return commit(wasWorking(state, now));
       case 'pause':
         return commit(pause(state, now));
       case 'reset':
@@ -407,6 +420,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.notifications.onButtonClicked.addListener((id, index) => {
+  if (id === AWAY_NOTIFICATION_ID) {
+    void runCommand({ command: index === 0 ? 'start' : 'wasWorking' });
+    return;
+  }
   if (id === PAUSE_NOTIFICATION_ID) {
     void runCommand({ command: index === 0 ? 'start' : 'reset' });
     return;
@@ -422,7 +439,9 @@ chrome.notifications.onButtonClicked.addListener((id, index) => {
 });
 
 chrome.notifications.onClicked.addListener((id) => {
-  if (id === NOTIFICATION_ID || id === PAUSE_NOTIFICATION_ID) void chrome.notifications.clear(id);
+  if (id === NOTIFICATION_ID || id === PAUSE_NOTIFICATION_ID || id === AWAY_NOTIFICATION_ID) {
+    void chrome.notifications.clear(id);
+  }
 });
 
 // When durations change in Options, an idle timer should show the new length.
@@ -467,6 +486,43 @@ chrome.permissions.onRemoved.addListener(() => {
     if (settings.blockSites) await saveSettings({ ...settings, blockSites: false });
   });
 });
+
+// The away check: Chrome reports "idle" after this long without keyboard or
+// mouse input, and "locked" as soon as the screen locks.
+chrome.idle.setDetectionInterval(AWAY_MS / 1000);
+
+chrome.idle.onStateChanged.addListener((idle) => {
+  void serialized(async () => {
+    const [state, settings] = await Promise.all([loadState(), loadSettings()]);
+    const now = Date.now();
+    if (idle === 'active') {
+      if (state.status === 'paused' && state.away) await welcomeBack(state);
+      return;
+    }
+    // "idle" arrives once the computer has sat untouched for the whole interval.
+    const leftAt = idle === 'idle' ? now - AWAY_MS : now;
+    const next = stepAway(state, settings, leftAt, now);
+    if (next !== state) await commit(next);
+  });
+});
+
+/** Back at the computer after an "away" pause: resume, or count the time as focus. */
+async function welcomeBack(state: TimerState): Promise<void> {
+  const awayMinutes = Math.max(
+    1,
+    Math.round((Date.now() - (state.pausedAt ?? Date.now())) / 60_000),
+  );
+  await chrome.notifications.clear(PAUSE_NOTIFICATION_ID);
+  await chrome.notifications.create(AWAY_NOTIFICATION_ID, {
+    type: 'basic',
+    iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
+    title: 'Welcome back',
+    message: `Focus paused when you stepped away ${awayMinutes} min ago.`,
+    buttons: [{ title: 'Resume' }, { title: 'I was working' }],
+    silent: true,
+    priority: 0,
+  });
+}
 
 chrome.runtime.onInstalled.addListener(() => {
   void serialized(async () => commit(await loadState()));

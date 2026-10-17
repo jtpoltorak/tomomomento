@@ -25,6 +25,8 @@ import {
   settling,
   skipSettle,
   start,
+  stepAway,
+  wasWorking,
   type Settings,
   type TimerState,
 } from './timer';
@@ -232,6 +234,60 @@ describe('timer state machine', () => {
     it('stays off unless turned on', () => {
       expect(sanitizeSettings({}).settleIn).toBe(false);
       expect(sanitizeSettings({ settleIn: true }).settleIn).toBe(true);
+    });
+  });
+
+  describe('step away', () => {
+    const on = { ...s, awayCheck: true, pauseNudge: true };
+    const running = start(initialState(on, T0), T0);
+
+    it('pauses focus as of when you left', () => {
+      const away = stepAway(running, on, T0 + 10 * MIN, T0 + 15 * MIN);
+      expect(away).toMatchObject({
+        status: 'paused',
+        away: true,
+        remainingMs: 15 * MIN,
+        pausedAt: T0 + 10 * MIN,
+      });
+      // Coming back asks, so the "still paused?" reminder stays out of it.
+      expect(pauseNudgeAt(away, on)).toBeNull();
+    });
+
+    it("can't count time from before the session began", () => {
+      const away = stepAway(running, on, T0 - 3 * MIN, T0 + 2 * MIN);
+      expect(away).toMatchObject({ remainingMs: 25 * MIN, pausedAt: T0 });
+    });
+
+    it('leaves breaks, paused timers, and anyone who turned it off alone', () => {
+      const brk = start(setPhase(running, 'shortBreak', on), T0);
+      expect(stepAway(brk, on, T0, T0 + MIN)).toBe(brk);
+      const paused = pause(running, T0 + MIN);
+      expect(stepAway(paused, on, T0, T0 + 2 * MIN)).toBe(paused);
+      expect(stepAway(running, s, T0, T0 + MIN)).toBe(running);
+    });
+
+    it('resumes where you left off', () => {
+      const away = stepAway(running, on, T0 + 10 * MIN, T0 + 15 * MIN);
+      const back = start(away, T0 + 30 * MIN);
+      expect(back).toMatchObject({ status: 'running', endTime: T0 + 45 * MIN });
+      expect(back.away).toBeUndefined();
+    });
+
+    it('counts the time away when you were working after all', () => {
+      const away = stepAway(running, on, T0 + 10 * MIN, T0 + 15 * MIN);
+      const back = wasWorking(away, T0 + 18 * MIN);
+      expect(back).toMatchObject({ status: 'running', endTime: T0 + 25 * MIN });
+      expect(back.away).toBeUndefined();
+      // Away longer than the session had left: it's done, and finishes right away.
+      expect(wasWorking(away, T0 + 50 * MIN).endTime).toBe(T0 + 50 * MIN);
+      // Only for an "away" pause.
+      const paused = pause(running, T0 + MIN);
+      expect(wasWorking(paused, T0 + 5 * MIN)).toBe(paused);
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).awayCheck).toBe(false);
+      expect(sanitizeSettings({ awayCheck: true }).awayCheck).toBe(true);
     });
   });
 

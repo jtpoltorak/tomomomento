@@ -66,6 +66,9 @@
     @if (breath()) {
       <button type="button" class="link just-start" (click)="skipSettle()">Start now</button>
     }
+    @if (awayOffer()) {
+      <button type="button" class="link just-start" (click)="wasWorking()">I was working</button>
+    }
     @if (full() && justStartOffer()) {
       <button type="button" class="link just-start" (click)="justStart()">
         or just start: {{ justStartMinutes }} min

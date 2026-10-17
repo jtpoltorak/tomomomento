@@ -389,6 +389,27 @@ describe('TimerView', () => {
     });
   });
 
+  describe('step away', () => {
+    it('says the timer paused while you were away, and offers to count the time', async () => {
+      const { el, store, fixture, button } = await setup({
+        status: 'paused',
+        remainingMs: 15 * 60_000,
+        pausedAt: Date.now() - 20 * 60_000,
+        away: true,
+      });
+      expect(el.querySelector('.status')?.textContent).toBe('Paused while you were away');
+      expect(button('Resume')).toBeTruthy();
+      button('I was working').click();
+      await fixture.whenStable();
+      expect(store.sent).toEqual([{ command: 'wasWorking' }]);
+    });
+
+    it('is not offered for an ordinary pause', async () => {
+      const { button } = await setup({ status: 'paused', remainingMs: 15 * 60_000 });
+      expect(button('I was working')).toBeUndefined();
+    });
+  });
+
   describe('just start', () => {
     async function offered(overrides = {}) {
       const ctx = await setup(overrides);

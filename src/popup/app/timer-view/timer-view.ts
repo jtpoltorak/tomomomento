@@ -190,6 +190,7 @@ export class TimerView {
     if (idea) return idea;
     if (extending && status === 'running') return 'Extra time. Your break is waiting';
     if (status === 'running') return phase === 'work' ? 'Stay focused' : 'Take a breather';
+    if (status === 'paused' && this.store.state().away) return 'Paused while you were away';
     if (status === 'paused')
       return this.stillPaused() ? 'Still paused. Pick it back up?' : 'Paused';
     return phase === 'work' ? 'Ready to focus' : 'Time for a break';
@@ -408,6 +409,17 @@ export class TimerView {
   protected justStart(): void {
     void this.store.send({ command: 'justStart' });
     // The link goes away once the timer runs, so keep keyboard focus on the controls.
+    this.focusSoon('.primary-btn');
+  }
+
+  /** Back from an "away" pause. Reading or thinking away from the keys still counts. */
+  protected readonly awayOffer = computed(() => {
+    const { status, away } = this.store.state();
+    return status === 'paused' && away === true;
+  });
+
+  protected wasWorking(): void {
+    void this.store.send({ command: 'wasWorking' });
     this.focusSoon('.primary-btn');
   }
 

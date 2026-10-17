@@ -116,6 +116,17 @@
       Pressing Start begins with 30 seconds of slow breathing, so you arrive before the clock
       starts. "Start now" skips it.
     </p>
+    @if (!isWeb) {
+      <label class="switch-row">
+        <span>Pause when I step away</span>
+        <input type="checkbox" role="switch" formControlName="awayCheck" />
+      </label>
+      <p class="note">
+        If the computer sits untouched for {{ awayMinutes }} minutes during focus, the timer pauses
+        from the moment you left. When you're back, pick it up again, or say you were working
+        (reading, thinking) and the time counts.
+      </p>
+    }
   </section>
 
   <section>

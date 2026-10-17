@@ -56,6 +56,8 @@ export interface Settings {
   pauseNudge: boolean;
   /** Thirty seconds of slow breathing before a focus session's clock starts. */
   settleIn: boolean;
+  /** Pause focus when the computer sits untouched, and ask on return (extension only). */
+  awayCheck: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
   focusSound: FocusSoundId;
   /** 0 to 1, separate from the alert volume. */
@@ -101,6 +103,8 @@ export interface TimerState {
    * already includes it, so the phase ends at the right time with no extra step.
    */
   settleUntil?: number;
+  /** Paused because you stepped away from the computer. `pausedAt` is when you left. */
+  away?: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -133,6 +137,7 @@ export const DEFAULT_SETTINGS: Settings = {
   minimalMode: false,
   pauseNudge: false,
   settleIn: false,
+  awayCheck: false,
   focusSound: 'off',
   focusVolume: 0.4,
   highContrast: false,
@@ -159,6 +164,9 @@ export const SETTLE_MS = 30_000;
 /** One slow breath: in for 4 seconds, out for 6. */
 export const BREATH_IN_MS = 4_000;
 export const BREATH_MS = 10_000;
+
+/** How long the computer sits untouched before focus pauses for "away". */
+export const AWAY_MS = 5 * 60_000;
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -222,6 +230,7 @@ function usualLength(state: TimerState): TimerState {
     afterFocus: _offer,
     pausedAt: _paused,
     settleUntil: _settle,
+    away: _away,
     ...rest
   } = state;
   return rest;
@@ -261,7 +270,7 @@ export function rollDay(state: TimerState, now: number): TimerState {
 
 export function start(state: TimerState, now: number): TimerState {
   if (state.status === 'running') return state;
-  const { pausedAt: _, ...rest } = state;
+  const { pausedAt: _, away: _away, ...rest } = state;
   return { ...rest, status: 'running', endTime: now + state.remainingMs };
 }
 
@@ -316,9 +325,41 @@ export function breathAt(state: TimerState, now: number): 'in' | 'out' {
   return ((elapsed % BREATH_MS) + BREATH_MS) % BREATH_MS < BREATH_IN_MS ? 'in' : 'out';
 }
 
+/**
+ * You stepped away during focus: pauses as of when you left, so the time away
+ * doesn't run down the clock. Breaks carry on, since stepping away is the point.
+ */
+export function stepAway(
+  state: TimerState,
+  settings: Settings,
+  leftAt: number,
+  now: number,
+): TimerState {
+  if (!settings.awayCheck || state.phase !== 'work' || state.status !== 'running') return state;
+  // You can't have left before this session began.
+  const began = state.endTime! - phaseLengthMs(state, settings);
+  return { ...pause(state, Math.min(Math.max(leftAt, began), now)), away: true };
+}
+
+/**
+ * "I was working": the time away was focus after all (reading, thinking), so
+ * it counts, and the clock picks up where it would have been.
+ */
+export function wasWorking(state: TimerState, now: number): TimerState {
+  if (state.status !== 'paused' || !state.away || state.pausedAt === undefined) return state;
+  const left = Math.max(0, state.remainingMs - (now - state.pausedAt));
+  return start({ ...state, remainingMs: left }, now);
+}
+
 /** When the "still paused?" reminder is due, or null when there isn't one. */
 export function pauseNudgeAt(state: TimerState, settings: Settings): number | null {
-  if (!settings.pauseNudge || state.status !== 'paused' || state.pausedAt === undefined) {
+  // Coming back asks about an "away" pause, so it doesn't need a reminder too.
+  if (
+    !settings.pauseNudge ||
+    state.status !== 'paused' ||
+    state.pausedAt === undefined ||
+    state.away
+  ) {
     return null;
   }
   return state.pausedAt + PAUSE_NUDGE_MS;
@@ -513,6 +554,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     minimalMode: input.minimalMode ?? d.minimalMode,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     settleIn: input.settleIn ?? d.settleIn,
+    awayCheck: input.awayCheck ?? d.awayCheck,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,
     focusVolume: Number.isFinite(Number(input.focusVolume))

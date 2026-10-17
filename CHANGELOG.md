@@ -11,6 +11,11 @@ these first.
 - **Settle in (optional):** pressing Start can begin with 30 seconds of slow
   breathing before the focus clock runs, with the progress bar breathing
   along. "Start now" skips it. Turn it on under Focus helpers in Settings.
+- **Step away (optional):** if the computer sits untouched for 5 minutes
+  during focus, the timer pauses from the moment you left. When you're back,
+  resume where you were, or tap "I was working" to count the time. Turn on
+  "Pause when I step away" under Focus helpers in Settings. This adds Chrome's
+  "idle" permission, which shows no warning.
 
 ## 1.5.0 (2026-10-16)
 

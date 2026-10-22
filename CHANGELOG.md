@@ -4,6 +4,15 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Rhythm presets (optional):** before a focus session starts, pick
+  Classic (25/5), Short (15/3) or Deep (50/10) with one tap under the timer
+  choices. It sets all three timer lengths at once. Turn on **Rhythm presets
+  on the timer** under Timers in Settings.
+
 ## 1.7.0 (2026-10-22)
 
 ### New

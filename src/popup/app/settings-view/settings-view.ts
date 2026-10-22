@@ -110,6 +110,7 @@ export class SettingsView {
     awayCheck: [false],
     takeCare: [false],
     smallWins: [false],
+    rhythmPresets: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],
     highContrast: [false],

@@ -467,6 +467,38 @@ describe('TimerView', () => {
     });
   });
 
+  describe('rhythm presets', () => {
+    async function offered(overrides = {}) {
+      const ctx = await setup(overrides);
+      ctx.store.settings.update((s) => ({ ...s, rhythmPresets: true }));
+      await ctx.fixture.whenStable();
+      return ctx;
+    }
+
+    it('sets the timers in one tap and marks the one in use', async () => {
+      const { el, fixture, store } = await offered();
+      const chips = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.rhythm'));
+      expect(chips().map((c) => c.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+        'Classic 25/5',
+        'Short 15/3',
+        'Deep 50/10',
+      ]);
+      expect(chips()[0].getAttribute('aria-pressed')).toBe('true');
+      chips()[2].click();
+      await fixture.whenStable();
+      expect(store.settings()).toMatchObject({ workMinutes: 50, shortBreakMinutes: 10 });
+      expect(chips()[2].getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('only shows before a focus session starts', async () => {
+      expect((await offered({ status: 'paused' })).el.querySelector('.rhythms')).toBeNull();
+      TestBed.resetTestingModule();
+      expect((await offered({ phase: 'shortBreak' })).el.querySelector('.rhythms')).toBeNull();
+      TestBed.resetTestingModule();
+      expect((await setup()).el.querySelector('.rhythms')).toBeNull();
+    });
+  });
+
   describe('just start', () => {
     async function offered(overrides = {}) {
       const ctx = await setup(overrides);

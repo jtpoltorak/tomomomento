@@ -28,6 +28,10 @@ import {
   JUST_START_MINUTES,
   KEEP_GOING_MINUTES,
   PHASE_LABELS,
+  applyRhythm,
+  RHYTHMS,
+  rhythmOf,
+  type RhythmId,
   SETTLE_MS,
   settling,
   smallWin,
@@ -230,6 +234,16 @@ export class TimerView {
     canJustStart(this.store.state(), this.store.settings()),
   );
   protected readonly justStartMinutes = JUST_START_MINUTES;
+
+  /** Rhythm presets, offered while a focus session is waiting to start. */
+  protected readonly rhythms = RHYTHMS;
+  protected readonly rhythmOffer = computed(() => {
+    const { phase, status, extending } = this.store.state();
+    return (
+      this.store.settings().rhythmPresets && phase === 'work' && status === 'idle' && !extending
+    );
+  });
+  protected readonly rhythm = computed(() => rhythmOf(this.store.settings()));
 
   /** Still in the flow when focus ends? A few more minutes before the break. */
   protected readonly keepGoingOffer = computed(() =>
@@ -477,6 +491,12 @@ export class TimerView {
 
   protected skip(): void {
     void this.store.send({ command: 'skip' });
+  }
+
+  /** The timer resets itself to the new length, since it hasn't started. */
+  protected chooseRhythm(id: RhythmId): void {
+    if (id !== this.rhythm())
+      void this.store.updateSettings(applyRhythm(this.store.settings(), id));
   }
 
   protected choosePhase(phase: Phase): void {

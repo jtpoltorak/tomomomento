@@ -64,6 +64,8 @@ export interface Settings {
   takeCare: boolean;
   /** A quick, quiet celebration when a focus session finishes. */
   smallWins: boolean;
+  /** One-tap timer setups (Classic, Short, Deep) on the timer screen before you start. */
+  rhythmPresets: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
   focusSound: FocusSoundId;
   /** 0 to 1, separate from the alert volume. */
@@ -151,6 +153,7 @@ export const DEFAULT_SETTINGS: Settings = {
   awayCheck: false,
   takeCare: false,
   smallWins: false,
+  rhythmPresets: false,
   focusSound: 'off',
   focusVolume: 0.4,
   highContrast: false,
@@ -195,6 +198,46 @@ export const CARE_TIPS = [
   'Stand up and stretch',
   "Grab a snack if you're hungry",
 ] as const;
+
+export type RhythmId = 'classic' | 'short' | 'deep';
+
+export interface Rhythm {
+  id: RhythmId;
+  label: string;
+  workMinutes: number;
+  shortBreakMinutes: number;
+  longBreakMinutes: number;
+}
+
+/** The rhythm presets: a whole timer setup in one tap. */
+export const RHYTHMS: readonly Rhythm[] = [
+  { id: 'classic', label: 'Classic', workMinutes: 25, shortBreakMinutes: 5, longBreakMinutes: 15 },
+  { id: 'short', label: 'Short', workMinutes: 15, shortBreakMinutes: 3, longBreakMinutes: 10 },
+  { id: 'deep', label: 'Deep', workMinutes: 50, shortBreakMinutes: 10, longBreakMinutes: 20 },
+];
+
+/** The preset the timers match right now, or null for a setup of your own. */
+export function rhythmOf(settings: Settings): RhythmId | null {
+  const match = RHYTHMS.find(
+    (r) =>
+      r.workMinutes === settings.workMinutes &&
+      r.shortBreakMinutes === settings.shortBreakMinutes &&
+      r.longBreakMinutes === settings.longBreakMinutes,
+  );
+  return match?.id ?? null;
+}
+
+/** The settings with a preset's three timer lengths. Everything else stays. */
+export function applyRhythm(settings: Settings, id: RhythmId): Settings {
+  const r = RHYTHMS.find((x) => x.id === id);
+  if (!r) return settings;
+  return {
+    ...settings,
+    workMinutes: r.workMinutes,
+    shortBreakMinutes: r.shortBreakMinutes,
+    longBreakMinutes: r.longBreakMinutes,
+  };
+}
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -630,6 +673,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     awayCheck: input.awayCheck ?? d.awayCheck,
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
+    rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,
     focusVolume: Number.isFinite(Number(input.focusVolume))

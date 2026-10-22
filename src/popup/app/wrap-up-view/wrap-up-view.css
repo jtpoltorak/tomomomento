@@ -1,0 +1,56 @@
+:host {
+  display: block;
+  text-align: center;
+}
+
+.count {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.thought,
+.all-sorted {
+  margin: 1.5rem 0;
+  font-size: 1.75rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.thought:focus,
+.all-sorted:focus {
+  outline: none;
+}
+.note {
+  margin: 1.25rem 0 0;
+  color: var(--muted);
+  font-size: 1.25rem;
+}
+
+.choices {
+  display: grid;
+  gap: 0.625rem;
+}
+.choice {
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--control);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 1.25rem;
+}
+.choice:hover {
+  background: var(--surface);
+}
+.choice.solid {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 500;
+}
+.choice.solid:hover {
+  filter: brightness(1.08);
+}
+
+.end .choice {
+  margin-top: 1.5rem;
+  min-width: 12rem;
+}

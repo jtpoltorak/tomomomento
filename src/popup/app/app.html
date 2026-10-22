@@ -97,6 +97,8 @@
       <app-stats-view />
     } @else if (view() === 'parking') {
       <app-parking-view />
+    } @else if (view() === 'wrapup') {
+      <app-wrap-up-view (finished)="show('timer')" />
     } @else if (view() === 'plan') {
       <app-plan-view (done)="show('timer')" />
     } @else {
@@ -104,6 +106,7 @@
         (openSettings)="show('settings')"
         (openPlan)="show('plan')"
         (openParking)="show('parking')"
+        (openWrapUp)="show('wrapup')"
       />
     }
   }

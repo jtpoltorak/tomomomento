@@ -230,6 +230,49 @@ describe('TimerView', () => {
     });
   });
 
+  describe('day wrap-up', () => {
+    async function evening(hour = 18) {
+      const ctx = await setup({ phase: 'shortBreak' });
+      const now = new Date();
+      now.setHours(hour, 0, 0, 0);
+      ctx.store.tick.set(now.getTime());
+      ctx.store.settings.update((s) => ({ ...s, parkingLot: true, dayWrapUp: true }));
+      ctx.store.parkingLot.set({
+        thoughts: [
+          { id: 'a', text: 'Call the dentist', at: 100 },
+          { id: 'b', text: 'Buy milk', at: 200 },
+        ],
+        seenAt: 0,
+      });
+      await ctx.fixture.whenStable();
+      return ctx;
+    }
+
+    it('offers to wrap up in the evening, in place of the parked card', async () => {
+      const { el, fixture, button } = await evening();
+      expect(el.querySelector('#wrap-card-title')?.textContent).toBe(
+        'Wrap up your day? 2 thoughts parked',
+      );
+      expect(el.querySelector('#parked-card-title')).toBeNull();
+      let opened = 0;
+      fixture.componentInstance.openWrapUp.subscribe(() => opened++);
+      button('Wrap up').click();
+      expect(opened).toBe(1);
+    });
+
+    it('waits until evening', async () => {
+      expect((await evening(15)).el.querySelector('#wrap-card-title')).toBeNull();
+    });
+
+    it('"Not tonight" hides it until tomorrow', async () => {
+      const { el, fixture, store, button } = await evening();
+      button('Not tonight').click();
+      await fixture.whenStable();
+      expect(store.parkingLot().wrappedOn).toBe(store.state().todayKey);
+      expect(el.querySelector('#wrap-card-title')).toBeNull();
+    });
+  });
+
   describe('break ideas', () => {
     it('suggests one on breaks in place of "Take a breather", and another on request', async () => {
       const { el, fixture, store } = await setup({ phase: 'shortBreak' });

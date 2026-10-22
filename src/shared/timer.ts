@@ -38,6 +38,8 @@ export interface Settings {
   planPrompt: boolean;
   /** The parking lot: jot stray thoughts during focus, look at them on a break. */
   parkingLot: boolean;
+  /** In the evening, offer to sort the day's parked thoughts one by one. */
+  dayWrapUp: boolean;
   /** On breaks, suggest something screen-free to do in place of "Take a breather". */
   breakIdeas: boolean;
   /** Offer a short "Just start" focus session for days when a full one feels like too much. */
@@ -140,6 +142,7 @@ export const DEFAULT_SETTINGS: Settings = {
   planEnabled: false,
   planPrompt: true,
   parkingLot: false,
+  dayWrapUp: false,
   breakIdeas: false,
   justStart: false,
   keepGoing: false,
@@ -660,6 +663,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     planEnabled: input.planEnabled ?? d.planEnabled,
     planPrompt: input.planPrompt ?? d.planPrompt,
     parkingLot: input.parkingLot ?? d.parkingLot,
+    dayWrapUp: input.dayWrapUp ?? d.dayWrapUp,
     breakIdeas: input.breakIdeas ?? d.breakIdeas,
     justStart: input.justStart ?? d.justStart,
     keepGoing: input.keepGoing ?? d.keepGoing,

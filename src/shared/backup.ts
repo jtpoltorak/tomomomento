@@ -99,7 +99,7 @@ export function mergeParkingLot(current: ParkingLot, incoming: ParkingLot): Park
   const byId = new Map<string, Thought>();
   for (const t of [...incoming.thoughts, ...current.thoughts]) byId.set(t.id, t);
   const thoughts = [...byId.values()].sort((a, b) => a.at - b.at).slice(-MAX_THOUGHTS);
-  return { thoughts, seenAt: current.seenAt };
+  return { ...current, thoughts };
 }
 
 /**

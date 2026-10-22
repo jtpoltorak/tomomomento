@@ -13,6 +13,7 @@ import {
   clearThoughts,
   EMPTY_PARKING_LOT,
   markSeen,
+  markWrapped,
   parkThought,
   removeThought,
   unseenCount,
@@ -102,6 +103,9 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
     },
     async markParkingSeen() {
       parkingLot.set(markSeen(parkingLot(), Date.now()));
+    },
+    async markWrappedUp() {
+      parkingLot.set(markWrapped(parkingLot(), state().todayKey));
     },
     backupData(): BackupData {
       return {

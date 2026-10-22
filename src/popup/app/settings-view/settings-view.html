@@ -330,6 +330,18 @@
       A notepad button up top for stray thoughts during focus. On your break, the timer reminds you
       what you parked.
     </p>
+    @if (form.controls.parkingLot.value) {
+      <div class="sub-options">
+        <label class="switch-row">
+          <span>Wrap up my day</span>
+          <input type="checkbox" role="switch" formControlName="dayWrapUp" />
+        </label>
+        <p class="note">
+          After {{ wrapUpTime }}, if anything is still parked, the timer offers to go through it one
+          thought at a time: keep it for tomorrow, mark it done, or let it go.
+        </p>
+      </div>
+    }
   </section>
 
   <section>

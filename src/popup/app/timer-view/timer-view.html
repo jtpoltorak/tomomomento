@@ -222,7 +222,15 @@
     </aside>
   }
 
-  @if (parkedCard()) {
+  @if (wrapCard()) {
+    <aside class="parked-card" aria-labelledby="wrap-card-title">
+      <p id="wrap-card-title">Wrap up your day? {{ wrapText() }} parked</p>
+      <div class="parked-card-actions">
+        <button type="button" class="pill-btn solid" (click)="openWrapUp.emit()">Wrap up</button>
+        <button type="button" class="pill-btn" (click)="notTonight()">Not tonight</button>
+      </div>
+    </aside>
+  } @else if (parkedCard()) {
     <aside class="parked-card" aria-labelledby="parked-card-title">
       <p id="parked-card-title">{{ parkedText() }} parked</p>
       <div class="parked-card-actions">

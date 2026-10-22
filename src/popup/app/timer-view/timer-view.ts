@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
 import { breakIdea } from '../../../shared/break-ideas';
-import { MAX_THOUGHT_LENGTH, thoughtsText } from '../../../shared/parking';
+import { MAX_THOUGHT_LENGTH, thoughtsText, wrapUpDue } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
 import {
   breathAt,
@@ -50,6 +50,7 @@ export class TimerView {
   readonly openSettings = output<void>();
   readonly openPlan = output<void>();
   readonly openParking = output<void>();
+  readonly openWrapUp = output<void>();
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
 
@@ -81,9 +82,29 @@ export class TimerView {
       !this.store.showPlanPrompt()
     );
   });
+  /**
+   * In the evening, the day wrap-up offers to sort what's still parked. It
+   * stays out of a running focus session, and the plan card comes first.
+   */
+  protected readonly wrapCard = computed(() => {
+    const s = this.store.settings();
+    const { phase, status, todayKey } = this.store.state();
+    const lot = this.store.parkingLot();
+    return s.parkingLot &&
+      s.dayWrapUp &&
+      !(phase === 'work' && status === 'running') &&
+      !this.store.showPlanPrompt() &&
+      !this.helpersCard() &&
+      wrapUpDue(lot, todayKey, this.store.tick())
+      ? lot.thoughts.length
+      : 0;
+  });
+  protected readonly wrapText = computed(() => thoughtsText(this.wrapCard()));
   /** On a break, how many thoughts were parked since you last looked. The plan card comes first. */
   protected readonly parkedCard = computed(() =>
-    this.store.showPlanPrompt() || this.helpersCard() ? 0 : this.store.parkedOnBreak(),
+    this.store.showPlanPrompt() || this.helpersCard() || this.wrapCard()
+      ? 0
+      : this.store.parkedOnBreak(),
   );
   protected readonly parkedText = computed(() => thoughtsText(this.parkedCard()));
   // The popup only has room for one extra line of text under the controls, so
@@ -94,6 +115,7 @@ export class TimerView {
     !this.store.showPlanPrompt() &&
     !this.helpersCard() &&
     !this.parkedCard() &&
+    !this.wrapCard() &&
     !this.planLabelNow()
       ? this.phaseQuote()
       : null,
@@ -444,6 +466,16 @@ export class TimerView {
 
   protected anotherIdea(): void {
     this.ideaOffset.update((n) => n + 1);
+  }
+
+  protected async notTonight(): Promise<void> {
+    await this.store.markWrappedUp();
+    afterNextRender(
+      () => this.host.nativeElement.querySelector<HTMLElement>('.primary-btn')?.focus(),
+      {
+        injector: this.injector,
+      },
+    );
   }
 
   protected async parkLater(): Promise<void> {

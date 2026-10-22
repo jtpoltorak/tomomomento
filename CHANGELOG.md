@@ -12,6 +12,10 @@ these first.
   Classic (25/5), Short (15/3) or Deep (50/10) with one tap under the timer
   choices. It sets all three timer lengths at once. Turn on **Rhythm presets
   on the timer** under Timers in Settings.
+- **Day wrap-up (optional):** after 5 pm, if anything is still in the
+  parking lot, the timer offers to go through it one thought at a time:
+  done, keep for tomorrow, or let go. Turn on **Wrap up my day** under
+  Planning in Settings (it needs the parking lot on).
 
 ## 1.7.0 (2026-10-22)
 

@@ -2,6 +2,7 @@ import {
   clearThoughts,
   EMPTY_PARKING_LOT,
   markSeen,
+  markWrapped,
   MAX_THOUGHT_LENGTH,
   MAX_THOUGHTS,
   parkThought,
@@ -9,6 +10,7 @@ import {
   sanitizeParkingLot,
   thoughtsText,
   unseenCount,
+  wrapUpDue,
 } from './parking';
 
 describe('parking lot', () => {
@@ -73,5 +75,24 @@ describe('parking lot', () => {
   it('says "thought" or "thoughts"', () => {
     expect(thoughtsText(1)).toBe('1 thought');
     expect(thoughtsText(3)).toBe('3 thoughts');
+  });
+
+  describe('day wrap-up', () => {
+    const at = (hour: number) => new Date(2026, 9, 22, hour).getTime();
+    const lot = parkThought(EMPTY_PARKING_LOT, 'call the dentist', 1, 'a');
+
+    it('is due in the evening while thoughts are parked, once a day', () => {
+      expect(wrapUpDue(lot, '2026-10-22', at(16))).toBe(false);
+      expect(wrapUpDue(lot, '2026-10-22', at(17))).toBe(true);
+      expect(wrapUpDue(EMPTY_PARKING_LOT, '2026-10-22', at(20))).toBe(false);
+      const wrapped = markWrapped(lot, '2026-10-22');
+      expect(wrapUpDue(wrapped, '2026-10-22', at(20))).toBe(false);
+      expect(wrapUpDue(wrapped, '2026-10-23', at(20))).toBe(true);
+    });
+
+    it('keeps a valid wrap-up day from storage and drops a bad one', () => {
+      expect(sanitizeParkingLot({ ...lot, wrappedOn: '2026-10-22' }).wrappedOn).toBe('2026-10-22');
+      expect('wrappedOn' in sanitizeParkingLot({ ...lot, wrappedOn: 'tonight' })).toBe(false);
+    });
   });
 });

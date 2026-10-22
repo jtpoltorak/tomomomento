@@ -52,6 +52,8 @@ export interface Settings {
   animateDigits: boolean;
   /** Just the clock, the progress bar and one button; the rest waits behind "Show more". */
   minimalMode: boolean;
+  /** Soft colors drift slowly behind everything, like a lava lamp. */
+  lavaLamp: boolean;
   /** A quiet reminder when the timer has sat paused for a while. */
   pauseNudge: boolean;
   /** Thirty seconds of slow breathing before a focus session's clock starts. */
@@ -141,6 +143,7 @@ export const DEFAULT_SETTINGS: Settings = {
   calmClock: false,
   animateDigits: false,
   minimalMode: false,
+  lavaLamp: false,
   pauseNudge: false,
   settleIn: false,
   awayCheck: false,
@@ -592,6 +595,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     calmClock: input.calmClock ?? d.calmClock,
     animateDigits: input.animateDigits ?? d.animateDigits,
     minimalMode: input.minimalMode ?? d.minimalMode,
+    lavaLamp: input.lavaLamp ?? d.lavaLamp,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     settleIn: input.settleIn ?? d.settleIn,
     awayCheck: input.awayCheck ?? d.awayCheck,

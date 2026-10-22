@@ -1,3 +1,8 @@
+@if (store.settings().lavaLamp) {
+  <!-- The lava lamp background: decoration only, behind everything. -->
+  <div class="lava" aria-hidden="true"><span></span><span></span><span></span></div>
+}
+
 <header class="topbar">
   @if (view() !== 'timer') {
     <button class="icon-btn ghost" (click)="show('timer')" aria-label="Back to timer" title="Back">

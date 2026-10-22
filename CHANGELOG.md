@@ -4,6 +4,15 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Lava lamp background (optional):** soft blobs of color drift slowly
+  behind everything, warm during focus and cool on breaks. They stay faint
+  enough that all text keeps its contrast, hold still with reduced motion,
+  and are left out in high contrast. Turn it on under Appearance in Settings.
+
 ## 1.6.0 (2026-10-17)
 
 ### New

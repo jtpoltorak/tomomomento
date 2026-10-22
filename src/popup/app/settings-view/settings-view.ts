@@ -104,6 +104,7 @@ export class SettingsView {
     calmClock: [false],
     animateDigits: [false],
     minimalMode: [false],
+    lavaLamp: [false],
     pauseNudge: [false],
     settleIn: [false],
     awayCheck: [false],

@@ -18,7 +18,9 @@ import { MAX_THOUGHT_LENGTH, thoughtsText, wrapUpDue } from '../../../shared/par
 import { pickQuote, type Quote } from '../../../shared/quotes';
 import {
   breathAt,
+  canAskFirstStep,
   canJustStart,
+  MAX_STEP_LENGTH,
   careNudge,
   canKeepGoing,
   calmMinutes,
@@ -116,6 +118,7 @@ export class TimerView {
     !this.helpersCard() &&
     !this.parkedCard() &&
     !this.wrapCard() &&
+    !this.askStep() &&
     !this.planLabelNow()
       ? this.phaseQuote()
       : null,
@@ -357,7 +360,17 @@ export class TimerView {
   });
 
   /** The label for the pomodoro in progress, or the next one during a break. */
+  /** Start asks for the first tiny step before a fresh focus session. */
+  private readonly asking = signal(false);
+  protected readonly askStep = computed(
+    () => this.asking() && canAskFirstStep(this.store.state(), this.store.settings()),
+  );
+  protected readonly maxStep = MAX_STEP_LENGTH;
+
   protected readonly planLabelNow = computed(() => {
+    // The step you named for this session is the most useful thing to see.
+    const { phase, firstStep } = this.store.state();
+    if (phase === 'work' && firstStep) return { prefix: 'First step', label: firstStep };
     // Extra time goes with the pomodoro that just finished.
     const index = this.planDone() - (this.store.state().extending ? 1 : 0);
     const label = this.plan()?.labels[index];
@@ -494,7 +507,26 @@ export class TimerView {
   }
 
   protected toggle(): void {
-    void this.store.send({ command: this.store.state().status === 'running' ? 'pause' : 'start' });
+    if (this.store.state().status === 'running') {
+      void this.store.send({ command: 'pause' });
+    } else if (canAskFirstStep(this.store.state(), this.store.settings())) {
+      this.asking.set(true);
+      this.focusSoon('#first-step');
+    } else {
+      void this.store.send({ command: 'start' });
+    }
+  }
+
+  /** Starts focus with the step typed in, or with none when the box is empty ("Skip"). */
+  protected startWithStep(step: string): void {
+    this.asking.set(false);
+    void this.store.send(step.trim() ? { command: 'start', step } : { command: 'start' });
+    this.focusSoon('.primary-btn');
+  }
+
+  protected cancelStep(): void {
+    this.asking.set(false);
+    this.focusSoon('.primary-btn');
   }
 
   protected justStart(): void {

@@ -115,6 +115,7 @@ export class SettingsView {
     rightClick: [false],
     takeCare: [false],
     smallWins: [false],
+    firstStep: [false],
     rhythmPresets: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],

@@ -11,6 +11,10 @@ these first.
 - **Ends at (optional):** while the timer runs, a small line under it says
   what time it ends, like "Ends at 2:45 PM". Turn on **Show when it ends**
   under Appearance in Settings.
+- **First tiny step (optional):** pressing Start on a new focus session asks
+  "What's the first tiny step?" Your answer shows under the timer until the
+  session ends. Turn on **Ask for the first tiny step** under Focus helpers
+  in Settings.
 
 ## 1.8.0 (2026-10-22)
 

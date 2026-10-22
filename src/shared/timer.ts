@@ -70,6 +70,8 @@ export interface Settings {
   takeCare: boolean;
   /** A quick, quiet celebration when a focus session finishes. */
   smallWins: boolean;
+  /** Pressing Start on a fresh focus session asks for the first tiny step first. */
+  firstStep: boolean;
   /** One-tap timer setups (Classic, Short, Deep) on the timer screen before you start. */
   rhythmPresets: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
@@ -123,6 +125,8 @@ export interface TimerState {
   inARow?: number;
   /** Epoch ms the last counted focus session ended, to tell whether the next one follows it. */
   lastFocusEnd?: number;
+  /** The first tiny step you named for this focus session. */
+  firstStep?: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -162,6 +166,7 @@ export const DEFAULT_SETTINGS: Settings = {
   rightClick: false,
   takeCare: false,
   smallWins: false,
+  firstStep: false,
   rhythmPresets: false,
   focusSound: 'off',
   focusVolume: 0.4,
@@ -313,6 +318,7 @@ function usualLength(state: TimerState): TimerState {
     pausedAt: _paused,
     settleUntil: _settle,
     away: _away,
+    firstStep: _step,
     ...rest
   } = state;
   return rest;
@@ -380,6 +386,28 @@ export function canSettle(state: TimerState, settings: Settings): boolean {
     !state.extending &&
     state.remainingMs === phaseLengthMs(state, settings)
   );
+}
+
+export const MAX_STEP_LENGTH = 80;
+
+/** Whether Start asks for the first tiny step: a focus session that hasn't begun yet. */
+export function canAskFirstStep(state: TimerState, settings: Settings): boolean {
+  return (
+    settings.firstStep &&
+    state.phase === 'work' &&
+    state.status === 'idle' &&
+    !state.extending &&
+    state.remainingMs === phaseLengthMs(state, settings)
+  );
+}
+
+/** Notes the first tiny step for the focus session about to start. Blank leaves it out. */
+export function withFirstStep(state: TimerState, step: string | undefined): TimerState {
+  const clean = String(step ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_STEP_LENGTH);
+  return clean && state.phase === 'work' ? { ...state, firstStep: clean } : state;
 }
 
 /** Start, with the settle-in breathing first when it's on. */
@@ -685,6 +713,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     rightClick: input.rightClick ?? d.rightClick,
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
+    firstStep: input.firstStep ?? d.firstStep,
     rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,

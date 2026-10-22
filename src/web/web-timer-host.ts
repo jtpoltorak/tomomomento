@@ -38,6 +38,7 @@ import {
   sanitizeSettings,
   setPhase,
   settleStart,
+  withFirstStep,
   skipSettle,
   wasWorking,
   type Phase,
@@ -179,7 +180,7 @@ export class WebTimerHost implements TimerHost {
       this.justFinished = false;
       switch (command.command) {
         case 'start':
-          return this.commit(settleStart(state, settings, now));
+          return this.commit(settleStart(withFirstStep(state, command.step), settings, now));
         case 'justStart':
           return this.commit(justStart(state, settings, now));
         case 'keepGoing':

@@ -3,7 +3,8 @@ import type { AlertSound } from './sounds';
 import type { Phase, TimerState } from './timer';
 
 export type Command =
-  | { command: 'start' }
+  /** `step`: the first tiny step for a focus session that's just beginning. */
+  | { command: 'start'; step?: string }
   /** A short "Just start" focus session. */
   | { command: 'justStart' }
   /** A few more minutes of focus before the break ("Keep going"). */

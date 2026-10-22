@@ -585,6 +585,20 @@
   font-size: 1.125rem;
 }
 
+/* First tiny step: asked once, in place of the controls, before a fresh focus session. */
+.first-step {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+}
+.first-step label {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+.first-step .quick-park {
+  width: 100%;
+}
+
 /* The minimal timer: a bigger clock with room to breathe, and a quiet way to the rest. */
 :host(.minimal) {
   gap: 2rem;

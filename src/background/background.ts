@@ -53,6 +53,7 @@ import {
   rollDay,
   setPhase,
   settleStart,
+  withFirstStep,
   skipSettle,
   stepAway,
   wasWorking,
@@ -393,7 +394,7 @@ function runCommand(cmd: Command): Promise<TimerState> {
     const state = rollDay(stored, now);
     switch (cmd.command) {
       case 'start':
-        return commit(settleStart(state, settings, now));
+        return commit(settleStart(withFirstStep(state, cmd.step), settings, now));
       case 'justStart':
         return commit(justStart(state, settings, now));
       case 'keepGoing':

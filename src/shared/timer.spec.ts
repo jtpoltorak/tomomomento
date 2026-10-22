@@ -1,5 +1,7 @@
 import {
   advance,
+  canAskFirstStep,
+  withFirstStep,
   applyRhythm,
   rhythmOf,
   breathAt,
@@ -370,6 +372,28 @@ describe('timer state machine', () => {
     it('stays off unless turned on', () => {
       expect(sanitizeSettings({}).takeCare).toBe(false);
       expect(sanitizeSettings({ takeCare: true }).takeCare).toBe(true);
+    });
+  });
+
+  describe('first tiny step', () => {
+    const on = { ...DEFAULT_SETTINGS, firstStep: true };
+
+    it('asks only before a fresh focus session', () => {
+      const fresh = initialState(on, 0);
+      expect(canAskFirstStep(fresh, on)).toBe(true);
+      expect(canAskFirstStep(fresh, DEFAULT_SETTINGS)).toBe(false);
+      expect(canAskFirstStep(pause(start(fresh, 0), 60_000), on)).toBe(false);
+      expect(canAskFirstStep(setPhase(fresh, 'shortBreak', on), on)).toBe(false);
+    });
+
+    it('keeps a tidy step for the session, and drops it when the session ends', () => {
+      const fresh = initialState(on, 0);
+      expect(withFirstStep(fresh, '   ').firstStep).toBeUndefined();
+      const running = start(withFirstStep(fresh, '  open   the doc '), 0);
+      expect(running.firstStep).toBe('open the doc');
+      expect(withFirstStep(fresh, 'x'.repeat(200)).firstStep?.length).toBe(80);
+      expect(pause(running, 1000).firstStep).toBe('open the doc');
+      expect(advance(running, on, running.endTime!, true).firstStep).toBeUndefined();
     });
   });
 

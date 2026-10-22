@@ -125,33 +125,55 @@
   }
 </section>
 
-<div class="controls">
-  @if (full()) {
-    <button
-      class="icon-btn"
-      (click)="reset()"
-      title="Restart this timer"
-      aria-label="Restart this timer"
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" />
-      </svg>
-    </button>
-  }
-  <button class="primary-btn" (click)="toggle()">{{ primaryLabel() }}</button>
-  @if (full()) {
-    <button
-      class="icon-btn"
-      (click)="skip()"
-      title="Skip to the next timer"
-      aria-label="Skip to the next timer"
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z" />
-      </svg>
-    </button>
-  }
-</div>
+@if (askStep()) {
+  <div class="first-step" role="group" aria-labelledby="first-step-label">
+    <label id="first-step-label" for="first-step">What's the first tiny step?</label>
+    <div class="quick-park">
+      <input
+        #step
+        type="text"
+        id="first-step"
+        [maxLength]="maxStep"
+        placeholder="Like “open the doc”"
+        autocomplete="off"
+        (keydown.enter)="startWithStep(step.value)"
+        (keydown.escape)="cancelStep()"
+      />
+      <button type="button" class="pill-btn solid" (click)="startWithStep(step.value)">
+        Start
+      </button>
+    </div>
+    <button type="button" class="link" (click)="startWithStep('')">Skip and start</button>
+  </div>
+} @else {
+  <div class="controls">
+    @if (full()) {
+      <button
+        class="icon-btn"
+        (click)="reset()"
+        title="Restart this timer"
+        aria-label="Restart this timer"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" />
+        </svg>
+      </button>
+    }
+    <button class="primary-btn" (click)="toggle()">{{ primaryLabel() }}</button>
+    @if (full()) {
+      <button
+        class="icon-btn"
+        (click)="skip()"
+        title="Skip to the next timer"
+        aria-label="Skip to the next timer"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z" />
+        </svg>
+      </button>
+    }
+  </div>
+}
 
 @if (full()) {
   @if (store.showPlanPrompt()) {

@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Everything to paste into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-for Tomomomento 1.6.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
+for Tomomomento 1.7.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
 `node scripts/store-images.mjs` after UI changes.
 
 ## Store listing tab
@@ -40,13 +40,15 @@ Features
 • An optional heads-up a minute before focus or a break ends
 • An optional calm clock that shows whole minutes instead of ticking seconds
 • An optional reminder when the timer sits paused for 10 minutes
-• An optional focus sound: soft ticking or brown noise while you work
+• An optional focus sound: soft ticking, brown noise, rain, or ocean waves while you work
 • An optional minimal timer: just the clock, the progress bar and one button
 • Optional animated digits that roll gently into place
 • Accessibility options: larger text, high contrast, color-blind friendly colors, an easy-read font, and reduced motion
 • Optional "Settle in": 30 seconds of slow breathing before a focus session starts
 • Optional "Step away" check: focus pauses when you leave the computer, and asks when you're back
 • Optional take-care reminders: water, a stretch, or resting your eyes after a few sessions in a row
+• An optional lava lamp background: soft colors drifting slowly behind the timer
+• Optional small wins: a quick "Nice work!" when a focus session finishes
 • A built-in guide to the technique and how to use it
 • Light and dark themes that follow your system, or pick one yourself
 • Optional quotes on the timer screen: focus quotes while you work, rest quotes on breaks
@@ -59,11 +61,13 @@ Tomomomento has no account, no ads, no analytics, and no tracking. It makes no n
 Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Not using Chrome? The same timer runs in any browser on the website below.
 
-What's new in 1.6
-Three new focus helpers for starting gently, wandering off, and looking after yourself. All are off until you turn them on in Settings.
-• Settle in: pressing Start can begin with 30 seconds of slow breathing, with the progress bar breathing along. "Start now" skips it.
-• Step away: if the computer sits untouched for 5 minutes during focus, the timer pauses from when you left. Back again? Resume, or tap "I was working" to count the time.
-• Take-care reminders: after every 3 focus sessions in a row, your break suggests a glass of water, resting your eyes, a stretch, or a snack.
+What's new in 1.7
+A calm and cozy update. All of it is off until you turn it on in Settings.
+• Lava lamp background: soft blobs of color drift slowly behind everything, warm for focus and cool for breaks. Text stays easy to read, and it holds still if you prefer reduced motion.
+• Rain and ocean waves: two new focus sounds, next to soft ticking and brown noise.
+• Small wins: when a focus session finishes, the progress bar glows and a quick "Nice work!" shows how many you've done today. No streaks, no pressure.
+
+Also recently added: 30 seconds of slow breathing before focus, an automatic pause when you step away from the computer, take-care reminders, a focus sound, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
 
 Links
 Website: https://tomomomento.com

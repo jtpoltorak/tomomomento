@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Everything to paste into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-for Tomomomento 1.7.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
+for Tomomomento 1.8.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
 `node scripts/store-images.mjs` after UI changes.
 
 ## Store listing tab
@@ -49,6 +49,9 @@ Features
 • Optional take-care reminders: water, a stretch, or resting your eyes after a few sessions in a row
 • An optional lava lamp background: soft colors drifting slowly behind the timer
 • Optional small wins: a quick "Nice work!" when a focus session finishes
+• Optional rhythm presets: Classic 25/5, Short 15/3 or Deep 50/10 in one tap
+• An optional day wrap-up: sort the day's parked thoughts one at a time in the evening
+• Optional right-click shortcuts: park selected text, or block the site you're on
 • A built-in guide to the technique and how to use it
 • Light and dark themes that follow your system, or pick one yourself
 • Optional quotes on the timer screen: focus quotes while you work, rest quotes on breaks
@@ -61,13 +64,13 @@ Tomomomento has no account, no ads, no analytics, and no tracking. It makes no n
 Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Not using Chrome? The same timer runs in any browser on the website below.
 
-What's new in 1.7
-A calm and cozy update. All of it is off until you turn it on in Settings.
-• Lava lamp background: soft blobs of color drift slowly behind everything, warm for focus and cool for breaks. Text stays easy to read, and it holds still if you prefer reduced motion.
-• Rain and ocean waves: two new focus sounds, next to soft ticking and brown noise.
-• Small wins: when a focus session finishes, the progress bar glows and a quick "Nice work!" shows how many you've done today. No streaks, no pressure.
+What's new in 1.8
+Three small time-savers. All are off until you turn them on in Settings.
+• Rhythm presets: before you start, switch between Classic 25/5, Short 15/3 and Deep 50/10 with one tap.
+• Day wrap-up: after 5 pm, if thoughts are still parked, go through them one at a time: done, keep for tomorrow, or let go.
+• Right-click shortcuts: select text on any page and park it as a thought, or block the site you're on during focus.
 
-Also recently added: 30 seconds of slow breathing before focus, an automatic pause when you step away from the computer, take-care reminders, a focus sound, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
+Also recently added: a lava lamp background, rain and ocean waves focus sounds, small wins, 30 seconds of slow breathing before focus, an automatic pause when you step away, take-care reminders, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
 
 Links
 Website: https://tomomomento.com

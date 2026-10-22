@@ -4,6 +4,22 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Lava lamp background (optional):** soft blobs of color drift slowly
+  behind everything, warm during focus and cool on breaks. They stay faint
+  enough that all text keeps its contrast, hold still with reduced motion,
+  and are left out in high contrast. Turn it on under Appearance in Settings.
+- **Rain and ocean waves:** two new focus sounds, next to soft ticking and
+  brown noise. Rain patters softly; the waves roll in and wash out about
+  every 8 seconds. Pick one under Focus sound in Settings.
+- **Small wins (optional):** when a focus session finishes, the progress bar
+  glows and a quick "Nice work! 3 done today." shows for a few seconds, or
+  the next time you open the timer on that break. No streaks. Turn on
+  "Celebrate small wins" under Focus helpers in Settings.
+
 ## 1.6.0 (2026-10-17)
 
 ### New

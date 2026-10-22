@@ -290,6 +290,83 @@ button {
   white-space: nowrap;
 }
 
+/*
+ * The lava lamp: three soft blobs in the phase color drift slowly behind
+ * everything. The whole layer is faint (its opacity caps any overlap), kept
+ * low enough that text, links and controls on top keep their contrast. With
+ * reduced motion the blobs hold still, and high contrast leaves them out.
+ */
+.lava {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--accent);
+  opacity: 0.065;
+  transition: color 3s ease;
+}
+:root[data-contrast='high'] .lava {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .lava {
+    opacity: 0.12;
+  }
+}
+:root[data-theme='dark'] .lava {
+  opacity: 0.12;
+}
+.lava span {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  /* A full-strength core with a soft edge, so each blob reads as a shape. */
+  background: radial-gradient(circle closest-side, currentColor 35%, transparent);
+  animation: lava-a 47s ease-in-out infinite alternate;
+}
+.lava span:nth-child(1) {
+  left: -30vmax;
+  top: -25vmax;
+}
+.lava span:nth-child(2) {
+  right: -35vmax;
+  top: 10vmax;
+  animation-name: lava-b;
+  animation-duration: 59s;
+}
+.lava span:nth-child(3) {
+  left: -10vmax;
+  bottom: -40vmax;
+  animation-name: lava-c;
+  animation-duration: 71s;
+}
+@keyframes lava-a {
+  50% {
+    transform: translate(28vmax, 22vmax) scale(0.8);
+  }
+  to {
+    transform: translate(8vmax, 45vmax) scale(1.15);
+  }
+}
+@keyframes lava-b {
+  50% {
+    transform: translate(-30vmax, 25vmax) scale(1.2);
+  }
+  to {
+    transform: translate(-12vmax, -15vmax) scale(0.85);
+  }
+}
+@keyframes lava-c {
+  50% {
+    transform: translate(25vmax, -35vmax) scale(0.9);
+  }
+  to {
+    transform: translate(-5vmax, -20vmax) scale(1.2);
+  }
+}
+
 /* Reduced motion, asked for by the device or by Settings (data-motion). */
 @media (prefers-reduced-motion: reduce) {
   *,

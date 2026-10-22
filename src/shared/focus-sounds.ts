@@ -8,7 +8,7 @@ import type { FocusSoundId } from './timer';
 export type FocusSound = Exclude<FocusSoundId, 'off'>;
 
 /** How loud each sound is at full volume. Both sit well under the alert sounds. */
-const LOUDNESS: Record<FocusSound, number> = { tick: 0.5, brown: 0.6 };
+const LOUDNESS: Record<FocusSound, number> = { tick: 0.5, brown: 0.6, rain: 0.5, waves: 0.6 };
 const FADE_IN = 1;
 const FADE_OUT = 0.4;
 
@@ -59,6 +59,78 @@ export function brownBuffer(ctx: BaseAudioContext, random = Math.random): AudioB
 }
 
 /**
+ * Makes a loop seamless: `make` fills `length + fade` samples, and the extra
+ * tail fades into the start (equal power, so the level doesn't dip), so the
+ * last sample flows into the first like any two neighbors.
+ */
+function seamless(
+  ctx: BaseAudioContext,
+  seconds: number,
+  make: (data: Float32Array, rate: number) => void,
+): AudioBuffer {
+  const rate = ctx.sampleRate;
+  const length = Math.round(rate * seconds);
+  const fade = Math.round(rate * 0.25);
+  const raw = new Float32Array(length + fade);
+  make(raw, rate);
+  const buffer = ctx.createBuffer(1, length, rate);
+  const data = buffer.getChannelData(0);
+  let peak = 0;
+  for (let i = 0; i < length; i++) {
+    const t = i < fade ? i / fade : 1;
+    data[i] = i < fade ? raw[i] * Math.sqrt(t) + raw[length + i] * Math.sqrt(1 - t) : raw[i];
+    peak = Math.max(peak, Math.abs(data[i]));
+  }
+  for (let i = 0; i < length; i++) data[i] = (data[i] / (peak || 1)) * 0.9;
+  return buffer;
+}
+
+/** Steady rain: a soft hiss with drops pattering through it. */
+export function rainBuffer(ctx: BaseAudioContext, random = Math.random): AudioBuffer {
+  return seamless(ctx, 10, (data, rate) => {
+    // The hiss: white noise, softened, with the rumble taken out.
+    let soft = 0;
+    let rumble = 0;
+    for (let i = 0; i < data.length; i++) {
+      soft += 0.35 * (random() * 2 - 1 - soft);
+      rumble += 0.01 * (soft - rumble);
+      data[i] = 0.35 * (soft - rumble);
+    }
+    // About 30 drops a second, each a tiny burst that dies away in a few milliseconds.
+    const drops = Math.round((data.length / rate) * 30);
+    for (let d = 0; d < drops; d++) {
+      const at = Math.floor(random() * data.length);
+      const level = 0.1 + 0.5 * random() ** 2;
+      const decay = (0.002 + 0.008 * random()) * rate;
+      for (let i = 0; i < decay * 5 && at + i < data.length; i++) {
+        data[at + i] += level * (random() * 2 - 1) * Math.exp(-i / decay);
+      }
+    }
+  });
+}
+
+/** Ocean waves: two slow swells that rise, break into foam, and wash back out. */
+export function wavesBuffer(ctx: BaseAudioContext, random = Math.random): AudioBuffer {
+  const period = 8;
+  return seamless(ctx, period * 2, (data, rate) => {
+    let deep = 0;
+    let foam = 0;
+    for (let i = 0; i < data.length; i++) {
+      const phase = ((i / rate) % period) / period;
+      // Rises over the first 40% of each wave, then washes out.
+      const swell =
+        phase < 0.4
+          ? 0.5 - 0.5 * Math.cos((Math.PI * phase) / 0.4)
+          : 0.5 + 0.5 * Math.cos((Math.PI * (phase - 0.4)) / 0.6);
+      const white = random() * 2 - 1;
+      deep = (deep + 0.02 * white) / 1.02;
+      foam += 0.3 * (white - foam);
+      data[i] = (0.25 + 0.75 * swell) * (6 * deep + 0.5 * foam * swell * swell);
+    }
+  });
+}
+
+/**
  * When to start the ticking loop so each tick lands as the clock's seconds
  * change. Returns the wall-clock time of the next whole second before `endTime`,
  * at or after `now`.
@@ -67,6 +139,13 @@ export function nextTickAt(endTime: number, now: number): number {
   const msIntoSecond = (((endTime - now) % 1000) + 1000) % 1000;
   return now + msIntoSecond;
 }
+
+const BUILDERS: Record<FocusSound, (ctx: BaseAudioContext) => AudioBuffer> = {
+  tick: tickBuffer,
+  brown: (ctx) => brownBuffer(ctx),
+  rain: (ctx) => rainBuffer(ctx),
+  waves: (ctx) => wavesBuffer(ctx),
+};
 
 /** Plays one focus sound at a time, looping until stopped. */
 export class FocusSoundPlayer {
@@ -94,7 +173,7 @@ export class FocusSoundPlayer {
     this.stop();
     let buffer = this.buffers.get(sound);
     if (!buffer) {
-      buffer = sound === 'tick' ? tickBuffer(this.ctx) : brownBuffer(this.ctx);
+      buffer = BUILDERS[sound](this.ctx);
       this.buffers.set(sound, buffer);
     }
     const source = this.ctx.createBufferSource();

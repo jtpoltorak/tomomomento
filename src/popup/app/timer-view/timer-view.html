@@ -17,7 +17,7 @@
   </div>
 }
 
-<section class="dial" [class.heads-up]="headsUp()">
+<section class="dial" [class.heads-up]="headsUp()" [class.win]="win()">
   <!-- One element per character: a changed digit gets a new key, so animated digits can roll it in. -->
   @if (calmClock(); as minutes) {
     <div

@@ -30,6 +30,7 @@ import {
   PHASE_LABELS,
   SETTLE_MS,
   settling,
+  smallWin,
   type Phase,
 } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
@@ -179,6 +180,23 @@ export class TimerView {
     return until - SETTLE_MS - Date.now();
   });
 
+  // ---- Small wins ----
+
+  /** The celebration line, shown for a few seconds after a focus session finishes. */
+  protected readonly win = signal<string | null>(null);
+  private winTimer: ReturnType<typeof setTimeout> | undefined;
+
+  private celebrate(): void {
+    const at = this.store.state().lastFocusEnd;
+    const line = smallWin(this.store.state(), this.store.settings(), readCelebrated(), Date.now());
+    if (!line || at === undefined) return;
+    // Once per session, even if the timer opens again in a minute.
+    writeCelebrated(at);
+    this.win.set(line);
+    clearTimeout(this.winTimer);
+    this.winTimer = setTimeout(() => this.win.set(null), WIN_SHOWN_MS);
+  }
+
   protected readonly live = computed(() => (this.breath() ? null : 'polite'));
   protected readonly settleAnnouncement = computed(() =>
     this.breath() ? 'Settling in. Focus starts in 30 seconds.' : '',
@@ -188,6 +206,8 @@ export class TimerView {
     const { phase, status, extending } = this.store.state();
     const breath = this.breath();
     if (breath) return breath === 'in' ? 'Breathe in…' : 'Breathe out…';
+    const win = this.win();
+    if (win) return win;
     if (this.headsUp()) {
       return phase === 'work'
         ? '1 minute left: find a stopping point'
@@ -318,6 +338,15 @@ export class TimerView {
     inject(DestroyRef).onDestroy(() => {
       clearInterval(id);
       clearTimeout(this.parkedTimer);
+      clearTimeout(this.winTimer);
+    });
+    // A focus session just finished (or did while the popup was closed): celebrate it once.
+    const finished = computed(() => this.store.state().lastFocusEnd);
+    effect(() => {
+      finished();
+      this.phase();
+      this.store.settings().smallWins;
+      untracked(() => this.celebrate());
     });
     // The quick-park box belongs to focus; a break closes it.
     effect(() => {
@@ -460,5 +489,26 @@ export class TimerView {
     if (target?.closest('button, input, select, textarea')) return;
     event.preventDefault();
     this.toggle();
+  }
+}
+
+/** How long the small-wins line stays before the usual status comes back. */
+const WIN_SHOWN_MS = 5_000;
+const CELEBRATED_KEY = 'tomomomento.celebrated';
+
+function readCelebrated(): number | null {
+  try {
+    const value = Number(localStorage.getItem(CELEBRATED_KEY));
+    return Number.isFinite(value) && value > 0 ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCelebrated(at: number): void {
+  try {
+    localStorage.setItem(CELEBRATED_KEY, String(at));
+  } catch {
+    // Private browsing: it may celebrate again next time, which is fine.
   }
 }

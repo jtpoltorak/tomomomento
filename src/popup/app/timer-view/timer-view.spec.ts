@@ -410,6 +410,47 @@ describe('TimerView', () => {
     });
   });
 
+  describe('small wins', () => {
+    beforeEach(() => localStorage.clear());
+
+    const ended = Date.now() - 1000;
+    function justFinished() {
+      return setup({
+        phase: 'shortBreak',
+        afterFocus: true,
+        completedToday: 3,
+        lastFocusEnd: ended,
+      });
+    }
+
+    it('celebrates a finished session for a few seconds, once', async () => {
+      const { el, store, fixture } = await justFinished();
+      vi.useFakeTimers();
+      try {
+        store.settings.update((s) => ({ ...s, smallWins: true }));
+        fixture.detectChanges();
+        expect(el.querySelector('.status')?.textContent).toBe('You did it! 3 done today.');
+        expect(el.querySelector('.dial')?.classList).toContain('win');
+        await vi.advanceTimersByTimeAsync(5_000);
+        fixture.detectChanges();
+        expect(el.querySelector('.status')?.textContent).toBe('Time for a break');
+      } finally {
+        vi.useRealTimers();
+      }
+      // Opening the timer again on the same break doesn't repeat it.
+      TestBed.resetTestingModule();
+      const again = await justFinished();
+      again.store.settings.update((s) => ({ ...s, smallWins: true }));
+      await again.fixture.whenStable();
+      expect(again.el.querySelector('.status')?.textContent).toBe('Time for a break');
+    });
+
+    it('stays quiet unless turned on', async () => {
+      const { el } = await justFinished();
+      expect(el.querySelector('.status')?.textContent).toBe('Time for a break');
+    });
+  });
+
   describe('take-care reminders', () => {
     it('shows on the break after a few sessions in a row, ahead of break ideas', async () => {
       const { el, store, fixture } = await setup({

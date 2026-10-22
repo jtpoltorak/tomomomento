@@ -25,6 +25,7 @@ import {
   settleStart,
   settling,
   skipSettle,
+  smallWin,
   start,
   stepAway,
   wasWorking,
@@ -292,6 +293,33 @@ describe('timer state machine', () => {
     });
   });
 
+  describe('small wins', () => {
+    const on = { ...s, smallWins: true };
+    const finished = advance(start(initialState(on, T0), T0), on, T0 + 25 * MIN, true);
+
+    it('celebrates a focus session that just finished, once', () => {
+      expect(smallWin(finished, on, null, T0 + 25 * MIN)).toBe('Nice work! 1 done today.');
+      expect(smallWin(finished, on, T0 + 25 * MIN, T0 + 26 * MIN)).toBeNull();
+      expect(smallWin(finished, s, null, T0 + 25 * MIN)).toBeNull();
+    });
+
+    it('changes its words as the day goes on', () => {
+      const second = { ...finished, completedToday: 2 };
+      expect(smallWin(second, on, null, T0 + 25 * MIN)).toBe('Well done! 2 done today.');
+    });
+
+    it('lets old sessions go, and skips skipped ones', () => {
+      expect(smallWin(finished, on, null, T0 + 60 * MIN)).toBeNull();
+      const skipped = advance(start(initialState(on, T0), T0), on, T0 + MIN, false);
+      expect(smallWin(skipped, on, null, T0 + MIN)).toBeNull();
+    });
+
+    it('stays off unless turned on', () => {
+      expect(sanitizeSettings({}).smallWins).toBe(false);
+      expect(sanitizeSettings({ smallWins: true }).smallWins).toBe(true);
+    });
+  });
+
   describe('take-care reminders', () => {
     const on = { ...s, takeCare: true };
     /** Runs focus sessions back to back with 5-minute breaks, starting at `from`. */
@@ -517,9 +545,11 @@ describe('timer state machine', () => {
     });
 
     it('cleans up stored values', () => {
-      const bad = { focusSound: 'rain', focusVolume: 7 } as unknown as Partial<Settings>;
+      const bad = { focusSound: 'whale song', focusVolume: 7 } as unknown as Partial<Settings>;
       expect(sanitizeSettings(bad)).toMatchObject({ focusSound: 'off', focusVolume: 1 });
       expect(sanitizeSettings({})).toMatchObject({ focusSound: 'off', focusVolume: 0.4 });
+      expect(sanitizeSettings({ focusSound: 'rain' }).focusSound).toBe('rain');
+      expect(sanitizeSettings({ focusSound: 'waves' }).focusSound).toBe('waves');
     });
   });
 

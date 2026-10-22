@@ -9,7 +9,7 @@ export type SoundId = 'bell' | 'chime' | 'digital';
 export type ThemeId = 'system' | 'light' | 'dark';
 export type TextSizeId = 'normal' | 'large' | 'xlarge';
 /** A quiet sound that plays during focus sessions, or 'off'. */
-export type FocusSoundId = 'off' | 'tick' | 'brown';
+export type FocusSoundId = 'off' | 'tick' | 'brown' | 'rain' | 'waves';
 
 export interface Settings {
   workMinutes: number;
@@ -52,6 +52,8 @@ export interface Settings {
   animateDigits: boolean;
   /** Just the clock, the progress bar and one button; the rest waits behind "Show more". */
   minimalMode: boolean;
+  /** Soft colors drift slowly behind everything, like a lava lamp. */
+  lavaLamp: boolean;
   /** A quiet reminder when the timer has sat paused for a while. */
   pauseNudge: boolean;
   /** Thirty seconds of slow breathing before a focus session's clock starts. */
@@ -60,6 +62,8 @@ export interface Settings {
   awayCheck: boolean;
   /** After every few focus sessions in a row, a break reminds you to look after yourself. */
   takeCare: boolean;
+  /** A quick, quiet celebration when a focus session finishes. */
+  smallWins: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
   focusSound: FocusSoundId;
   /** 0 to 1, separate from the alert volume. */
@@ -141,10 +145,12 @@ export const DEFAULT_SETTINGS: Settings = {
   calmClock: false,
   animateDigits: false,
   minimalMode: false,
+  lavaLamp: false,
   pauseNudge: false,
   settleIn: false,
   awayCheck: false,
   takeCare: false,
+  smallWins: false,
   focusSound: 'off',
   focusVolume: 0.4,
   highContrast: false,
@@ -206,6 +212,8 @@ export const FOCUS_SOUND_LABELS: Record<FocusSoundId, string> = {
   off: 'Off',
   tick: 'Soft ticking',
   brown: 'Brown noise',
+  rain: 'Rain',
+  waves: 'Ocean waves',
 };
 
 export const TEXT_SIZE_LABELS: Record<TextSizeId, string> = {
@@ -541,6 +549,30 @@ export function careNudge(state: TimerState, settings: Settings): string | null 
   return `${n} in a row. ${CARE_TIPS[(n / CARE_EVERY - 1) % CARE_TIPS.length]}`;
 }
 
+/** How long after a focus session ends opening the timer still celebrates it. */
+export const WIN_WINDOW_MS = 30 * 60_000;
+const WIN_WORDS = ['Nice work!', 'Well done!', 'You did it!', 'One more done!'] as const;
+
+/**
+ * The "small wins" line for a focus session that just finished, or null:
+ * "Nice work! 3 done today." Each finished session is celebrated once
+ * (`celebrated` is the end time of the last one that was), and only soon after.
+ */
+export function smallWin(
+  state: TimerState,
+  settings: Settings,
+  celebrated: number | null,
+  now: number,
+): string | null {
+  const ended = state.lastFocusEnd;
+  if (!settings.smallWins || state.phase === 'work' || !state.afterFocus || ended === undefined) {
+    return null;
+  }
+  if (ended === celebrated || now - ended > WIN_WINDOW_MS) return null;
+  const n = state.completedToday;
+  return `${WIN_WORDS[(n + WIN_WORDS.length - 1) % WIN_WORDS.length]} ${n} done today.`;
+}
+
 /** Whole minutes left, rounded up, for the calm clock: "25" until 24:00, then "24". */
 export function calmMinutes(ms: number): number {
   return Math.ceil(ms / 60_000);
@@ -592,10 +624,12 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     calmClock: input.calmClock ?? d.calmClock,
     animateDigits: input.animateDigits ?? d.animateDigits,
     minimalMode: input.minimalMode ?? d.minimalMode,
+    lavaLamp: input.lavaLamp ?? d.lavaLamp,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     settleIn: input.settleIn ?? d.settleIn,
     awayCheck: input.awayCheck ?? d.awayCheck,
     takeCare: input.takeCare ?? d.takeCare,
+    smallWins: input.smallWins ?? d.smallWins,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,
     focusVolume: Number.isFinite(Number(input.focusVolume))

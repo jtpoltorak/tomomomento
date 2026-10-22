@@ -161,6 +161,13 @@ export class TimerView {
   protected readonly rolling = computed(
     () => this.rendered() && this.store.settings().animateDigits,
   );
+  /** The time of day the running phase ends, when that's turned on. */
+  protected readonly endsAt = computed(() => {
+    const { status, endTime } = this.store.state();
+    return this.store.settings().showEndsAt && status === 'running' && endTime !== null
+      ? formatTime(endTime)
+      : null;
+  });
   protected minutesText(n: number): string {
     return `${n} ${n === 1 ? 'minute' : 'minutes'}`;
   }

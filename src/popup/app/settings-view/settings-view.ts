@@ -105,6 +105,7 @@ export class SettingsView {
     keepGoing: [false],
     headsUp: [false],
     calmClock: [false],
+    showEndsAt: [false],
     animateDigits: [false],
     minimalMode: [false],
     lavaLamp: [false],

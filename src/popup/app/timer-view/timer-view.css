@@ -176,6 +176,12 @@
   padding-inline: 0.25rem;
 }
 /* A break idea can be swapped for another with the small button beside it. */
+.ends-at {
+  margin: -0.5rem 0 0;
+  color: var(--muted);
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+}
 .status-row {
   display: flex;
   align-items: center;

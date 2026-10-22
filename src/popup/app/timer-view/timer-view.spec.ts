@@ -510,6 +510,22 @@ describe('TimerView', () => {
     });
   });
 
+  describe('ends at', () => {
+    it('shows the time the running phase ends, when turned on', async () => {
+      const end = new Date();
+      end.setHours(14, 45, 0, 0);
+      const { el, fixture, store } = await setup({ status: 'running', endTime: end.getTime() });
+      expect(el.querySelector('.ends-at')).toBeNull();
+      store.settings.update((s) => ({ ...s, showEndsAt: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.ends-at')?.textContent).toBe('Ends at 2:45 PM');
+
+      store.state.update((s) => ({ ...s, status: 'paused', endTime: null }));
+      await fixture.whenStable();
+      expect(el.querySelector('.ends-at')).toBeNull();
+    });
+  });
+
   describe('rhythm presets', () => {
     async function offered(overrides = {}) {
       const ctx = await setup(overrides);

@@ -4,6 +4,14 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Ends at (optional):** while the timer runs, a small line under it says
+  what time it ends, like "Ends at 2:45 PM". Turn on **Show when it ends**
+  under Appearance in Settings.
+
 ## 1.8.0 (2026-10-22)
 
 ### New

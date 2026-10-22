@@ -114,6 +114,9 @@
       </button>
     }
   </div>
+  @if (endsAt(); as at) {
+    <p class="ends-at">Ends at {{ at }}</p>
+  }
   <!-- The helpers card is short-lived, so it borrows this line's room while it shows. -->
   @if (full() && !helpersCard() && planLabelNow(); as now) {
     <p class="plan-now">

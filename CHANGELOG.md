@@ -15,6 +15,10 @@ these first.
 - **Rain and ocean waves:** two new focus sounds, next to soft ticking and
   brown noise. Rain patters softly; the waves roll in and wash out about
   every 8 seconds. Pick one under Focus sound in Settings.
+- **Small wins (optional):** when a focus session finishes, the progress bar
+  glows and a quick "Nice work! 3 done today." shows for a few seconds, or
+  the next time you open the timer on that break. No streaks. Turn on
+  "Celebrate small wins" under Focus helpers in Settings.
 
 ## 1.6.0 (2026-10-17)
 

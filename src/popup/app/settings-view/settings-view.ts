@@ -109,6 +109,7 @@ export class SettingsView {
     settleIn: [false],
     awayCheck: [false],
     takeCare: [false],
+    smallWins: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],
     highContrast: [false],

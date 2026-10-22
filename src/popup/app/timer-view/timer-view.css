@@ -119,6 +119,26 @@
     transform: scaleX(1);
   }
 }
+/* Small wins: the bar glows twice and the line pops in, then it all settles back. */
+.win .bar {
+  animation: win-glow 1.4s ease-out 2;
+}
+@keyframes win-glow {
+  30% {
+    box-shadow: 0 0 0 0.5rem color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+}
+.win .status {
+  color: var(--fg);
+  font-weight: 500;
+  animation: win-in 0.5s ease-out;
+}
+@keyframes win-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
 .status.settle {
   min-width: 8.5rem;
 }

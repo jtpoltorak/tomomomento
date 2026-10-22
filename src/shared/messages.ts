@@ -1,5 +1,6 @@
 import type { FocusSound } from './focus-sounds';
 import type { AlertSound } from './sounds';
+import type { Energy } from './stats';
 import type { Phase, TimerState } from './timer';
 
 export type Command =
@@ -13,6 +14,8 @@ export type Command =
   | { command: 'skipSettle' }
   /** Back from an "away" pause: the time away was focus, so count it. */
   | { command: 'wasWorking' }
+  /** The energy check-in for the focus session that just ended. */
+  | { command: 'rateEnergy'; level: Energy }
   | { command: 'pause' }
   | { command: 'reset' }
   | { command: 'skip' }

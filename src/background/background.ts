@@ -22,7 +22,7 @@ import {
 import { parkThought } from '../shared/parking';
 import { planDoneMessage } from '../shared/plan';
 import type { AlertSound } from '../shared/sounds';
-import { addFocusMinutes, recordPomodoro } from '../shared/stats';
+import { addFocusMinutes, recordEnergy, recordPomodoro } from '../shared/stats';
 import {
   loadHistory,
   loadParkingLot,
@@ -402,6 +402,12 @@ function runCommand(cmd: Command): Promise<TimerState> {
         return commit(keepGoing(state, settings, now));
       case 'skipSettle':
         return commit(skipSettle(state, now));
+      case 'rateEnergy': {
+        const at = state.lastFocusEnd;
+        if (at === undefined || state.energyFor === at) return state;
+        await saveHistory(recordEnergy(await loadHistory(), at, cmd.level));
+        return commit({ ...state, energyFor: at });
+      }
       case 'wasWorking':
         return commit(wasWorking(state, now));
       case 'pause':

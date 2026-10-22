@@ -12,6 +12,7 @@ import { sanitizeParkingLot, type ParkingLot } from '../shared/parking';
 import { planDoneMessage, sanitizePlanData, type PlanData } from '../shared/plan';
 import {
   addFocusMinutes,
+  recordEnergy,
   recordPomodoro,
   sanitizeHistory,
   seedHistory,
@@ -190,6 +191,12 @@ export class WebTimerHost implements TimerHost {
           return this.commit(skipSettle(state, now));
         case 'wasWorking':
           return this.commit(wasWorking(state, now));
+        case 'rateEnergy': {
+          const at = state.lastFocusEnd;
+          if (at === undefined || state.energyFor === at) return state;
+          write(KEYS.history, recordEnergy(loadHistory(), at, command.level));
+          return this.commit({ ...state, energyFor: at });
+        }
         case 'pause':
           return this.commit(pause(state, now));
         case 'reset':

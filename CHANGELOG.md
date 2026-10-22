@@ -15,6 +15,10 @@ these first.
   "What's the first tiny step?" Your answer shows under the timer until the
   session ends. Turn on **Ask for the first tiny step** under Focus helpers
   in Settings.
+- **Energy check-in (optional):** on the break after a focus session, tap
+  Low, Okay or Great. Stats gets a "Time of day" section showing how
+  mornings, afternoons, evenings and nights tend to go. Turn on **Energy
+  check-in** under Focus helpers in Settings.
 
 ## 1.8.0 (2026-10-22)
 

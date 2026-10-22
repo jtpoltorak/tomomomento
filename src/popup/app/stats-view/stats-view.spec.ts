@@ -84,4 +84,31 @@ describe('StatsView', () => {
     expect(store.history()).toEqual({});
     expect(button('Reset stats')).toBeTruthy();
   });
+
+  it('shows how each time of day goes, with energy check-ins on', async () => {
+    const { el, fixture, store } = await setup({
+      [daysAgo(0)]: {
+        pomodoros: 6,
+        focusMinutes: 150,
+        energy: { morning: { sum: 9, count: 3 }, afternoon: { sum: 4, count: 3 } },
+      },
+    });
+    expect(el.querySelector('.energy')).toBeNull();
+    store.settings.update((s) => ({ ...s, energyCheck: true }));
+    await fixture.whenStable();
+    const rows = Array.from(el.querySelectorAll('.energy li')).map((li) =>
+      Array.from(li.children)
+        .map((c) => c.textContent?.trim())
+        .join(' '),
+    );
+    expect(rows).toEqual([
+      'Morning Great 3 check-ins',
+      'Afternoon Low 3 check-ins',
+      'Evening Not enough yet 0 check-ins',
+      'Night Not enough yet 0 check-ins',
+    ]);
+    expect(el.querySelector('#stats-energy + .energy + .note')?.textContent?.trim()).toBe(
+      'Mornings tend to go best for you.',
+    );
+  });
 });

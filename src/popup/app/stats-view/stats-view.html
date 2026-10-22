@@ -64,6 +64,31 @@
   </div>
 </section>
 
+@if (energyOn()) {
+  <section aria-labelledby="stats-energy">
+    <h2 id="stats-energy">Time of day</h2>
+    <ul class="energy">
+      @for (row of energyRows(); track row.id) {
+        <li>
+          <span class="part">{{ row.label }}</span>
+          @if (row.average !== null) {
+            <strong class="word">{{ energyWord(row.average) }}</strong>
+          } @else {
+            <span class="word muted">Not enough yet</span>
+          }
+          <span class="checkins">{{ checkIns(row.count) }}</span>
+        </li>
+      }
+    </ul>
+    <p class="note">
+      {{
+        bestTime() ??
+          'After a few energy check-ins at different times of day, this shows which go best.'
+      }}
+    </p>
+  </section>
+}
+
 <section class="reset-section">
   @if (confirming()) {
     <div class="confirm" role="group" aria-labelledby="reset-question">

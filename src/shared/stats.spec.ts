@@ -1,5 +1,10 @@
 import {
   addFocusMinutes,
+  bestDaypart,
+  daypartOf,
+  energyByDaypart,
+  energyWord,
+  recordEnergy,
   formatMinutes,
   heatLevel,
   heatmap,
@@ -117,5 +122,47 @@ describe('stats', () => {
   it('shades on a fixed scale and formats focus time', () => {
     expect([0, 1, 2, 3, 4, 5, 7, 8, 20].map(heatLevel)).toEqual([0, 1, 1, 2, 2, 3, 3, 4, 4]);
     expect([0, 45, 60, 125].map(formatMinutes)).toEqual(['0m', '45m', '1h', '2h 5m']);
+  });
+
+  describe('energy check-ins', () => {
+    const at = (hour: number) => new Date(2026, 9, 13, hour, 10).getTime();
+    const base = recordPomodoro({}, at(9), 25);
+
+    it('sorts the hours into times of day', () => {
+      expect([4, 5, 11, 12, 16, 17, 21, 22].map((h) => daypartOf(at(h)))).toEqual([
+        'night',
+        'morning',
+        'morning',
+        'afternoon',
+        'afternoon',
+        'evening',
+        'evening',
+        'night',
+      ]);
+    });
+
+    it('tallies check-ins on the day, and keeps them as pomodoros are added', () => {
+      let h = recordEnergy(base, at(9), 3);
+      h = recordEnergy(h, at(10), 2);
+      h = recordPomodoro(h, at(11), 25);
+      expect(h['2026-10-13'].energy).toEqual({ morning: { sum: 5, count: 2 } });
+      expect(recordEnergy({}, at(9), 3)).toEqual({});
+      expect(sanitizeHistory(h)).toEqual(h);
+    });
+
+    it('needs a few check-ins before it says anything', () => {
+      let h = base;
+      for (const level of [3, 3, 2] as const) h = recordEnergy(h, at(9), level);
+      for (const level of [1, 2] as const) h = recordEnergy(h, at(14), level);
+      let rows = energyByDaypart(h);
+      expect(rows.map((r) => r.average)).toEqual([8 / 3, null, null, null]);
+      expect(bestDaypart(rows)).toBeNull(); // only mornings know enough
+
+      h = recordEnergy(h, at(14), 1);
+      rows = energyByDaypart(h);
+      expect(bestDaypart(rows)?.label).toBe('Morning');
+      expect(energyWord(8 / 3)).toBe('Great');
+      expect(energyWord(4 / 3)).toBe('Low');
+    });
   });
 });

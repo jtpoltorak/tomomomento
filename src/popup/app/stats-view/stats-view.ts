@@ -8,6 +8,9 @@ import {
   signal,
 } from '@angular/core';
 import {
+  bestDaypart,
+  energyByDaypart,
+  energyWord,
   formatMinutes,
   heatLevel,
   heatmap,
@@ -65,6 +68,19 @@ export class StatsView {
     const count = days.length === 1 ? '1 day' : `${days.length} days`;
     return `${count} with focus in the last ${HEATMAP_WEEKS} weeks. Best day: ${this.longDate(best)}, ${this.pomodoros(best.pomodoros)}.`;
   });
+
+  /** Energy check-ins by time of day, when that's turned on. */
+  protected readonly energyOn = computed(() => this.store.settings().energyCheck);
+  protected readonly energyRows = computed(() => energyByDaypart(this.store.history()));
+  protected readonly bestTime = computed(() => {
+    const best = bestDaypart(this.energyRows());
+    return best ? `${best.label}s tend to go best for you.` : null;
+  });
+  protected readonly energyWord = energyWord;
+
+  protected checkIns(n: number): string {
+    return n === 1 ? '1 check-in' : `${n} check-ins`;
+  }
 
   protected readonly confirming = signal(false);
 

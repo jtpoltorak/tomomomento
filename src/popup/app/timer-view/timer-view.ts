@@ -16,6 +16,7 @@ import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
 import { breakIdea } from '../../../shared/break-ideas';
 import { MAX_THOUGHT_LENGTH, thoughtsText, wrapUpDue } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
+import { ENERGY_LABELS, type Energy } from '../../../shared/stats';
 import {
   breathAt,
   canAskFirstStep,
@@ -37,6 +38,7 @@ import {
   SETTLE_MS,
   settling,
   smallWin,
+  WIN_WINDOW_MS,
   type Phase,
 } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
@@ -109,6 +111,25 @@ export class TimerView {
       : this.store.parkedOnBreak(),
   );
   protected readonly parkedText = computed(() => thoughtsText(this.parkedCard()));
+  /** On the break after a focus session, a one-tap check-in on how it went. Other cards come first. */
+  protected readonly energyCard = computed(() => {
+    const { phase, lastFocusEnd, energyFor } = this.store.state();
+    return (
+      this.store.settings().energyCheck &&
+      phase !== 'work' &&
+      lastFocusEnd !== undefined &&
+      energyFor !== lastFocusEnd &&
+      this.store.tick() - lastFocusEnd < WIN_WINDOW_MS &&
+      !this.store.showPlanPrompt() &&
+      !this.helpersCard() &&
+      !this.wrapCard() &&
+      !this.parkedCard()
+    );
+  });
+  protected readonly energyLevels = ([1, 2, 3] as const).map((level) => ({
+    level,
+    label: ENERGY_LABELS[level],
+  }));
   // The popup only has room for one extra line of text under the controls, so
   // the daily plan card, the parked thoughts card and your own label for this
   // pomodoro come before a quote.
@@ -118,6 +139,7 @@ export class TimerView {
     !this.helpersCard() &&
     !this.parkedCard() &&
     !this.wrapCard() &&
+    !this.energyCard() &&
     !this.askStep() &&
     !this.planLabelNow()
       ? this.phaseQuote()
@@ -486,6 +508,11 @@ export class TimerView {
 
   protected anotherIdea(): void {
     this.ideaOffset.update((n) => n + 1);
+  }
+
+  protected async rateEnergy(level: Energy): Promise<void> {
+    await this.store.send({ command: 'rateEnergy', level });
+    this.focusSoon('.primary-btn');
   }
 
   protected async notTonight(): Promise<void> {

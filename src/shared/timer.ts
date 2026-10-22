@@ -72,6 +72,8 @@ export interface Settings {
   smallWins: boolean;
   /** Pressing Start on a fresh focus session asks for the first tiny step first. */
   firstStep: boolean;
+  /** After a focus session, a one-tap "how was it?" that Stats turns into best times of day. */
+  energyCheck: boolean;
   /** One-tap timer setups (Classic, Short, Deep) on the timer screen before you start. */
   rhythmPresets: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
@@ -127,6 +129,8 @@ export interface TimerState {
   lastFocusEnd?: number;
   /** The first tiny step you named for this focus session. */
   firstStep?: string;
+  /** `lastFocusEnd` of the session the energy check-in was answered for, so it asks once. */
+  energyFor?: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -167,6 +171,7 @@ export const DEFAULT_SETTINGS: Settings = {
   takeCare: false,
   smallWins: false,
   firstStep: false,
+  energyCheck: false,
   rhythmPresets: false,
   focusSound: 'off',
   focusVolume: 0.4,
@@ -714,6 +719,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
     firstStep: input.firstStep ?? d.firstStep,
+    energyCheck: input.energyCheck ?? d.energyCheck,
     rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,

@@ -263,6 +263,17 @@
         <button type="button" class="pill-btn" (click)="parkLater()">Later</button>
       </div>
     </aside>
+  } @else if (energyCard()) {
+    <aside class="parked-card" aria-labelledby="energy-card-title">
+      <p id="energy-card-title">How was that one?</p>
+      <div class="parked-card-actions">
+        @for (e of energyLevels; track e.level) {
+          <button type="button" class="pill-btn" (click)="rateEnergy(e.level)">
+            {{ e.label }}
+          </button>
+        }
+      </div>
+    </aside>
   }
 
   @if (quote(); as q) {

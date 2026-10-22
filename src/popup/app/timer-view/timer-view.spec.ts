@@ -559,6 +559,26 @@ describe('TimerView', () => {
     });
   });
 
+  describe('energy check-in', () => {
+    it('asks on the break after a focus session, once', async () => {
+      const ended = Date.now() - 60_000;
+      const { el, fixture, store, button } = await setup({
+        phase: 'shortBreak',
+        lastFocusEnd: ended,
+      });
+      expect(el.querySelector('#energy-card-title')).toBeNull();
+      store.settings.update((s) => ({ ...s, energyCheck: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('#energy-card-title')?.textContent).toBe('How was that one?');
+      button('Great').click();
+      expect(store.sent).toEqual([{ command: 'rateEnergy', level: 3 }]);
+
+      store.state.update((s) => ({ ...s, energyFor: ended }));
+      await fixture.whenStable();
+      expect(el.querySelector('#energy-card-title')).toBeNull();
+    });
+  });
+
   describe('ends at', () => {
     it('shows the time the running phase ends, when turned on', async () => {
       const end = new Date();

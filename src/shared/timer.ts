@@ -62,6 +62,8 @@ export interface Settings {
   settleIn: boolean;
   /** Pause focus when the computer sits untouched, and ask on return (extension only). */
   awayCheck: boolean;
+  /** Right-click selected text to park it, or a page to block its site (extension only). */
+  rightClick: boolean;
   /** After every few focus sessions in a row, a break reminds you to look after yourself. */
   takeCare: boolean;
   /** A quick, quiet celebration when a focus session finishes. */
@@ -154,6 +156,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pauseNudge: false,
   settleIn: false,
   awayCheck: false,
+  rightClick: false,
   takeCare: false,
   smallWins: false,
   rhythmPresets: false,
@@ -675,6 +678,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     settleIn: input.settleIn ?? d.settleIn,
     awayCheck: input.awayCheck ?? d.awayCheck,
+    rightClick: input.rightClick ?? d.rightClick,
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
     rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,

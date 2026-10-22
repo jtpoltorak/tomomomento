@@ -111,6 +111,7 @@ export class SettingsView {
     pauseNudge: [false],
     settleIn: [false],
     awayCheck: [false],
+    rightClick: [false],
     takeCare: [false],
     smallWins: [false],
     rhythmPresets: [false],

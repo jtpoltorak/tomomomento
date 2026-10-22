@@ -11,16 +11,26 @@ import type {
   FocusSoundMessage,
   PlaySoundMessage,
 } from '../shared/messages';
-import { BLOCKER_PERMISSIONS, hostMatches, shouldBlock, SUGGESTED_SITES } from '../shared/blocker';
+import {
+  addSite,
+  BLOCKER_PERMISSIONS,
+  hostMatches,
+  normalizeSite,
+  shouldBlock,
+  SUGGESTED_SITES,
+} from '../shared/blocker';
+import { parkThought } from '../shared/parking';
 import { planDoneMessage } from '../shared/plan';
 import type { AlertSound } from '../shared/sounds';
 import { addFocusMinutes, recordPomodoro } from '../shared/stats';
 import {
   loadHistory,
+  loadParkingLot,
   loadPlan,
   loadSettings,
   loadState,
   saveHistory,
+  saveParkingLot,
   saveSettings,
   saveState,
 } from '../shared/storage';
@@ -453,6 +463,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync' || !changes['settings']) return;
   void serialized(async () => {
     const [state, settings] = await Promise.all([loadState(), loadSettings()]);
+    await syncMenus(settings);
     if (state.status === 'idle') await commit(reset(state, settings));
     else {
       await syncBlocking(state, settings);
@@ -478,6 +489,7 @@ chrome.permissions.onAdded.addListener(() => {
       await saveSettings({ ...settings, blockSites: true, blockedSites });
     }
     await syncBlocking(state);
+    await syncMenus();
   });
 });
 
@@ -487,6 +499,67 @@ chrome.permissions.onRemoved.addListener(() => {
     if (await chrome.permissions.contains(BLOCKER_PERMISSIONS)) return;
     const settings = await loadSettings();
     if (settings.blockSites) await saveSettings({ ...settings, blockSites: false });
+  });
+});
+
+// Right-click shortcuts. Each item is there only while its switch, and the
+// feature it feeds, are on.
+const MENU_PARK = 'park-thought';
+const MENU_BLOCK = 'block-site';
+
+async function syncMenus(settings?: Settings): Promise<void> {
+  settings ??= await loadSettings();
+  await chrome.contextMenus.removeAll();
+  if (!settings.rightClick) return;
+  // Creating reports problems through lastError, so read it to keep the console quiet.
+  const quiet = () => void chrome.runtime.lastError;
+  if (settings.parkingLot) {
+    chrome.contextMenus.create(
+      { id: MENU_PARK, title: 'Park this thought', contexts: ['selection'] },
+      quiet,
+    );
+  }
+  if (settings.blockSites && (await chrome.permissions.contains(BLOCKER_PERMISSIONS))) {
+    chrome.contextMenus.create(
+      {
+        id: MENU_BLOCK,
+        title: 'Block this site during focus',
+        contexts: ['page'],
+        documentUrlPatterns: ['http://*/*', 'https://*/*'],
+      },
+      quiet,
+    );
+  }
+}
+
+/** A quick check mark on the toolbar icon, so a right-click shortcut shows it worked. */
+async function confirmOnBadge(): Promise<void> {
+  if ((await chrome.action.getBadgeText({})) === '✓') return;
+  const [state, settings] = await Promise.all([loadState(), loadSettings()]);
+  const colors = settings.colorSafe ? SAFE_BADGE_COLORS : BADGE_COLORS;
+  await chrome.action.setBadgeBackgroundColor({ color: colors[state.phase] });
+  await chrome.action.setBadgeText({ text: '✓' });
+  setTimeout(() => void serialized(async () => updateBadge(await loadState())), 1500);
+}
+
+chrome.contextMenus.onClicked.addListener((info) => {
+  void serialized(async () => {
+    const settings = await loadSettings();
+    if (!settings.rightClick) return;
+    if (info.menuItemId === MENU_PARK && settings.parkingLot && info.selectionText) {
+      const lot = await loadParkingLot();
+      await saveParkingLot(parkThought(lot, info.selectionText, Date.now(), crypto.randomUUID()));
+      await confirmOnBadge();
+    } else if (info.menuItemId === MENU_BLOCK && settings.blockSites && info.pageUrl) {
+      const site = normalizeSite(info.pageUrl);
+      if (!site) return;
+      const blockedSites = addSite(settings.blockedSites, site);
+      // Saving starts blocking it right away if focus is running (see storage.onChanged).
+      if (blockedSites !== settings.blockedSites) {
+        await saveSettings({ ...settings, blockedSites: [...blockedSites] });
+      }
+      await confirmOnBadge();
+    }
   });
 });
 
@@ -528,11 +601,15 @@ async function welcomeBack(state: TimerState): Promise<void> {
 }
 
 chrome.runtime.onInstalled.addListener(() => {
-  void serialized(async () => commit(await loadState()));
+  void serialized(async () => {
+    await syncMenus();
+    return commit(await loadState());
+  });
 });
 
 // The browser may have been closed when a phase ended; catch up on launch.
 // A focus session still running picks its sound back up.
 chrome.runtime.onStartup.addListener(() => {
+  void serialized(() => syncMenus());
   void completeIfDue().then(() => serialized(async () => syncFocusSound(await loadState())));
 });

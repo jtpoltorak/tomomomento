@@ -45,6 +45,15 @@ export function normalizeSite(input: string): string | null {
   return host;
 }
 
+/**
+ * The list with `site` added at the end, or the same list when it's already
+ * there (or covered by a site it's part of) or the list is full.
+ */
+export function addSite(sites: readonly string[], site: string): readonly string[] {
+  if (sites.some((s) => hostMatches(site, s)) || sites.length >= MAX_BLOCKED_SITES) return sites;
+  return [...sites, site];
+}
+
 /** Cleans a stored site list: valid, unique domains, capped in length. */
 export function sanitizeSites(input: unknown): string[] {
   if (!Array.isArray(input)) return [];

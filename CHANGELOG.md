@@ -16,6 +16,10 @@ these first.
   parking lot, the timer offers to go through it one thought at a time:
   done, keep for tomorrow, or let go. Turn on **Wrap up my day** under
   Planning in Settings (it needs the parking lot on).
+- **Right-click shortcuts (optional):** select text on any page and
+  right-click to **Park this thought**, or right-click a page to **Block this
+  site during focus**. Turn on **Right-click shortcuts** under Focus helpers
+  in Settings. Adds the `contextMenus` permission, which shows no warning.
 
 ## 1.7.0 (2026-10-22)
 

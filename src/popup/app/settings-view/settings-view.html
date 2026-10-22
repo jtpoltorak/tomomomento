@@ -125,12 +125,28 @@
       starts. "Start now" skips it.
     </p>
     <label class="switch-row">
+      <span>Ask for the first tiny step</span>
+      <input type="checkbox" role="switch" formControlName="firstStep" />
+    </label>
+    <p class="note">
+      Pressing Start asks "What's the first tiny step?" Your answer shows under the timer while you
+      focus. Skipping is always fine.
+    </p>
+    <label class="switch-row">
       <span>Celebrate small wins</span>
       <input type="checkbox" role="switch" formControlName="smallWins" />
     </label>
     <p class="note">
       When a focus session finishes, the bar glows and a quick "Nice work!" says how many you've
       done today. No streaks, no pressure.
+    </p>
+    <label class="switch-row">
+      <span>Energy check-in</span>
+      <input type="checkbox" role="switch" formControlName="energyCheck" />
+    </label>
+    <p class="note">
+      After a focus session, tap Low, Okay or Great. Stats shows which times of day tend to go best
+      for you.
     </p>
     <label class="switch-row">
       <span>Take-care reminders</span>
@@ -381,6 +397,14 @@
     <p class="note">
       Shows whole minutes instead of a ticking countdown, for when watching the seconds feels
       stressful.
+    </p>
+    <label class="switch-row">
+      <span>Show when it ends</span>
+      <input type="checkbox" role="switch" formControlName="showEndsAt" />
+    </label>
+    <p class="note">
+      While the timer runs, a line under it says what time it ends, like "Ends at 2:45 PM". No math
+      needed.
     </p>
     <label class="switch-row">
       <span>Animated digits</span>

@@ -8,6 +8,38 @@ import { localDateKey, type Settings, type TimerState } from './timer';
 export interface DayStats {
   pomodoros: number;
   focusMinutes: number;
+  /** Energy check-ins, tallied by time of day. Absent until the first one. */
+  energy?: Partial<Record<Daypart, EnergyTally>>;
+}
+
+/** How a focus session felt: 1 low, 2 okay, 3 great. */
+export type Energy = 1 | 2 | 3;
+export type Daypart = 'morning' | 'afternoon' | 'evening' | 'night';
+
+export interface EnergyTally {
+  /** Sum of the ratings, so the average is sum / count. */
+  sum: number;
+  count: number;
+}
+
+export const ENERGY_LABELS: Record<Energy, string> = { 1: 'Low', 2: 'Okay', 3: 'Great' };
+
+export const DAYPARTS: readonly { id: Daypart; label: string }[] = [
+  { id: 'morning', label: 'Morning' },
+  { id: 'afternoon', label: 'Afternoon' },
+  { id: 'evening', label: 'Evening' },
+  { id: 'night', label: 'Night' },
+];
+
+/** A time of day needs this many check-ins before Stats says anything about it. */
+export const MIN_ENERGY_RATINGS = 3;
+
+export interface EnergyRow {
+  id: Daypart;
+  label: string;
+  count: number;
+  /** 1 to 3, or null with too few check-ins to say. */
+  average: number | null;
 }
 
 /** Keyed by local date (YYYY-MM-DD). */
@@ -48,7 +80,7 @@ export function recordPomodoro(history: History, finishedAt: number, minutes: nu
   const day = history[key] ?? { pomodoros: 0, focusMinutes: 0 };
   return {
     ...history,
-    [key]: { pomodoros: day.pomodoros + 1, focusMinutes: day.focusMinutes + minutes },
+    [key]: { ...day, pomodoros: day.pomodoros + 1, focusMinutes: day.focusMinutes + minutes },
   };
 }
 
@@ -61,6 +93,52 @@ export function addFocusMinutes(history: History, finishedAt: number, minutes: n
   const day = history[key];
   if (!day) return history;
   return { ...history, [key]: { ...day, focusMinutes: day.focusMinutes + minutes } };
+}
+
+/** Morning 5 am to noon, afternoon to 5 pm, evening to 10 pm, night after that. */
+export function daypartOf(at: number): Daypart {
+  const hour = new Date(at).getHours();
+  if (hour >= 5 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 17) return 'afternoon';
+  if (hour >= 17 && hour < 22) return 'evening';
+  return 'night';
+}
+
+/** Adds a check-in for the focus session that ended at `at`, on the day it counted for. */
+export function recordEnergy(history: History, at: number, level: Energy): History {
+  const key = localDateKey(at);
+  const day = history[key];
+  if (!day || ![1, 2, 3].includes(level)) return history;
+  const part = daypartOf(at);
+  const tally = day.energy?.[part] ?? { sum: 0, count: 0 };
+  const energy = { ...day.energy, [part]: { sum: tally.sum + level, count: tally.count + 1 } };
+  return { ...history, [key]: { ...day, energy } };
+}
+
+/** Every check-in so far, by time of day. */
+export function energyByDaypart(history: History): EnergyRow[] {
+  return DAYPARTS.map(({ id, label }) => {
+    let sum = 0;
+    let count = 0;
+    for (const day of Object.values(history)) {
+      sum += day.energy?.[id]?.sum ?? 0;
+      count += day.energy?.[id]?.count ?? 0;
+    }
+    return { id, label, count, average: count >= MIN_ENERGY_RATINGS ? sum / count : null };
+  });
+}
+
+/** The time of day that clearly goes best, once at least two have enough check-ins. */
+export function bestDaypart(rows: readonly EnergyRow[]): EnergyRow | null {
+  const known = rows.filter((r) => r.average !== null);
+  if (known.length < 2) return null;
+  const sorted = [...known].sort((a, b) => b.average! - a.average!);
+  return sorted[0].average! - sorted[1].average! >= 0.25 ? sorted[0] : null;
+}
+
+/** An average check-in in words. */
+export function energyWord(average: number): string {
+  return ENERGY_LABELS[Math.round(average) as Energy];
 }
 
 /**
@@ -77,6 +155,19 @@ export function seedHistory(state: TimerState, settings: Settings): History {
   };
 }
 
+function sanitizeEnergy(input: unknown): DayStats['energy'] {
+  if (!input || typeof input !== 'object') return undefined;
+  const out: NonNullable<DayStats['energy']> = {};
+  for (const { id } of DAYPARTS) {
+    const tally = (input as Record<string, unknown>)[id] as Partial<EnergyTally> | undefined;
+    const count = Math.floor(Number(tally?.count));
+    const sum = Number(tally?.sum);
+    if (!Number.isFinite(count) || count <= 0 || !Number.isFinite(sum)) continue;
+    out[id] = { count, sum: Math.min(3 * count, Math.max(count, sum)) };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** Drops anything malformed, since storage can hold whatever an older version wrote. */
 export function sanitizeHistory(input: unknown): History {
   const out: History = {};
@@ -88,6 +179,8 @@ export function sanitizeHistory(input: unknown): History {
     const m = Math.floor(Number(focusMinutes));
     if (!Number.isFinite(p) || p <= 0) continue;
     out[key] = { pomodoros: p, focusMinutes: Number.isFinite(m) && m > 0 ? m : 0 };
+    const energy = sanitizeEnergy((value as Partial<DayStats>).energy);
+    if (energy) out[key].energy = energy;
   }
   return out;
 }

@@ -176,6 +176,12 @@
   padding-inline: 0.25rem;
 }
 /* A break idea can be swapped for another with the small button beside it. */
+.ends-at {
+  margin: -0.5rem 0 0;
+  color: var(--muted);
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+}
 .status-row {
   display: flex;
   align-items: center;
@@ -577,6 +583,20 @@
 }
 .quick-park .pill-btn {
   font-size: 1.125rem;
+}
+
+/* First tiny step: asked once, in place of the controls, before a fresh focus session. */
+.first-step {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+}
+.first-step label {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+.first-step .quick-park {
+  width: 100%;
 }
 
 /* The minimal timer: a bigger clock with room to breathe, and a quiet way to the rest. */

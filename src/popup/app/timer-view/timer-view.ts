@@ -16,9 +16,12 @@ import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
 import { breakIdea } from '../../../shared/break-ideas';
 import { MAX_THOUGHT_LENGTH, thoughtsText, wrapUpDue } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
+import { ENERGY_LABELS, type Energy } from '../../../shared/stats';
 import {
   breathAt,
+  canAskFirstStep,
   canJustStart,
+  MAX_STEP_LENGTH,
   careNudge,
   canKeepGoing,
   calmMinutes,
@@ -35,6 +38,7 @@ import {
   SETTLE_MS,
   settling,
   smallWin,
+  WIN_WINDOW_MS,
   type Phase,
 } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
@@ -107,6 +111,25 @@ export class TimerView {
       : this.store.parkedOnBreak(),
   );
   protected readonly parkedText = computed(() => thoughtsText(this.parkedCard()));
+  /** On the break after a focus session, a one-tap check-in on how it went. Other cards come first. */
+  protected readonly energyCard = computed(() => {
+    const { phase, lastFocusEnd, energyFor } = this.store.state();
+    return (
+      this.store.settings().energyCheck &&
+      phase !== 'work' &&
+      lastFocusEnd !== undefined &&
+      energyFor !== lastFocusEnd &&
+      this.store.tick() - lastFocusEnd < WIN_WINDOW_MS &&
+      !this.store.showPlanPrompt() &&
+      !this.helpersCard() &&
+      !this.wrapCard() &&
+      !this.parkedCard()
+    );
+  });
+  protected readonly energyLevels = ([1, 2, 3] as const).map((level) => ({
+    level,
+    label: ENERGY_LABELS[level],
+  }));
   // The popup only has room for one extra line of text under the controls, so
   // the daily plan card, the parked thoughts card and your own label for this
   // pomodoro come before a quote.
@@ -116,6 +139,8 @@ export class TimerView {
     !this.helpersCard() &&
     !this.parkedCard() &&
     !this.wrapCard() &&
+    !this.energyCard() &&
+    !this.askStep() &&
     !this.planLabelNow()
       ? this.phaseQuote()
       : null,
@@ -161,6 +186,13 @@ export class TimerView {
   protected readonly rolling = computed(
     () => this.rendered() && this.store.settings().animateDigits,
   );
+  /** The time of day the running phase ends, when that's turned on. */
+  protected readonly endsAt = computed(() => {
+    const { status, endTime } = this.store.state();
+    return this.store.settings().showEndsAt && status === 'running' && endTime !== null
+      ? formatTime(endTime)
+      : null;
+  });
   protected minutesText(n: number): string {
     return `${n} ${n === 1 ? 'minute' : 'minutes'}`;
   }
@@ -350,7 +382,17 @@ export class TimerView {
   });
 
   /** The label for the pomodoro in progress, or the next one during a break. */
+  /** Start asks for the first tiny step before a fresh focus session. */
+  private readonly asking = signal(false);
+  protected readonly askStep = computed(
+    () => this.asking() && canAskFirstStep(this.store.state(), this.store.settings()),
+  );
+  protected readonly maxStep = MAX_STEP_LENGTH;
+
   protected readonly planLabelNow = computed(() => {
+    // The step you named for this session is the most useful thing to see.
+    const { phase, firstStep } = this.store.state();
+    if (phase === 'work' && firstStep) return { prefix: 'First step', label: firstStep };
     // Extra time goes with the pomodoro that just finished.
     const index = this.planDone() - (this.store.state().extending ? 1 : 0);
     const label = this.plan()?.labels[index];
@@ -468,6 +510,11 @@ export class TimerView {
     this.ideaOffset.update((n) => n + 1);
   }
 
+  protected async rateEnergy(level: Energy): Promise<void> {
+    await this.store.send({ command: 'rateEnergy', level });
+    this.focusSoon('.primary-btn');
+  }
+
   protected async notTonight(): Promise<void> {
     await this.store.markWrappedUp();
     afterNextRender(
@@ -487,7 +534,26 @@ export class TimerView {
   }
 
   protected toggle(): void {
-    void this.store.send({ command: this.store.state().status === 'running' ? 'pause' : 'start' });
+    if (this.store.state().status === 'running') {
+      void this.store.send({ command: 'pause' });
+    } else if (canAskFirstStep(this.store.state(), this.store.settings())) {
+      this.asking.set(true);
+      this.focusSoon('#first-step');
+    } else {
+      void this.store.send({ command: 'start' });
+    }
+  }
+
+  /** Starts focus with the step typed in, or with none when the box is empty ("Skip"). */
+  protected startWithStep(step: string): void {
+    this.asking.set(false);
+    void this.store.send(step.trim() ? { command: 'start', step } : { command: 'start' });
+    this.focusSoon('.primary-btn');
+  }
+
+  protected cancelStep(): void {
+    this.asking.set(false);
+    this.focusSoon('.primary-btn');
   }
 
   protected justStart(): void {

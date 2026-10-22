@@ -510,6 +510,91 @@ describe('TimerView', () => {
     });
   });
 
+  describe('first tiny step', () => {
+    async function asking() {
+      const ctx = await setup();
+      ctx.store.settings.update((s) => ({ ...s, firstStep: true }));
+      await ctx.fixture.whenStable();
+      ctx.button('Start').click();
+      await ctx.fixture.whenStable();
+      return ctx;
+    }
+
+    it('asks before starting, then starts with the step', async () => {
+      const { el, fixture, store } = await asking();
+      expect(store.sent).toEqual([]);
+      expect(el.querySelector('#first-step-label')?.textContent).toBe(
+        "What's the first tiny step?",
+      );
+      const input = el.querySelector<HTMLInputElement>('#first-step')!;
+      input.value = 'open the doc';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      await fixture.whenStable();
+      expect(store.sent).toEqual([{ command: 'start', step: 'open the doc' }]);
+      expect(el.querySelector('.first-step')).toBeNull();
+    });
+
+    it('can be skipped or closed', async () => {
+      const { store, button } = await asking();
+      button('Skip and start').click();
+      expect(store.sent).toEqual([{ command: 'start' }]);
+      TestBed.resetTestingModule();
+
+      const again = await asking();
+      again.el
+        .querySelector('#first-step')!
+        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await again.fixture.whenStable();
+      expect(again.store.sent).toEqual([]);
+      expect(again.button('Start')).toBeTruthy();
+    });
+
+    it('shows the step under the timer during the session', async () => {
+      const { el } = await setup({
+        status: 'running',
+        endTime: Date.now() + 60_000,
+        firstStep: 'open the doc',
+      });
+      expect(el.querySelector('.plan-now')?.textContent?.trim()).toBe('First step: open the doc');
+    });
+  });
+
+  describe('energy check-in', () => {
+    it('asks on the break after a focus session, once', async () => {
+      const ended = Date.now() - 60_000;
+      const { el, fixture, store, button } = await setup({
+        phase: 'shortBreak',
+        lastFocusEnd: ended,
+      });
+      expect(el.querySelector('#energy-card-title')).toBeNull();
+      store.settings.update((s) => ({ ...s, energyCheck: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('#energy-card-title')?.textContent).toBe('How was that one?');
+      button('Great').click();
+      expect(store.sent).toEqual([{ command: 'rateEnergy', level: 3 }]);
+
+      store.state.update((s) => ({ ...s, energyFor: ended }));
+      await fixture.whenStable();
+      expect(el.querySelector('#energy-card-title')).toBeNull();
+    });
+  });
+
+  describe('ends at', () => {
+    it('shows the time the running phase ends, when turned on', async () => {
+      const end = new Date();
+      end.setHours(14, 45, 0, 0);
+      const { el, fixture, store } = await setup({ status: 'running', endTime: end.getTime() });
+      expect(el.querySelector('.ends-at')).toBeNull();
+      store.settings.update((s) => ({ ...s, showEndsAt: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.ends-at')?.textContent).toBe('Ends at 2:45 PM');
+
+      store.state.update((s) => ({ ...s, status: 'paused', endTime: null }));
+      await fixture.whenStable();
+      expect(el.querySelector('.ends-at')).toBeNull();
+    });
+  });
+
   describe('rhythm presets', () => {
     async function offered(overrides = {}) {
       const ctx = await setup(overrides);

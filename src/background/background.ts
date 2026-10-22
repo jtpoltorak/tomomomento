@@ -22,7 +22,7 @@ import {
 import { parkThought } from '../shared/parking';
 import { planDoneMessage } from '../shared/plan';
 import type { AlertSound } from '../shared/sounds';
-import { addFocusMinutes, recordPomodoro } from '../shared/stats';
+import { addFocusMinutes, recordEnergy, recordPomodoro } from '../shared/stats';
 import {
   loadHistory,
   loadParkingLot,
@@ -53,6 +53,7 @@ import {
   rollDay,
   setPhase,
   settleStart,
+  withFirstStep,
   skipSettle,
   stepAway,
   wasWorking,
@@ -393,7 +394,7 @@ function runCommand(cmd: Command): Promise<TimerState> {
     const state = rollDay(stored, now);
     switch (cmd.command) {
       case 'start':
-        return commit(settleStart(state, settings, now));
+        return commit(settleStart(withFirstStep(state, cmd.step), settings, now));
       case 'justStart':
         return commit(justStart(state, settings, now));
       case 'keepGoing':
@@ -401,6 +402,12 @@ function runCommand(cmd: Command): Promise<TimerState> {
         return commit(keepGoing(state, settings, now));
       case 'skipSettle':
         return commit(skipSettle(state, now));
+      case 'rateEnergy': {
+        const at = state.lastFocusEnd;
+        if (at === undefined || state.energyFor === at) return state;
+        await saveHistory(recordEnergy(await loadHistory(), at, cmd.level));
+        return commit({ ...state, energyFor: at });
+      }
       case 'wasWorking':
         return commit(wasWorking(state, now));
       case 'pause':

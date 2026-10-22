@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Everything to paste into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-for Tomomomento 1.8.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
+for Tomomomento 1.9.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
 `node scripts/store-images.mjs` after UI changes.
 
 ## Store listing tab
@@ -52,6 +52,9 @@ Features
 • Optional rhythm presets: Classic 25/5, Short 15/3 or Deep 50/10 in one tap
 • An optional day wrap-up: sort the day's parked thoughts one at a time in the evening
 • Optional right-click shortcuts: park selected text, or block the site you're on
+• An optional "Ends at" line that shows what time the timer finishes
+• An optional first-tiny-step question when you press Start
+• An optional energy check-in that shows which times of day go best for you
 • A built-in guide to the technique and how to use it
 • Light and dark themes that follow your system, or pick one yourself
 • Optional quotes on the timer screen: focus quotes while you work, rest quotes on breaks
@@ -64,13 +67,13 @@ Tomomomento has no account, no ads, no analytics, and no tracking. It makes no n
 Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Not using Chrome? The same timer runs in any browser on the website below.
 
-What's new in 1.8
-Three small time-savers. All are off until you turn them on in Settings.
-• Rhythm presets: before you start, switch between Classic 25/5, Short 15/3 and Deep 50/10 with one tap.
-• Day wrap-up: after 5 pm, if thoughts are still parked, go through them one at a time: done, keep for tomorrow, or let go.
-• Right-click shortcuts: select text on any page and park it as a thought, or block the site you're on during focus.
+What's new in 1.9
+Three ways to get going and stay aware of time. All are off until you turn them on in Settings.
+• Ends at: while the timer runs, a small line says what time it ends, like "Ends at 2:45 PM".
+• First tiny step: pressing Start asks for the very first step, like "open the doc", and shows it under the timer while you focus. Skipping is always fine.
+• Energy check-in: after a focus session, tap Low, Okay or Great. Stats then shows which times of day tend to go best for you.
 
-Also recently added: a lava lamp background, rain and ocean waves focus sounds, small wins, 30 seconds of slow breathing before focus, an automatic pause when you step away, take-care reminders, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
+Also recently added: rhythm presets, an evening wrap-up for parked thoughts, right-click shortcuts, a lava lamp background, rain and ocean waves focus sounds, small wins, 30 seconds of slow breathing before focus, an automatic pause when you step away, take-care reminders, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
 
 Links
 Website: https://tomomomento.com

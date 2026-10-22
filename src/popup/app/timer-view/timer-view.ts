@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
 import { breakIdea } from '../../../shared/break-ideas';
-import { MAX_THOUGHT_LENGTH, thoughtsText } from '../../../shared/parking';
+import { MAX_THOUGHT_LENGTH, thoughtsText, wrapUpDue } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
 import {
   breathAt,
@@ -28,6 +28,10 @@ import {
   JUST_START_MINUTES,
   KEEP_GOING_MINUTES,
   PHASE_LABELS,
+  applyRhythm,
+  RHYTHMS,
+  rhythmOf,
+  type RhythmId,
   SETTLE_MS,
   settling,
   smallWin,
@@ -46,6 +50,7 @@ export class TimerView {
   readonly openSettings = output<void>();
   readonly openPlan = output<void>();
   readonly openParking = output<void>();
+  readonly openWrapUp = output<void>();
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
 
@@ -77,9 +82,29 @@ export class TimerView {
       !this.store.showPlanPrompt()
     );
   });
+  /**
+   * In the evening, the day wrap-up offers to sort what's still parked. It
+   * stays out of a running focus session, and the plan card comes first.
+   */
+  protected readonly wrapCard = computed(() => {
+    const s = this.store.settings();
+    const { phase, status, todayKey } = this.store.state();
+    const lot = this.store.parkingLot();
+    return s.parkingLot &&
+      s.dayWrapUp &&
+      !(phase === 'work' && status === 'running') &&
+      !this.store.showPlanPrompt() &&
+      !this.helpersCard() &&
+      wrapUpDue(lot, todayKey, this.store.tick())
+      ? lot.thoughts.length
+      : 0;
+  });
+  protected readonly wrapText = computed(() => thoughtsText(this.wrapCard()));
   /** On a break, how many thoughts were parked since you last looked. The plan card comes first. */
   protected readonly parkedCard = computed(() =>
-    this.store.showPlanPrompt() || this.helpersCard() ? 0 : this.store.parkedOnBreak(),
+    this.store.showPlanPrompt() || this.helpersCard() || this.wrapCard()
+      ? 0
+      : this.store.parkedOnBreak(),
   );
   protected readonly parkedText = computed(() => thoughtsText(this.parkedCard()));
   // The popup only has room for one extra line of text under the controls, so
@@ -90,6 +115,7 @@ export class TimerView {
     !this.store.showPlanPrompt() &&
     !this.helpersCard() &&
     !this.parkedCard() &&
+    !this.wrapCard() &&
     !this.planLabelNow()
       ? this.phaseQuote()
       : null,
@@ -230,6 +256,16 @@ export class TimerView {
     canJustStart(this.store.state(), this.store.settings()),
   );
   protected readonly justStartMinutes = JUST_START_MINUTES;
+
+  /** Rhythm presets, offered while a focus session is waiting to start. */
+  protected readonly rhythms = RHYTHMS;
+  protected readonly rhythmOffer = computed(() => {
+    const { phase, status, extending } = this.store.state();
+    return (
+      this.store.settings().rhythmPresets && phase === 'work' && status === 'idle' && !extending
+    );
+  });
+  protected readonly rhythm = computed(() => rhythmOf(this.store.settings()));
 
   /** Still in the flow when focus ends? A few more minutes before the break. */
   protected readonly keepGoingOffer = computed(() =>
@@ -432,6 +468,16 @@ export class TimerView {
     this.ideaOffset.update((n) => n + 1);
   }
 
+  protected async notTonight(): Promise<void> {
+    await this.store.markWrappedUp();
+    afterNextRender(
+      () => this.host.nativeElement.querySelector<HTMLElement>('.primary-btn')?.focus(),
+      {
+        injector: this.injector,
+      },
+    );
+  }
+
   protected async parkLater(): Promise<void> {
     await this.store.markParkingSeen();
     // The card's buttons are gone, so hand focus to the parking lot button up top.
@@ -477,6 +523,12 @@ export class TimerView {
 
   protected skip(): void {
     void this.store.send({ command: 'skip' });
+  }
+
+  /** The timer resets itself to the new length, since it hasn't started. */
+  protected chooseRhythm(id: RhythmId): void {
+    if (id !== this.rhythm())
+      void this.store.updateSettings(applyRhythm(this.store.settings(), id));
   }
 
   protected choosePhase(phase: Phase): void {

@@ -1,4 +1,11 @@
-import { hostMatches, normalizeSite, sanitizeSites, shouldBlock } from './blocker';
+import {
+  addSite,
+  hostMatches,
+  MAX_BLOCKED_SITES,
+  normalizeSite,
+  sanitizeSites,
+  shouldBlock,
+} from './blocker';
 import { DEFAULT_SETTINGS, initialState, start } from './timer';
 
 describe('site blocker', () => {
@@ -40,5 +47,19 @@ describe('site blocker', () => {
     expect(shouldBlock({ ...running, phase: 'shortBreak' }, settings)).toBe(false);
     expect(shouldBlock(running, { ...settings, blockSites: false })).toBe(false);
     expect(shouldBlock(running, { ...settings, blockedSites: [] })).toBe(false);
+  });
+});
+
+describe('addSite', () => {
+  it('adds a new site at the end', () => {
+    expect(addSite(['youtube.com'], 'reddit.com')).toEqual(['youtube.com', 'reddit.com']);
+  });
+
+  it('leaves the list alone when the site is already covered or the list is full', () => {
+    const sites = ['youtube.com'];
+    expect(addSite(sites, 'youtube.com')).toBe(sites);
+    expect(addSite(sites, 'music.youtube.com')).toBe(sites);
+    const full = Array.from({ length: MAX_BLOCKED_SITES }, (_, i) => `site${i}.com`);
+    expect(addSite(full, 'reddit.com')).toBe(full);
   });
 });

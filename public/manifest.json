@@ -6,7 +6,7 @@
   "description": "A simple, customizable focus timer: focus sessions, short and long breaks, and optional sound and notification alerts.",
   "minimum_chrome_version": "120",
   "homepage_url": "https://tomomomento.com",
-  "permissions": ["alarms", "idle", "notifications", "offscreen", "storage"],
+  "permissions": ["alarms", "contextMenus", "idle", "notifications", "offscreen", "storage"],
   "optional_permissions": ["declarativeNetRequestWithHostAccess"],
   "optional_host_permissions": ["<all_urls>"],
   "background": {

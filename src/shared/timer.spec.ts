@@ -1,5 +1,7 @@
 import {
   advance,
+  applyRhythm,
+  rhythmOf,
   breathAt,
   canSettle,
   careNudge,
@@ -368,6 +370,29 @@ describe('timer state machine', () => {
     it('stays off unless turned on', () => {
       expect(sanitizeSettings({}).takeCare).toBe(false);
       expect(sanitizeSettings({ takeCare: true }).takeCare).toBe(true);
+    });
+  });
+
+  describe('rhythm presets', () => {
+    it('knows which preset the timers match', () => {
+      expect(rhythmOf(DEFAULT_SETTINGS)).toBe('classic');
+      expect(rhythmOf({ ...DEFAULT_SETTINGS, workMinutes: 30 })).toBeNull();
+    });
+
+    it('sets all three timer lengths and nothing else', () => {
+      const deep = applyRhythm({ ...DEFAULT_SETTINGS, sessionsBeforeLongBreak: 3 }, 'deep');
+      expect(deep).toMatchObject({
+        workMinutes: 50,
+        shortBreakMinutes: 10,
+        longBreakMinutes: 20,
+        sessionsBeforeLongBreak: 3,
+      });
+      expect(rhythmOf(applyRhythm(DEFAULT_SETTINGS, 'short'))).toBe('short');
+    });
+
+    it('is off unless turned on', () => {
+      expect(DEFAULT_SETTINGS.rhythmPresets).toBe(false);
+      expect(sanitizeSettings({ rhythmPresets: true }).rhythmPresets).toBe(true);
     });
   });
 

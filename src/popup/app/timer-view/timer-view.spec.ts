@@ -230,6 +230,49 @@ describe('TimerView', () => {
     });
   });
 
+  describe('day wrap-up', () => {
+    async function evening(hour = 18) {
+      const ctx = await setup({ phase: 'shortBreak' });
+      const now = new Date();
+      now.setHours(hour, 0, 0, 0);
+      ctx.store.tick.set(now.getTime());
+      ctx.store.settings.update((s) => ({ ...s, parkingLot: true, dayWrapUp: true }));
+      ctx.store.parkingLot.set({
+        thoughts: [
+          { id: 'a', text: 'Call the dentist', at: 100 },
+          { id: 'b', text: 'Buy milk', at: 200 },
+        ],
+        seenAt: 0,
+      });
+      await ctx.fixture.whenStable();
+      return ctx;
+    }
+
+    it('offers to wrap up in the evening, in place of the parked card', async () => {
+      const { el, fixture, button } = await evening();
+      expect(el.querySelector('#wrap-card-title')?.textContent).toBe(
+        'Wrap up your day? 2 thoughts parked',
+      );
+      expect(el.querySelector('#parked-card-title')).toBeNull();
+      let opened = 0;
+      fixture.componentInstance.openWrapUp.subscribe(() => opened++);
+      button('Wrap up').click();
+      expect(opened).toBe(1);
+    });
+
+    it('waits until evening', async () => {
+      expect((await evening(15)).el.querySelector('#wrap-card-title')).toBeNull();
+    });
+
+    it('"Not tonight" hides it until tomorrow', async () => {
+      const { el, fixture, store, button } = await evening();
+      button('Not tonight').click();
+      await fixture.whenStable();
+      expect(store.parkingLot().wrappedOn).toBe(store.state().todayKey);
+      expect(el.querySelector('#wrap-card-title')).toBeNull();
+    });
+  });
+
   describe('break ideas', () => {
     it('suggests one on breaks in place of "Take a breather", and another on request', async () => {
       const { el, fixture, store } = await setup({ phase: 'shortBreak' });
@@ -464,6 +507,38 @@ describe('TimerView', () => {
       await fixture.whenStable();
       expect(el.querySelector('.status')?.textContent).toBe('3 in a row. Have a glass of water');
       expect(el.querySelector('.another')).toBeNull();
+    });
+  });
+
+  describe('rhythm presets', () => {
+    async function offered(overrides = {}) {
+      const ctx = await setup(overrides);
+      ctx.store.settings.update((s) => ({ ...s, rhythmPresets: true }));
+      await ctx.fixture.whenStable();
+      return ctx;
+    }
+
+    it('sets the timers in one tap and marks the one in use', async () => {
+      const { el, fixture, store } = await offered();
+      const chips = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.rhythm'));
+      expect(chips().map((c) => c.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+        'Classic 25/5',
+        'Short 15/3',
+        'Deep 50/10',
+      ]);
+      expect(chips()[0].getAttribute('aria-pressed')).toBe('true');
+      chips()[2].click();
+      await fixture.whenStable();
+      expect(store.settings()).toMatchObject({ workMinutes: 50, shortBreakMinutes: 10 });
+      expect(chips()[2].getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('only shows before a focus session starts', async () => {
+      expect((await offered({ status: 'paused' })).el.querySelector('.rhythms')).toBeNull();
+      TestBed.resetTestingModule();
+      expect((await offered({ phase: 'shortBreak' })).el.querySelector('.rhythms')).toBeNull();
+      TestBed.resetTestingModule();
+      expect((await setup()).el.querySelector('.rhythms')).toBeNull();
     });
   });
 

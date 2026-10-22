@@ -5,6 +5,7 @@ import {
   clearThoughts,
   EMPTY_PARKING_LOT,
   markSeen,
+  markWrapped,
   parkThought,
   removeThought,
   unseenCount,
@@ -184,6 +185,11 @@ export class PomodoroStore {
   /** Opening the lot, or "Later" on the break card, quiets the card until something new is parked. */
   async markParkingSeen(): Promise<void> {
     await this.setParkingLot(markSeen(this.parkingLot(), Date.now()));
+  }
+
+  /** Starting the day wrap-up, or "Not tonight", quiets its card until tomorrow evening. */
+  async markWrappedUp(): Promise<void> {
+    await this.setParkingLot(markWrapped(this.parkingLot(), this.state().todayKey));
   }
 
   private async setParkingLot(lot: ParkingLot): Promise<void> {

@@ -1,0 +1,16 @@
+@if (current(); as t) {
+  <p class="count">{{ index() + 1 }} of {{ total }}</p>
+  <p class="thought" tabindex="-1">{{ t.text }}</p>
+  <div class="choices" role="group" aria-label="What to do with it">
+    <button type="button" class="choice solid" (click)="clear()">Done</button>
+    <button type="button" class="choice keep" (click)="keep()">Keep for tomorrow</button>
+    <button type="button" class="choice" (click)="clear()">Let go</button>
+  </div>
+  <p class="note">Letting go is fine. If it matters, it will come back.</p>
+} @else {
+  <div class="end">
+    <p class="all-sorted" tabindex="-1">All sorted. Rest easy.</p>
+    <p class="note">{{ summary() }}</p>
+    <button type="button" class="choice solid" (click)="finished.emit()">Done for today</button>
+  </div>
+}

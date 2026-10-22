@@ -62,6 +62,14 @@
       For days when a full focus session feels like too much. The timer offers a short one that
       counts like any other.
     </p>
+    <label class="switch-row">
+      <span>Rhythm presets on the timer</span>
+      <input type="checkbox" role="switch" formControlName="rhythmPresets" />
+    </label>
+    <p class="note">
+      Before you start, pick Classic (25/5), Short (15/3) or Deep (50/10) with one tap. It sets the
+      three timers above.
+    </p>
   </section>
 
   <section>
@@ -141,6 +149,14 @@
         If the computer sits untouched for {{ awayMinutes }} minutes during focus, the timer pauses
         from the moment you left. When you're back, pick it up again, or say you were working
         (reading, thinking) and the time counts.
+      </p>
+      <label class="switch-row">
+        <span>Right-click shortcuts</span>
+        <input type="checkbox" role="switch" formControlName="rightClick" />
+      </label>
+      <p class="note">
+        Right-click selected text to park it as a thought, or right-click a page to add its site to
+        the blocker. Each one shows up when the parking lot or site blocker is on.
       </p>
     }
   </section>
@@ -322,6 +338,18 @@
       A notepad button up top for stray thoughts during focus. On your break, the timer reminds you
       what you parked.
     </p>
+    @if (form.controls.parkingLot.value) {
+      <div class="sub-options">
+        <label class="switch-row">
+          <span>Wrap up my day</span>
+          <input type="checkbox" role="switch" formControlName="dayWrapUp" />
+        </label>
+        <p class="note">
+          After {{ wrapUpTime }}, if anything is still parked, the timer offers to go through it one
+          thought at a time: keep it for tomorrow, mark it done, or let it go.
+        </p>
+      </div>
+    }
   </section>
 
   <section>

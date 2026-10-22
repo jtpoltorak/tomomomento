@@ -38,6 +38,8 @@ export interface Settings {
   planPrompt: boolean;
   /** The parking lot: jot stray thoughts during focus, look at them on a break. */
   parkingLot: boolean;
+  /** In the evening, offer to sort the day's parked thoughts one by one. */
+  dayWrapUp: boolean;
   /** On breaks, suggest something screen-free to do in place of "Take a breather". */
   breakIdeas: boolean;
   /** Offer a short "Just start" focus session for days when a full one feels like too much. */
@@ -60,10 +62,14 @@ export interface Settings {
   settleIn: boolean;
   /** Pause focus when the computer sits untouched, and ask on return (extension only). */
   awayCheck: boolean;
+  /** Right-click selected text to park it, or a page to block its site (extension only). */
+  rightClick: boolean;
   /** After every few focus sessions in a row, a break reminds you to look after yourself. */
   takeCare: boolean;
   /** A quick, quiet celebration when a focus session finishes. */
   smallWins: boolean;
+  /** One-tap timer setups (Classic, Short, Deep) on the timer screen before you start. */
+  rhythmPresets: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
   focusSound: FocusSoundId;
   /** 0 to 1, separate from the alert volume. */
@@ -138,6 +144,7 @@ export const DEFAULT_SETTINGS: Settings = {
   planEnabled: false,
   planPrompt: true,
   parkingLot: false,
+  dayWrapUp: false,
   breakIdeas: false,
   justStart: false,
   keepGoing: false,
@@ -149,8 +156,10 @@ export const DEFAULT_SETTINGS: Settings = {
   pauseNudge: false,
   settleIn: false,
   awayCheck: false,
+  rightClick: false,
   takeCare: false,
   smallWins: false,
+  rhythmPresets: false,
   focusSound: 'off',
   focusVolume: 0.4,
   highContrast: false,
@@ -195,6 +204,46 @@ export const CARE_TIPS = [
   'Stand up and stretch',
   "Grab a snack if you're hungry",
 ] as const;
+
+export type RhythmId = 'classic' | 'short' | 'deep';
+
+export interface Rhythm {
+  id: RhythmId;
+  label: string;
+  workMinutes: number;
+  shortBreakMinutes: number;
+  longBreakMinutes: number;
+}
+
+/** The rhythm presets: a whole timer setup in one tap. */
+export const RHYTHMS: readonly Rhythm[] = [
+  { id: 'classic', label: 'Classic', workMinutes: 25, shortBreakMinutes: 5, longBreakMinutes: 15 },
+  { id: 'short', label: 'Short', workMinutes: 15, shortBreakMinutes: 3, longBreakMinutes: 10 },
+  { id: 'deep', label: 'Deep', workMinutes: 50, shortBreakMinutes: 10, longBreakMinutes: 20 },
+];
+
+/** The preset the timers match right now, or null for a setup of your own. */
+export function rhythmOf(settings: Settings): RhythmId | null {
+  const match = RHYTHMS.find(
+    (r) =>
+      r.workMinutes === settings.workMinutes &&
+      r.shortBreakMinutes === settings.shortBreakMinutes &&
+      r.longBreakMinutes === settings.longBreakMinutes,
+  );
+  return match?.id ?? null;
+}
+
+/** The settings with a preset's three timer lengths. Everything else stays. */
+export function applyRhythm(settings: Settings, id: RhythmId): Settings {
+  const r = RHYTHMS.find((x) => x.id === id);
+  if (!r) return settings;
+  return {
+    ...settings,
+    workMinutes: r.workMinutes,
+    shortBreakMinutes: r.shortBreakMinutes,
+    longBreakMinutes: r.longBreakMinutes,
+  };
+}
 
 export const THEME_LABELS: Record<ThemeId, string> = {
   system: 'System',
@@ -617,6 +666,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     planEnabled: input.planEnabled ?? d.planEnabled,
     planPrompt: input.planPrompt ?? d.planPrompt,
     parkingLot: input.parkingLot ?? d.parkingLot,
+    dayWrapUp: input.dayWrapUp ?? d.dayWrapUp,
     breakIdeas: input.breakIdeas ?? d.breakIdeas,
     justStart: input.justStart ?? d.justStart,
     keepGoing: input.keepGoing ?? d.keepGoing,
@@ -628,8 +678,10 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     settleIn: input.settleIn ?? d.settleIn,
     awayCheck: input.awayCheck ?? d.awayCheck,
+    rightClick: input.rightClick ?? d.rightClick,
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
+    rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,
     focusVolume: Number.isFinite(Number(input.focusVolume))

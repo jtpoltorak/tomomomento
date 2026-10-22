@@ -18,8 +18,9 @@ import { SettingsView } from './settings-view/settings-view';
 import { StatsView } from './stats-view/stats-view';
 import { applyA11y, applyTheme } from './theme';
 import { TimerView } from './timer-view/timer-view';
+import { WrapUpView } from './wrap-up-view/wrap-up-view';
 
-type View = 'timer' | 'settings' | 'help' | 'stats' | 'plan' | 'parking';
+type View = 'timer' | 'settings' | 'help' | 'stats' | 'plan' | 'parking' | 'wrapup';
 
 const TITLES: Record<Exclude<View, 'timer'>, string> = {
   settings: 'Settings',
@@ -27,11 +28,12 @@ const TITLES: Record<Exclude<View, 'timer'>, string> = {
   stats: 'Stats',
   plan: "Today's plan",
   parking: 'Parking lot',
+  wrapup: 'Wrap up your day',
 };
 
 @Component({
   selector: 'app-root',
-  imports: [TimerView, SettingsView, HelpView, StatsView, PlanView, ParkingView],
+  imports: [TimerView, SettingsView, HelpView, StatsView, PlanView, ParkingView, WrapUpView],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -76,7 +78,9 @@ export class App {
         const el = this.host.nativeElement;
         const target =
           view === 'timer'
-            ? el.querySelector<HTMLElement>(`[data-view="${from}"]`)
+            ? // The card that opened the view may be gone by now (the day wrap-up), so fall back to Start.
+              (el.querySelector<HTMLElement>(`[data-view="${from}"]`) ??
+              el.querySelector<HTMLElement>('.primary-btn'))
             : // The parking lot is for getting a thought down fast, so go straight to the box.
               el.querySelector<HTMLElement>(view === 'parking' ? '#thought' : 'h1');
         target?.focus();

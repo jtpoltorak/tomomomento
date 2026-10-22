@@ -34,6 +34,34 @@
   font-weight: 500;
 }
 
+/* Rhythm presets: quieter than the phase pills, since they're a setup choice. */
+.rhythms {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.rhythm {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  white-space: nowrap;
+}
+.rhythm:hover:not(.active) {
+  color: var(--fg);
+}
+.rhythm.active {
+  border-color: var(--accent);
+  color: var(--fg);
+  font-weight: 500;
+}
+.rhythm-mins {
+  font-variant-numeric: tabular-nums;
+}
+
 .dial {
   display: flex;
   flex-direction: column;

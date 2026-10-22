@@ -14,6 +14,7 @@ import { debounceTime } from 'rxjs';
 import { backupFileName, createBackup, parseBackup, type BackupData } from '../../../shared/backup';
 import { MAX_BLOCKED_SITES, normalizeSite, SUGGESTED_SITES } from '../../../shared/blocker';
 import { FocusSoundPlayer } from '../../../shared/focus-sounds';
+import { WRAP_UP_HOUR } from '../../../shared/parking';
 import { playSound } from '../../../shared/sounds';
 import {
   AWAY_MS,
@@ -59,6 +60,7 @@ export class SettingsView {
   protected readonly pauseNudgeMinutes = PAUSE_NUDGE_MS / 60_000;
   protected readonly awayMinutes = AWAY_MS / 60_000;
   protected readonly careEvery = CARE_EVERY;
+  protected readonly wrapUpTime = `${WRAP_UP_HOUR - 12} pm`;
 
   // The blocker lives outside the form because turning it on waits on Chrome's permission prompt.
   protected readonly blockSites = signal(this.store.settings().blockSites);
@@ -97,6 +99,7 @@ export class SettingsView {
     planEnabled: [false],
     planPrompt: [true],
     parkingLot: [false],
+    dayWrapUp: [false],
     breakIdeas: [false],
     justStart: [false],
     keepGoing: [false],
@@ -108,8 +111,10 @@ export class SettingsView {
     pauseNudge: [false],
     settleIn: [false],
     awayCheck: [false],
+    rightClick: [false],
     takeCare: [false],
     smallWins: [false],
+    rhythmPresets: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],
     highContrast: [false],

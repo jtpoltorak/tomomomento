@@ -15,6 +15,30 @@
       </button>
     }
   </div>
+  @if (rhythmOffer()) {
+    <div class="rhythms" role="group" aria-label="Rhythm">
+      @for (r of rhythms; track r.id) {
+        <button
+          type="button"
+          class="rhythm"
+          [class.active]="rhythm() === r.id"
+          [attr.aria-pressed]="rhythm() === r.id"
+          [attr.aria-label]="
+            r.label +
+            ': ' +
+            r.workMinutes +
+            ' minutes focus, ' +
+            r.shortBreakMinutes +
+            ' minute breaks'
+          "
+          (click)="chooseRhythm(r.id)"
+        >
+          {{ r.label }}
+          <span class="rhythm-mins">{{ r.workMinutes }}/{{ r.shortBreakMinutes }}</span>
+        </button>
+      }
+    </div>
+  }
 }
 
 <section class="dial" [class.heads-up]="headsUp()" [class.win]="win()">
@@ -198,7 +222,15 @@
     </aside>
   }
 
-  @if (parkedCard()) {
+  @if (wrapCard()) {
+    <aside class="parked-card" aria-labelledby="wrap-card-title">
+      <p id="wrap-card-title">Wrap up your day? {{ wrapText() }} parked</p>
+      <div class="parked-card-actions">
+        <button type="button" class="pill-btn solid" (click)="openWrapUp.emit()">Wrap up</button>
+        <button type="button" class="pill-btn" (click)="notTonight()">Not tonight</button>
+      </div>
+    </aside>
+  } @else if (parkedCard()) {
     <aside class="parked-card" aria-labelledby="parked-card-title">
       <p id="parked-card-title">{{ parkedText() }} parked</p>
       <div class="parked-card-actions">

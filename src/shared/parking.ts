@@ -20,7 +20,12 @@ export interface ParkingLot {
   thoughts: Thought[];
   /** Epoch ms the lot was last opened or its break card waved off. */
   seenAt: number;
+  /** Local date (YYYY-MM-DD) of the last day wrap-up, done or waved off. */
+  wrappedOn?: string;
 }
+
+/** The day wrap-up is offered from this hour (local time) on. */
+export const WRAP_UP_HOUR = 17;
 
 export const EMPTY_PARKING_LOT: ParkingLot = { thoughts: [], seenAt: 0 };
 
@@ -46,10 +51,14 @@ export function sanitizeParkingLot(input: unknown): ParkingLot {
     thoughts.push({ id, text: clean, at: Number.isFinite(at) ? Number(at) : 0 });
   }
   const seenAt = Number(raw.seenAt);
-  return {
+  const lot: ParkingLot = {
     thoughts: thoughts.slice(-MAX_THOUGHTS),
     seenAt: Number.isFinite(seenAt) ? seenAt : 0,
   };
+  if (typeof raw.wrappedOn === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.wrappedOn)) {
+    lot.wrappedOn = raw.wrappedOn;
+  }
+  return lot;
 }
 
 /** Adds a thought at the end. Blank text changes nothing; past the limit, the oldest goes. */
@@ -70,6 +79,18 @@ export function clearThoughts(lot: ParkingLot): ParkingLot {
 
 export function markSeen(lot: ParkingLot, now: number): ParkingLot {
   return { ...lot, seenAt: now };
+}
+
+/** In the evening, with thoughts still parked and no wrap-up yet today. */
+export function wrapUpDue(lot: ParkingLot, today: string, now: number): boolean {
+  return (
+    lot.thoughts.length > 0 && lot.wrappedOn !== today && new Date(now).getHours() >= WRAP_UP_HOUR
+  );
+}
+
+/** Starting the wrap-up, or "Not tonight", quiets it until tomorrow evening. */
+export function markWrapped(lot: ParkingLot, today: string): ParkingLot {
+  return { ...lot, wrappedOn: today };
 }
 
 /** Thoughts parked since you last looked, which the break card points you to. */

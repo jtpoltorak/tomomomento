@@ -517,9 +517,11 @@ describe('timer state machine', () => {
     });
 
     it('cleans up stored values', () => {
-      const bad = { focusSound: 'rain', focusVolume: 7 } as unknown as Partial<Settings>;
+      const bad = { focusSound: 'whale song', focusVolume: 7 } as unknown as Partial<Settings>;
       expect(sanitizeSettings(bad)).toMatchObject({ focusSound: 'off', focusVolume: 1 });
       expect(sanitizeSettings({})).toMatchObject({ focusSound: 'off', focusVolume: 0.4 });
+      expect(sanitizeSettings({ focusSound: 'rain' }).focusSound).toBe('rain');
+      expect(sanitizeSettings({ focusSound: 'waves' }).focusSound).toBe('waves');
     });
   });
 

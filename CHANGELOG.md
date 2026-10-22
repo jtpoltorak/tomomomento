@@ -12,6 +12,9 @@ these first.
   behind everything, warm during focus and cool on breaks. They stay faint
   enough that all text keeps its contrast, hold still with reduced motion,
   and are left out in high contrast. Turn it on under Appearance in Settings.
+- **Rain and ocean waves:** two new focus sounds, next to soft ticking and
+  brown noise. Rain patters softly; the waves roll in and wash out about
+  every 8 seconds. Pick one under Focus sound in Settings.
 
 ## 1.6.0 (2026-10-17)
 

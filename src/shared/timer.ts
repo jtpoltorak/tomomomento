@@ -9,7 +9,7 @@ export type SoundId = 'bell' | 'chime' | 'digital';
 export type ThemeId = 'system' | 'light' | 'dark';
 export type TextSizeId = 'normal' | 'large' | 'xlarge';
 /** A quiet sound that plays during focus sessions, or 'off'. */
-export type FocusSoundId = 'off' | 'tick' | 'brown';
+export type FocusSoundId = 'off' | 'tick' | 'brown' | 'rain' | 'waves';
 
 export interface Settings {
   workMinutes: number;
@@ -209,6 +209,8 @@ export const FOCUS_SOUND_LABELS: Record<FocusSoundId, string> = {
   off: 'Off',
   tick: 'Soft ticking',
   brown: 'Brown noise',
+  rain: 'Rain',
+  waves: 'Ocean waves',
 };
 
 export const TEXT_SIZE_LABELS: Record<TextSizeId, string> = {

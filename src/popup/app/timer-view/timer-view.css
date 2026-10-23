@@ -487,6 +487,10 @@
   margin: 0;
   font-weight: 600;
 }
+.parked-card .look-back-best {
+  color: var(--muted);
+  font-weight: 400;
+}
 .parked-card-actions {
   display: flex;
   gap: 0.375rem;

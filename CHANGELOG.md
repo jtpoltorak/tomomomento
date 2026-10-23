@@ -11,6 +11,9 @@ these first.
 - **Keyboard shortcuts (optional):** on the timer, <kbd>S</kbd> skips,
   <kbd>R</kbd> restarts and <kbd>P</kbd> parks a thought. Turn on
   **Keyboard shortcuts** under Accessibility in Settings.
+- **Weekly look-back (optional):** the first time you open the timer each
+  week, a short card shows last week's pomodoros, focus time and best day.
+  Turn it on under Focus helpers in Settings.
 
 ## 1.9.0 (2026-10-22)
 

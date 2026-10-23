@@ -16,7 +16,7 @@ import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
 import { breakIdea } from '../../../shared/break-ideas';
 import { MAX_THOUGHT_LENGTH, thoughtsText, wrapUpDue } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
-import { ENERGY_LABELS, type Energy } from '../../../shared/stats';
+import { ENERGY_LABELS, formatMinutes, weekLookBack, type Energy } from '../../../shared/stats';
 import {
   breathAt,
   canAskFirstStep,
@@ -126,6 +126,25 @@ export class TimerView {
       !this.parkedCard()
     );
   });
+  /** Once a week: last week at a glance, until it's acknowledged. Other cards come first. */
+  private readonly lookedBack = signal(readLookedBack());
+  protected readonly lookBack = computed(() => {
+    if (!this.store.settings().weeklyLookBack) return null;
+    const { phase, status } = this.store.state();
+    if (phase === 'work' && status === 'running') return null;
+    if (this.store.showPlanPrompt() || this.helpersCard() || this.wrapCard()) return null;
+    if (this.parkedCard() || this.energyCard()) return null;
+    const back = weekLookBack(this.store.history(), this.store.tick());
+    if (!back || back.week === this.lookedBack()) return null;
+    const { pomodoros, focusMinutes } = back.totals;
+    const day = back.best.date.toLocaleDateString('en-US', { weekday: 'long' });
+    return {
+      week: back.week,
+      title: `Last week: ${pomodoros === 1 ? '1 pomodoro' : `${pomodoros} pomodoros`}, ${formatMinutes(focusMinutes)} focused`,
+      best: `Best day: ${day}, with ${back.best.pomodoros}.`,
+    };
+  });
+
   protected readonly energyLevels = ([1, 2, 3] as const).map((level) => ({
     level,
     label: ENERGY_LABELS[level],
@@ -140,6 +159,7 @@ export class TimerView {
     !this.parkedCard() &&
     !this.wrapCard() &&
     !this.energyCard() &&
+    !this.lookBack() &&
     !this.askStep() &&
     !this.planLabelNow()
       ? this.phaseQuote()
@@ -510,6 +530,12 @@ export class TimerView {
     this.ideaOffset.update((n) => n + 1);
   }
 
+  protected doneLookingBack(week: string): void {
+    this.lookedBack.set(week);
+    writeLookedBack(week);
+    this.focusSoon('.primary-btn');
+  }
+
   protected async rateEnergy(level: Energy): Promise<void> {
     await this.store.send({ command: 'rateEnergy', level });
     this.focusSoon('.primary-btn');
@@ -646,5 +672,23 @@ function writeCelebrated(at: number): void {
     localStorage.setItem(CELEBRATED_KEY, String(at));
   } catch {
     // Private browsing: it may celebrate again next time, which is fine.
+  }
+}
+
+const LOOKED_BACK_KEY = 'tomomomento.lookedBack';
+
+function readLookedBack(): string | null {
+  try {
+    return localStorage.getItem(LOOKED_BACK_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeLookedBack(week: string): void {
+  try {
+    localStorage.setItem(LOOKED_BACK_KEY, week);
+  } catch {
+    // Private browsing: the card may come back next time, which is fine.
   }
 }

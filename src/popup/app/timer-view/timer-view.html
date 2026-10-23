@@ -274,6 +274,14 @@
         }
       </div>
     </aside>
+  } @else if (lookBack(); as back) {
+    <aside class="parked-card look-back" aria-labelledby="look-back-title">
+      <div>
+        <p id="look-back-title">{{ back.title }}</p>
+        <p class="look-back-best">{{ back.best }}</p>
+      </div>
+      <button type="button" class="pill-btn" (click)="doneLookingBack(back.week)">Nice</button>
+    </aside>
   }
 
   @if (quote(); as q) {

@@ -271,6 +271,31 @@ export function heatLevel(pomodoros: number): 0 | 1 | 2 | 3 | 4 {
   return 4;
 }
 
+export interface LookBack {
+  /** Local date (YYYY-MM-DD) of the Monday the current week started, which keys the card. */
+  week: string;
+  totals: Totals;
+  /** The day of last week with the most pomodoros. */
+  best: Day;
+}
+
+/** Last week, Monday to Sunday, once there's something in it to look back on. */
+export function weekLookBack(history: History, now: number): LookBack | null {
+  const today = startOfDay(now);
+  const monday = addDays(today, -((today.getDay() + 6) % 7));
+  const days = Array.from({ length: 7 }, (_, i) => dayAt(history, addDays(monday, i - 7)));
+  const totals = days.reduce(
+    (t, d) => ({
+      pomodoros: t.pomodoros + d.pomodoros,
+      focusMinutes: t.focusMinutes + d.focusMinutes,
+    }),
+    { pomodoros: 0, focusMinutes: 0 },
+  );
+  if (totals.pomodoros === 0) return null;
+  const best = days.reduce((a, b) => (b.pomodoros > a.pomodoros ? b : a));
+  return { week: localDateKey(monday.getTime()), totals, best };
+}
+
 /** "0m", "45m", "2h 5m", "3h". */
 export function formatMinutes(minutes: number): string {
   const h = Math.floor(minutes / 60);

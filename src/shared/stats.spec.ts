@@ -13,6 +13,7 @@ import {
   sanitizeHistory,
   seedHistory,
   summarize,
+  weekLookBack,
 } from './stats';
 import { DEFAULT_SETTINGS, initialState, localDateKey } from './timer';
 
@@ -164,5 +165,19 @@ describe('stats', () => {
       expect(energyWord(8 / 3)).toBe('Great');
       expect(energyWord(4 / 3)).toBe('Low');
     });
+  });
+
+  it('looks back on last week, Monday to Sunday', () => {
+    // NOW is Tuesday Oct 13; last week ran Mon Oct 5 to Sun Oct 11.
+    let h = recordPomodoro({}, day(10, 4), 25); // the week before: left out
+    h = recordPomodoro(h, day(10, 7), 25);
+    h = recordPomodoro(h, day(10, 7), 25);
+    h = recordPomodoro(h, day(10, 11), 50);
+    h = recordPomodoro(h, day(10, 12), 25); // this week: left out
+    const back = weekLookBack(h, NOW)!;
+    expect(back.week).toBe('2026-10-12');
+    expect(back.totals).toEqual({ pomodoros: 3, focusMinutes: 100 });
+    expect(back.best.key).toBe('2026-10-07');
+    expect(weekLookBack({}, NOW)).toBeNull();
   });
 });

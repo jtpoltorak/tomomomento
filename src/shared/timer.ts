@@ -74,6 +74,8 @@ export interface Settings {
   firstStep: boolean;
   /** After a focus session, a one-tap "how was it?" that Stats turns into best times of day. */
   energyCheck: boolean;
+  /** The first time you open the timer each week, a short card about last week. */
+  weeklyLookBack: boolean;
   /** One-tap timer setups (Classic, Short, Deep) on the timer screen before you start. */
   rhythmPresets: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
@@ -174,6 +176,7 @@ export const DEFAULT_SETTINGS: Settings = {
   smallWins: false,
   firstStep: false,
   energyCheck: false,
+  weeklyLookBack: false,
   rhythmPresets: false,
   focusSound: 'off',
   focusVolume: 0.4,
@@ -723,6 +726,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     smallWins: input.smallWins ?? d.smallWins,
     firstStep: input.firstStep ?? d.firstStep,
     energyCheck: input.energyCheck ?? d.energyCheck,
+    weeklyLookBack: input.weeklyLookBack ?? d.weeklyLookBack,
     rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,

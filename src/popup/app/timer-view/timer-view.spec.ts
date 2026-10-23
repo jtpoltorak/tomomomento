@@ -1,3 +1,4 @@
+import { localDateKey } from '../../../shared/timer';
 import { TestBed } from '@angular/core/testing';
 import { savePlan } from '../../../shared/plan';
 import { SHORT_BREAK_IDEAS } from '../../../shared/break-ideas';
@@ -576,6 +577,34 @@ describe('TimerView', () => {
       store.state.update((s) => ({ ...s, energyFor: ended }));
       await fixture.whenStable();
       expect(el.querySelector('#energy-card-title')).toBeNull();
+    });
+  });
+
+  describe('weekly look-back', () => {
+    beforeEach(() => localStorage.removeItem('tomomomento.lookedBack'));
+
+    it('sums up last week once, until acknowledged', async () => {
+      const lastWed = new Date();
+      lastWed.setHours(12, 0, 0, 0);
+      lastWed.setDate(lastWed.getDate() - ((lastWed.getDay() + 6) % 7) - 5);
+      const key = localDateKey(lastWed.getTime());
+      const store = createFakeStore({}, { [key]: { pomodoros: 4, focusMinutes: 100 } });
+      store.settings.update((s) => ({ ...s, weeklyLookBack: true }));
+      TestBed.configureTestingModule({
+        imports: [TimerView],
+        providers: [provideFakeStore(store)],
+      });
+      const fixture = TestBed.createComponent(TimerView);
+      await fixture.whenStable();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('#look-back-title')?.textContent).toBe(
+        'Last week: 4 pomodoros, 1h 40m focused',
+      );
+      expect(el.querySelector('.look-back-best')?.textContent).toBe('Best day: Wednesday, with 4.');
+      el.querySelector<HTMLButtonElement>('.look-back .pill-btn')!.click();
+      await fixture.whenStable();
+      expect(el.querySelector('.look-back')).toBeNull();
+      expect(localStorage.getItem('tomomomento.lookedBack')).toBeTruthy();
     });
   });
 

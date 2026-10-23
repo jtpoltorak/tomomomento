@@ -160,6 +160,7 @@ export class SettingsView {
     smallWins: [false],
     firstStep: [false],
     whereWasI: [false],
+    timeCheck: [false],
     energyCheck: [false],
     weeklyLookBack: [false],
     driftTally: [false],

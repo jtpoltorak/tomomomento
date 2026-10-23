@@ -174,6 +174,17 @@
       timer when you come back, until the next focus session is done.
     </p>
     <label class="switch-row">
+      <span>Hourly time check</span>
+      <input type="checkbox" role="switch" formControlName="timeCheck" />
+    </label>
+    <p class="note">
+      On the hour from 8 am to 9 pm, a quiet notification says the time, even with no timer running,
+      for days when time slips away. The soft tone plays too if sound is on.
+      @if (isWeb) {
+        It needs this tab open, and notifications allowed.
+      }
+    </p>
+    <label class="switch-row">
       <span>Celebrate small wins</span>
       <input type="checkbox" role="switch" formControlName="smallWins" />
     </label>

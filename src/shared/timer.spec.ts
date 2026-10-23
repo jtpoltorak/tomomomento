@@ -6,6 +6,9 @@ import {
   rhythmOf,
   breathAt,
   breathSecondsLeft,
+  nextHour,
+  timeCheckDue,
+  timeCheckText,
   canSettle,
   careNudge,
   calmMinutes,
@@ -564,6 +567,7 @@ describe('timer state machine', () => {
     expect(sanitizeSettings({}).visualTimer).toBe(false);
     expect(sanitizeSettings({}).dailyIntention).toBe(false);
     expect(sanitizeSettings({}).whereWasI).toBe(false);
+    expect(sanitizeSettings({}).timeCheck).toBe(false);
   });
 
   describe('paused reminder', () => {
@@ -627,6 +631,32 @@ describe('timer state machine', () => {
       const bad = { textSize: 'huge' } as unknown as Partial<Settings>;
       expect(sanitizeSettings(bad).textSize).toBe('normal');
       expect(sanitizeSettings({ textSize: 'xlarge' }).textSize).toBe('xlarge');
+    });
+  });
+
+  describe('hourly time check', () => {
+    const at = (h: number, m = 0, sec = 0) => new Date(2026, 9, 23, h, m, sec).getTime();
+    const on = { ...DEFAULT_SETTINGS, timeCheck: true };
+
+    it('is due on the hour in waking hours, and stays quiet when late or off', () => {
+      expect(nextHour(at(14, 37))).toBe(at(15));
+      expect(timeCheckDue(on, at(15, 0, 3))).toBe(at(15));
+      expect(timeCheckDue(on, at(15, 5))).toBeNull(); // the computer slept through it
+      expect(timeCheckDue(on, at(7, 0, 1))).toBeNull();
+      expect(timeCheckDue(on, at(21, 0, 1))).toBe(at(21));
+      expect(timeCheckDue(on, at(22, 0, 1))).toBeNull();
+      expect(timeCheckDue(DEFAULT_SETTINGS, at(15))).toBeNull();
+    });
+
+    it('says the hour, and how a running timer stands', () => {
+      const idle = initialState(DEFAULT_SETTINGS, at(15));
+      expect(timeCheckText(idle, at(15))).toEqual({
+        title: "It's 3 PM",
+        body: 'A quick time check.',
+      });
+      const running = { ...idle, status: 'running' as const, endTime: at(15, 12) };
+      expect(timeCheckText(running, at(15)).body).toBe('Focus has 12 min left.');
+      expect(timeCheckText(idle, at(12)).title).toBe("It's 12 PM");
     });
   });
 });

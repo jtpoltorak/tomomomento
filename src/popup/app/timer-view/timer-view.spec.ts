@@ -681,6 +681,17 @@ describe('TimerView', () => {
     });
   });
 
+  it('offers the big timer from the clock corner when it is turned on', async () => {
+    const { el, fixture, store } = await setup();
+    expect(el.querySelector('.big-btn')).toBeNull();
+    store.settings.update((s) => ({ ...s, bigTimer: true }));
+    await fixture.whenStable();
+    let opened = 0;
+    fixture.componentInstance.openBig.subscribe(() => opened++);
+    el.querySelector<HTMLButtonElement>('[aria-label="Big timer"]')!.click();
+    expect(opened).toBe(1);
+  });
+
   describe('daily intention', () => {
     beforeEach(() => localStorage.removeItem('tomomomento.intention'));
 

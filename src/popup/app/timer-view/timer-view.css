@@ -63,11 +63,18 @@
 }
 
 .dial {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0;
+}
+/* Tucked in the clock's corner, out of the way of the digits. */
+.big-btn {
+  position: absolute;
+  top: 0;
+  right: -0.5rem;
 }
 .clock {
   font-size: 5.5rem;

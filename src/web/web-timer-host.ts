@@ -296,6 +296,10 @@ export class WebTimerHost implements TimerHost {
 
   async openSettingsTab(): Promise<void> {}
 
+  async openBigTimer(): Promise<boolean> {
+    return false;
+  }
+
   private commit(state: TimerState): TimerState {
     write(KEYS.state, state);
     this.schedule(state);

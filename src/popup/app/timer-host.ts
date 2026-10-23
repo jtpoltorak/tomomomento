@@ -61,6 +61,11 @@ export interface TimerHost {
   needsTabForFiles(): Promise<boolean>;
   /** Opens Settings in a full browser tab. */
   openSettingsTab(): Promise<void>;
+  /**
+   * Opens the big timer in a full browser tab when there's no room for it here
+   * (the extension popup). Resolves true if it did, false to show it in place.
+   */
+  openBigTimer(): Promise<boolean>;
 }
 
 export const TIMER_HOST = new InjectionToken<TimerHost>('TimerHost');

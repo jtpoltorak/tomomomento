@@ -62,6 +62,7 @@ export class TimerView {
   readonly openPlan = output<void>();
   readonly openParking = output<void>();
   readonly openWrapUp = output<void>();
+  readonly openBig = output<void>();
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
 
@@ -333,6 +334,7 @@ export class TimerView {
     return `${n} ${n === 1 ? 'minute' : 'minutes'}`;
   }
   protected readonly visualTimer = computed(() => this.store.settings().visualTimer);
+  protected readonly bigTimer = computed(() => this.store.settings().bigTimer && this.full());
   // The bar empties as time passes, like sand running out.
   protected readonly percentLeft = computed(() => Math.round(100 * (1 - this.store.progress())));
   /** Whole minutes, so screen readers aren't flooded with a new value every second. */

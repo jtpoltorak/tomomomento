@@ -17,6 +17,9 @@ these first.
 - **Focus garden (optional):** Stats grows a little plant for each pomodoro
   you finish this week, with a fresh garden every Monday. Turn it on under
   Focus helpers in Settings.
+- **Big timer view (optional):** a button that fills the whole window with the
+  clock, the phase color sinking as time passes, for reading across the room.
+  Turn it on under Appearance in Settings.
 
 ## 1.11.0 (2026-10-23)
 

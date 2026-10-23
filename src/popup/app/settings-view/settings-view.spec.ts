@@ -218,7 +218,7 @@ describe('SettingsView', () => {
   it('explains that the web app has no site blocker', async () => {
     const { el } = await setup('web');
     expect(el.querySelector('input[role=switch]:not([formcontrolname])')).toBeNull();
-    expect(el.textContent).toContain('needs the Tomomomento Chrome extension');
+    expect(el.textContent).toContain('needs the Tomomomento browser extension');
   });
 
   it('turns on planning, with the daily card on by default', async () => {

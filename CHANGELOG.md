@@ -22,6 +22,9 @@ these first.
 
 ### Improved
 
+- **Microsoft Edge:** the listing kit for Edge Add-ons is ready
+  (`store/EDGE.md`), and the extension's wording says "browser" where it
+  meant any browser.
 - **Settle in:** a small countdown beside "Breathe in…" and "Breathe out…"
   shows the seconds left in each breath.
 

@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Everything to paste into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-for Tomomomento 1.11.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
+for Tomomomento 1.12.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
 `node scripts/store-images.mjs` after UI changes.
 
 ## Store listing tab
@@ -64,6 +64,9 @@ Features
 • An optional hourly time check: a quiet notice on the hour, timer or not
 • Starter setups: Gentle start, Deep work, Low stimulation or Know yourself in one tap
 • Search in Settings to find any option fast
+• An optional live toolbar icon: a ring that empties as the timer runs
+• An optional big timer view that fills the window, for reading from across the room
+• An optional focus garden: a little plant in Stats for each pomodoro this week
 • A built-in guide to the technique and how to use it
 • Light and dark themes that follow your system, or pick one yourself
 • Optional quotes on the timer screen: focus quotes while you work, rest quotes on breaks
@@ -76,15 +79,14 @@ Tomomomento has no account, no ads, no analytics, and no tracking. It makes no n
 Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Prefer not to install anything? The same timer runs in any browser on the website below.
 
-What's new in 1.11
-Easier to set up, easier to get back on track. The new helpers are off until you turn them on in Settings.
-• Starter setups: one tap turns on a few options that work well together: Gentle start, Deep work, Low stimulation or Know yourself. Undo puts things back.
-• Settings search: type "sound" or "break" and only those settings stay on screen.
-• Where was I?: when you pause or a focus session ends, jot one line about where you left off. It's waiting under the timer when you come back.
-• Hourly time check: on the hour from 8 am to 9 pm, a quiet notification says the time, even with no timer running.
-• Settle in now counts down each breath.
+What's new in 1.12
+Fun to look at, and the classic look stays the default. Each one is off until you turn it on in Settings.
+• Live toolbar icon: while the timer runs, the toolbar icon becomes a ring in the phase's color that empties as time passes.
+• Big timer view: one button fills the whole window with the clock, the color sinking down the screen as time passes. Great on a second screen.
+• Focus garden: Stats grows a little plant for each pomodoro you finish this week. A fresh garden every Monday, and nothing ever wilts.
+• Breathing circle: while settling in, a soft circle grows and shrinks with each breath in place of the clock.
 
-Also recently added: a daily intention, a visual timer, a distraction tally, a weekly look-back, keyboard shortcuts, an "Ends at" time, a first-tiny-step question, an energy check-in, rhythm presets, an evening wrap-up for parked thoughts, right-click shortcuts, a lava lamp background, rain and ocean waves focus sounds, small wins, 30 seconds of slow breathing before focus, an automatic pause when you step away, take-care reminders, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
+Also recently added: starter setups, settings search, "Where was I?", an hourly time check, a daily intention, a visual timer, a distraction tally, a weekly look-back, keyboard shortcuts, an "Ends at" time, a first-tiny-step question, an energy check-in, rhythm presets, an evening wrap-up for parked thoughts, right-click shortcuts, a lava lamp background, rain and ocean waves focus sounds, small wins, 30 seconds of slow breathing before focus, an automatic pause when you step away, take-care reminders, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
 
 Links
 Website: https://tomomomento.com

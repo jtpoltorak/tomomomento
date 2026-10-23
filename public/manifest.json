@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Tomomomento: Focus Timer",
   "short_name": "Tomomomento",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "A simple, customizable focus timer: focus sessions, short and long breaks, and optional sound and notification alerts.",
   "minimum_chrome_version": "120",
   "homepage_url": "https://tomomomento.com",

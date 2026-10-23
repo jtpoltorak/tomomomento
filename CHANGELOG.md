@@ -4,6 +4,14 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Live toolbar icon (optional):** while the timer runs, the toolbar icon
+  becomes a ring that empties as time passes. Turn it on under Appearance in
+  Settings.
+
 ## 1.11.0 (2026-10-23)
 
 ### New

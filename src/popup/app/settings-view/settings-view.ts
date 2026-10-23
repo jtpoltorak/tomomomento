@@ -148,6 +148,7 @@ export class SettingsView {
     calmClock: [false],
     dailyIntention: [false],
     visualTimer: [false],
+    liveIcon: [false],
     showEndsAt: [false],
     animateDigits: [false],
     minimalMode: [false],

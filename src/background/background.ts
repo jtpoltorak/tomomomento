@@ -64,6 +64,7 @@ import {
   type Settings,
   type TimerState,
 } from '../shared/timer';
+import { showRing, showUsualIcon } from './live-icon';
 
 const PHASE_END_ALARM = 'phase-end';
 const BADGE_ALARM = 'badge-refresh';
@@ -245,7 +246,9 @@ function headsUp(): Promise<void> {
 }
 
 async function updateBadge(state: TimerState, justFinished = false): Promise<void> {
-  const colors = (await loadSettings()).colorSafe ? SAFE_BADGE_COLORS : BADGE_COLORS;
+  const settings = await loadSettings();
+  const colors = settings.colorSafe ? SAFE_BADGE_COLORS : BADGE_COLORS;
+  if (state.status === 'idle') await showUsualIcon();
   if (state.status === 'idle' && justFinished) {
     // A quiet "time's up" cue for people who leave sounds and notifications off.
     await chrome.action.setBadgeBackgroundColor({ color: colors[state.phase] });
@@ -260,11 +263,19 @@ async function updateBadge(state: TimerState, justFinished = false): Promise<voi
     await chrome.action.setTitle({ title: `Tomomomento: ${PHASE_LABELS[state.phase]} ready` });
     return;
   }
-  const minutesLeft = Math.ceil(remainingMs(state, Date.now()) / 60_000);
+  const left = remainingMs(state, Date.now());
+  const minutesLeft = Math.ceil(left / 60_000);
   const color = state.status === 'paused' ? PAUSED_BADGE_COLOR : colors[state.phase];
-  await chrome.action.setBadgeBackgroundColor({ color });
-  await chrome.action.setBadgeTextColor?.({ color: '#ffffff' });
-  await chrome.action.setBadgeText({ text: `${minutesLeft}m` });
+  if (settings.liveIcon) {
+    // The ring says it all, so the minutes badge steps aside (the tooltip still has them).
+    await showRing(left / phaseLengthMs(state, settings), color);
+    await chrome.action.setBadgeText({ text: '' });
+  } else {
+    await showUsualIcon();
+    await chrome.action.setBadgeBackgroundColor({ color });
+    await chrome.action.setBadgeTextColor?.({ color: '#ffffff' });
+    await chrome.action.setBadgeText({ text: `${minutesLeft}m` });
+  }
   const verb = state.status === 'paused' ? 'paused' : 'running';
   await chrome.action.setTitle({
     title: `Tomomomento: ${PHASE_LABELS[state.phase]} ${verb}, ${minutesLeft} min left`,

@@ -54,6 +54,8 @@ export interface Settings {
   calmClock: boolean;
   /** A shrinking disc in place of the digits, so time left reads at a glance. */
   visualTimer: boolean;
+  /** The toolbar icon becomes a ring that empties as the timer runs (extension only). */
+  liveIcon: boolean;
   /** While the timer runs, show the time of day it ends ("Ends at 2:45 PM"). */
   showEndsAt: boolean;
   /** Each digit of the clock rolls in gently as it changes. */
@@ -176,6 +178,7 @@ export const DEFAULT_SETTINGS: Settings = {
   calmClock: false,
   dailyIntention: false,
   visualTimer: false,
+  liveIcon: false,
   showEndsAt: false,
   animateDigits: false,
   minimalMode: false,
@@ -743,6 +746,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     calmClock: input.calmClock ?? d.calmClock,
     dailyIntention: input.dailyIntention ?? d.dailyIntention,
     visualTimer: input.visualTimer ?? d.visualTimer,
+    liveIcon: input.liveIcon ?? d.liveIcon,
     showEndsAt: input.showEndsAt ?? d.showEndsAt,
     animateDigits: input.animateDigits ?? d.animateDigits,
     minimalMode: input.minimalMode ?? d.minimalMode,

@@ -484,6 +484,16 @@
       A colored disc in place of the numbers, shrinking as time passes, so you can tell how much is
       left at a glance.
     </p>
+    @if (!isWeb) {
+      <label class="switch-row">
+        <span>Live toolbar icon</span>
+        <input type="checkbox" role="switch" formControlName="liveIcon" />
+      </label>
+      <p class="note">
+        While the timer runs, the Tomomomento icon in your toolbar becomes a ring that empties as
+        time passes, in place of the minutes badge.
+      </p>
+    }
     <label class="switch-row">
       <span>Show when it ends</span>
       <input type="checkbox" role="switch" formControlName="showEndsAt" />

@@ -4,6 +4,14 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Keyboard shortcuts (optional):** on the timer, <kbd>S</kbd> skips,
+  <kbd>R</kbd> restarts and <kbd>P</kbd> parks a thought. Turn on
+  **Keyboard shortcuts** under Accessibility in Settings.
+
 ## 1.9.0 (2026-10-22)
 
 ### New

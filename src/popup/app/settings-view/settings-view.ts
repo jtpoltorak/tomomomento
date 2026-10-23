@@ -125,6 +125,7 @@ export class SettingsView {
     textSize: ['normal' as TextSizeId],
     easyFont: [false],
     reduceMotion: [false],
+    shortcuts: [false],
   });
 
   constructor() {

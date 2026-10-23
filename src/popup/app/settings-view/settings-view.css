@@ -309,3 +309,10 @@ footer {
   display: flex;
   gap: 0.5rem;
 }
+kbd {
+  padding: 0 0.375rem;
+  border: 1px solid var(--control);
+  border-radius: 0.375rem;
+  background: var(--surface);
+  font: inherit;
+}

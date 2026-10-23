@@ -601,6 +601,21 @@ export class TimerView {
     if (phase !== this.store.state().phase) void this.store.send({ command: 'setPhase', phase });
   }
 
+  /** Optional single-key shortcuts. Off by default, so typing never sets one off by surprise. */
+  @HostListener('document:keydown', ['$event'])
+  protected onKey(event: KeyboardEvent): void {
+    if (!this.store.settings().shortcuts) return;
+    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('input, select, textarea, [contenteditable]')) return;
+    const action = SHORTCUTS[event.key.toLowerCase()];
+    if (!action || !this.full()) return;
+    event.preventDefault();
+    if (action === 'skip') this.skip();
+    else if (action === 'reset') this.reset();
+    else if (this.quickPark() && !this.parkOpen()) this.openPark();
+  }
+
   @HostListener('document:keydown.space', ['$event'])
   protected onSpace(event: Event): void {
     const target = event.target as HTMLElement | null;
@@ -609,6 +624,9 @@ export class TimerView {
     this.toggle();
   }
 }
+
+/** Keyboard shortcuts on the timer screen, when they're turned on. */
+const SHORTCUTS: Record<string, 'skip' | 'reset' | 'park'> = { s: 'skip', r: 'reset', p: 'park' };
 
 /** How long the small-wins line stays before the usual status comes back. */
 const WIN_SHOWN_MS = 5_000;

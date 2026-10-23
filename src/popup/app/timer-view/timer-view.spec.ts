@@ -579,6 +579,29 @@ describe('TimerView', () => {
     });
   });
 
+  describe('keyboard shortcuts', () => {
+    const press = (key: string, target: EventTarget = document.body) =>
+      target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+
+    it('skips, restarts and parks with single keys, when turned on', async () => {
+      const { el, fixture, store } = await setup();
+      press('s');
+      expect(store.sent).toEqual([]);
+
+      store.settings.update((s) => ({ ...s, shortcuts: true, parkingLot: true }));
+      await fixture.whenStable();
+      press('s');
+      press('R');
+      expect(store.sent).toEqual([{ command: 'skip' }, { command: 'reset' }]);
+      press('p');
+      await fixture.whenStable();
+      const box = el.querySelector<HTMLInputElement>('#quick-thought')!;
+      expect(box).toBeTruthy();
+      press('s', box); // typing in a box is just typing
+      expect(store.sent.length).toBe(2);
+    });
+  });
+
   describe('ends at', () => {
     it('shows the time the running phase ends, when turned on', async () => {
       const end = new Date();

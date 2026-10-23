@@ -90,6 +90,8 @@ export interface Settings {
   easyFont: boolean;
   /** No animations, even when the device doesn't ask for reduced motion. */
   reduceMotion: boolean;
+  /** Single-key shortcuts on the timer screen: S skip, R restart, P park a thought. */
+  shortcuts: boolean;
 }
 
 export interface TimerState {
@@ -180,6 +182,7 @@ export const DEFAULT_SETTINGS: Settings = {
   textSize: 'normal',
   easyFont: false,
   reduceMotion: false,
+  shortcuts: false,
 };
 
 /** How long a "Just start" focus session runs. */
@@ -731,5 +734,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     textSize: input.textSize && input.textSize in TEXT_SIZE_LABELS ? input.textSize : d.textSize,
     easyFont: input.easyFont ?? d.easyFont,
     reduceMotion: input.reduceMotion ?? d.reduceMotion,
+    shortcuts: input.shortcuts ?? d.shortcuts,
   };
 }

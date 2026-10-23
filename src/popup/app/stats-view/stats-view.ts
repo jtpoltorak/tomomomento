@@ -84,7 +84,7 @@ export class StatsView {
   protected readonly drifts = computed(() => {
     const { thisWeek, lastWeek } = driftWeeks(this.store.history(), this.now());
     const line = (w: { drifts: number; pomodoros: number }) =>
-      `${w.drifts === 1 ? '1 drift' : `${w.drifts} drifts`} in ${this.pomodoros(w.pomodoros)}`;
+      `${w.drifts === 1 ? '1 drift' : `${w.drifts} drifts`}${w.pomodoros ? ` in ${this.pomodoros(w.pomodoros)}` : ' so far'}`;
     const rate = (w: { drifts: number; pomodoros: number }) => w.drifts / w.pomodoros;
     const fewer =
       thisWeek.pomodoros > 0 && lastWeek.pomodoros > 0 && rate(thisWeek) < rate(lastWeek);

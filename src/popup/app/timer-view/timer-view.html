@@ -277,6 +277,9 @@
   @if (askIntention()) {
     <aside class="parked-card intention-card" aria-labelledby="intention-label">
       <label id="intention-label" for="intention">What matters most today?</label>
+      @if (!editingIntention()) {
+        <button type="button" class="link" (click)="setIntention('')">Not today</button>
+      }
       <div class="quick-park">
         <input
           #intent
@@ -293,9 +296,6 @@
           Set
         </button>
       </div>
-      @if (!editingIntention()) {
-        <button type="button" class="link" (click)="setIntention('')">Not today</button>
-      }
     </aside>
   } @else if (wrapCard()) {
     <aside class="parked-card" aria-labelledby="wrap-card-title">

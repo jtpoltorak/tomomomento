@@ -158,7 +158,18 @@ export class TimerView {
     const saved = this.intention();
     return saved?.day === localDateKey(this.store.tick()) ? saved.text : null;
   });
-  protected readonly intentionLine = computed(() => (this.full() && this.intentionToday()) || null);
+  /** Steps aside while another card is up, so the popup still fits. */
+  protected readonly intentionLine = computed(() =>
+    this.full() &&
+    !this.store.showPlanPrompt() &&
+    !this.helpersCard() &&
+    !this.wrapCard() &&
+    !this.parkedCard() &&
+    !this.energyCard() &&
+    !this.lookBack()
+      ? this.intentionToday() || null
+      : null,
+  );
   protected readonly editingIntention = signal(false);
   /** Stays out of a running focus session, and the plan and helpers cards come first. */
   protected readonly askIntention = computed(() => {
@@ -197,11 +208,12 @@ export class TimerView {
     label: ENERGY_LABELS[level],
   }));
   // The popup only has room for one extra line of text under the controls, so
-  // the daily plan card, the parked thoughts card and your own label for this
-  // pomodoro come before a quote.
+  // the daily plan card, the parked thoughts card, today's intention and your
+  // own label for this pomodoro come before a quote.
   protected readonly quote = computed(() =>
     this.store.settings().showQuotes &&
     !this.askIntention() &&
+    !this.intentionLine() &&
     !this.store.showPlanPrompt() &&
     !this.helpersCard() &&
     !this.parkedCard() &&

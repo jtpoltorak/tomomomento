@@ -552,6 +552,7 @@ describe('timer state machine', () => {
     expect(calmMinutes(0)).toBe(0);
     expect(sanitizeSettings({}).calmClock).toBe(false);
     expect(sanitizeSettings({}).visualTimer).toBe(false);
+    expect(sanitizeSettings({}).dailyIntention).toBe(false);
   });
 
   describe('paused reminder', () => {

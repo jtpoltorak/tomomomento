@@ -19,6 +19,9 @@ these first.
   Turn on **Distraction tally** under Focus helpers in Settings.
 - **Visual timer (optional):** a colored disc in place of the numbers that
   shrinks as time passes. Turn on **Visual timer** under Appearance in Settings.
+- **Daily intention (optional):** the first time you open the timer each day,
+  it asks "What matters most today?" and keeps your answer at the top until
+  midnight. Turn on **Daily intention** under Planning in Settings.
 
 ## 1.9.0 (2026-10-22)
 

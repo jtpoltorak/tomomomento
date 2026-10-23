@@ -105,6 +105,7 @@ export class SettingsView {
     keepGoing: [false],
     headsUp: [false],
     calmClock: [false],
+    dailyIntention: [false],
     visualTimer: [false],
     showEndsAt: [false],
     animateDigits: [false],

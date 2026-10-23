@@ -34,6 +34,8 @@ export interface Settings {
   showQuotes: boolean;
   /** "Plan my day": pick how many pomodoros to do today and track them under the timer. */
   planEnabled: boolean;
+  /** Ask "What matters most today?" on the first open each day and keep the answer on the timer. */
+  dailyIntention: boolean;
   /** With planning on, offer a card on the first open of each day. */
   planPrompt: boolean;
   /** The parking lot: jot stray thoughts during focus, look at them on a break. */
@@ -168,6 +170,7 @@ export const DEFAULT_SETTINGS: Settings = {
   keepGoing: false,
   headsUp: false,
   calmClock: false,
+  dailyIntention: false,
   visualTimer: false,
   showEndsAt: false,
   animateDigits: false,
@@ -405,6 +408,8 @@ export function canSettle(state: TimerState, settings: Settings): boolean {
   );
 }
 
+/** Longest daily intention, so it fits on one line at the top of the timer. */
+export const MAX_INTENTION_LENGTH = 60;
 export const MAX_STEP_LENGTH = 80;
 
 /** Whether Start asks for the first tiny step: a focus session that hasn't begun yet. */
@@ -720,6 +725,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     keepGoing: input.keepGoing ?? d.keepGoing,
     headsUp: input.headsUp ?? d.headsUp,
     calmClock: input.calmClock ?? d.calmClock,
+    dailyIntention: input.dailyIntention ?? d.dailyIntention,
     visualTimer: input.visualTimer ?? d.visualTimer,
     showEndsAt: input.showEndsAt ?? d.showEndsAt,
     animateDigits: input.animateDigits ?? d.animateDigits,

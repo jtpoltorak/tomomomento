@@ -668,6 +668,50 @@ describe('TimerView', () => {
     });
   });
 
+  describe('daily intention', () => {
+    beforeEach(() => localStorage.removeItem('tomomomento.intention'));
+
+    it('asks once a day and keeps the answer at the top', async () => {
+      const { el, fixture, store, button } = await setup();
+      expect(el.querySelector('#intention')).toBeNull();
+      store.settings.update((s) => ({ ...s, dailyIntention: true }));
+      await fixture.whenStable();
+      const box = el.querySelector<HTMLInputElement>('#intention')!;
+      expect(el.querySelector('#intention-label')?.textContent).toBe('What matters most today?');
+      box.value = '  Send the proposal  ';
+      button('Set').click();
+      await fixture.whenStable();
+      expect(el.querySelector('#intention')).toBeNull();
+      expect(el.querySelector('.intention-text')?.textContent).toBe('Send the proposal');
+
+      button('Change').click();
+      await fixture.whenStable();
+      expect(el.querySelector<HTMLInputElement>('#intention')?.value).toBe('Send the proposal');
+      el.querySelector('#intention')!.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape' }),
+      );
+      await fixture.whenStable();
+      expect(el.querySelector('#intention')).toBeNull();
+      expect(el.querySelector('.intention-text')?.textContent).toBe('Send the proposal');
+    });
+
+    it('lets a day be skipped, and asks again tomorrow', async () => {
+      localStorage.setItem(
+        'tomomomento.intention',
+        JSON.stringify({ day: '2020-01-01', text: 'Old news' }),
+      );
+      const { el, fixture, store, button } = await setup();
+      store.settings.update((s) => ({ ...s, dailyIntention: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.intention')).toBeNull();
+      button('Not today').click();
+      await fixture.whenStable();
+      expect(el.querySelector('#intention')).toBeNull();
+      expect(el.querySelector('.intention')).toBeNull();
+      expect(JSON.parse(localStorage.getItem('tomomomento.intention')!).text).toBe('');
+    });
+  });
+
   describe('ends at', () => {
     it('shows the time the running phase ends, when turned on', async () => {
       const end = new Date();

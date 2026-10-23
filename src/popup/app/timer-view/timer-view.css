@@ -614,3 +614,34 @@
 .more-toggle {
   align-self: center;
 }
+
+/* Daily intention: one line at the top of the timer, and a card to set it. */
+.intention {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  margin: 0;
+  font-size: 1.125rem;
+}
+.intention-label {
+  color: var(--muted);
+}
+.intention-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.intention-card {
+  display: grid;
+  justify-items: start;
+  gap: 0.375rem;
+}
+.intention-card label {
+  font-weight: 600;
+}
+.intention-card .quick-park {
+  width: 100%;
+}

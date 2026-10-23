@@ -1,3 +1,17 @@
+@if (intentionLine(); as text) {
+  <p class="intention">
+    <span class="intention-label">Today:</span>
+    <span class="intention-text">{{ text }}</span>
+    <button
+      type="button"
+      class="link intention-change"
+      aria-label="Change today's intention"
+      (click)="changeIntention()"
+    >
+      Change
+    </button>
+  </p>
+}
 @if (full()) {
   <div class="phases" role="group" aria-label="Choose a timer">
     @for (p of phases; track p.id) {
@@ -260,7 +274,30 @@
     </aside>
   }
 
-  @if (wrapCard()) {
+  @if (askIntention()) {
+    <aside class="parked-card intention-card" aria-labelledby="intention-label">
+      <label id="intention-label" for="intention">What matters most today?</label>
+      <div class="quick-park">
+        <input
+          #intent
+          type="text"
+          id="intention"
+          [maxLength]="maxIntention"
+          [value]="intentionLine() ?? ''"
+          placeholder="Like “send the proposal”"
+          autocomplete="off"
+          (keydown.enter)="setIntention(intent.value)"
+          (keydown.escape)="editingIntention() ? editingIntention.set(false) : setIntention('')"
+        />
+        <button type="button" class="pill-btn solid" (click)="setIntention(intent.value)">
+          Set
+        </button>
+      </div>
+      @if (!editingIntention()) {
+        <button type="button" class="link" (click)="setIntention('')">Not today</button>
+      }
+    </aside>
+  } @else if (wrapCard()) {
     <aside class="parked-card" aria-labelledby="wrap-card-title">
       <p id="wrap-card-title">Wrap up your day? {{ wrapText() }} parked</p>
       <div class="parked-card-actions">

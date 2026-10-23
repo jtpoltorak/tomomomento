@@ -22,6 +22,8 @@ import {
   canAskFirstStep,
   canJustStart,
   MAX_STEP_LENGTH,
+  MAX_INTENTION_LENGTH,
+  localDateKey,
   careNudge,
   canKeepGoing,
   calmMinutes,
@@ -145,6 +147,32 @@ export class TimerView {
     this.driftTimer = setTimeout(() => this.justDrifted.set(false), 2000);
   }
 
+  /**
+   * The daily intention: asked on the first open each day, then kept at the top
+   * of the timer until midnight. A skipped day is saved as an empty answer.
+   */
+  private readonly intention = signal(readIntention());
+  protected readonly maxIntention = MAX_INTENTION_LENGTH;
+  private readonly intentionToday = computed(() => {
+    if (!this.store.settings().dailyIntention) return null;
+    const saved = this.intention();
+    return saved?.day === localDateKey(this.store.tick()) ? saved.text : null;
+  });
+  protected readonly intentionLine = computed(() => (this.full() && this.intentionToday()) || null);
+  protected readonly editingIntention = signal(false);
+  /** Stays out of a running focus session, and the plan and helpers cards come first. */
+  protected readonly askIntention = computed(() => {
+    if (!this.store.settings().dailyIntention || !this.full() || this.askStep()) return false;
+    if (this.editingIntention()) return true;
+    const { phase, status } = this.store.state();
+    return (
+      this.intentionToday() === null &&
+      !(phase === 'work' && status === 'running') &&
+      !this.store.showPlanPrompt() &&
+      !this.helpersCard()
+    );
+  });
+
   /** Once a week: last week at a glance, until it's acknowledged. Other cards come first. */
   private readonly lookedBack = signal(readLookedBack());
   protected readonly lookBack = computed(() => {
@@ -173,6 +201,7 @@ export class TimerView {
   // pomodoro come before a quote.
   protected readonly quote = computed(() =>
     this.store.settings().showQuotes &&
+    !this.askIntention() &&
     !this.store.showPlanPrompt() &&
     !this.helpersCard() &&
     !this.parkedCard() &&
@@ -551,6 +580,22 @@ export class TimerView {
     this.ideaOffset.update((n) => n + 1);
   }
 
+  protected setIntention(text: string): void {
+    const entry = {
+      day: localDateKey(this.store.tick()),
+      text: text.trim().slice(0, MAX_INTENTION_LENGTH),
+    };
+    this.intention.set(entry);
+    writeIntention(entry);
+    this.editingIntention.set(false);
+    this.focusSoon('.primary-btn');
+  }
+
+  protected changeIntention(): void {
+    this.editingIntention.set(true);
+    this.focusSoon('#intention');
+  }
+
   protected doneLookingBack(week: string): void {
     this.lookedBack.set(week);
     writeLookedBack(week);
@@ -718,5 +763,30 @@ function writeLookedBack(week: string): void {
     localStorage.setItem(LOOKED_BACK_KEY, week);
   } catch {
     // Private browsing: the card may come back next time, which is fine.
+  }
+}
+
+const INTENTION_KEY = 'tomomomento.intention';
+
+interface Intention {
+  /** Local date (YYYY-MM-DD) it was set, so it clears itself overnight. */
+  day: string;
+  text: string;
+}
+
+function readIntention(): Intention | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(INTENTION_KEY) ?? 'null');
+    return typeof value?.day === 'string' && typeof value?.text === 'string' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeIntention(value: Intention): void {
+  try {
+    localStorage.setItem(INTENTION_KEY, JSON.stringify(value));
+  } catch {
+    // Private browsing: it may ask again next time, which is fine.
   }
 }

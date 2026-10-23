@@ -1,6 +1,6 @@
 {
   "name": "tomomomento",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "scripts": {
     "build": "node scripts/build.mjs",
     "watch": "node scripts/build.mjs --watch",

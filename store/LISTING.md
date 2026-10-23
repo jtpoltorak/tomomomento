@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Everything to paste into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-for Tomomomento 1.9.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
+for Tomomomento 1.10.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
 `node scripts/store-images.mjs` after UI changes.
 
 ## Store listing tab
@@ -55,6 +55,11 @@ Features
 • An optional "Ends at" line that shows what time the timer finishes
 • An optional first-tiny-step question when you press Start
 • An optional energy check-in that shows which times of day go best for you
+• Optional keyboard shortcuts: S skips, R restarts, P parks a thought
+• An optional weekly look-back: last week's pomodoros, focus time and best day
+• An optional distraction tally: tap "I drifted" and see the trend week to week
+• An optional visual timer: a colored disc that shrinks as time passes
+• An optional daily intention: "What matters most today?" kept at the top of the timer
 • A built-in guide to the technique and how to use it
 • Light and dark themes that follow your system, or pick one yourself
 • Optional quotes on the timer screen: focus quotes while you work, rest quotes on breaks
@@ -67,13 +72,15 @@ Tomomomento has no account, no ads, no analytics, and no tracking. It makes no n
 Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Not using Chrome? The same timer runs in any browser on the website below.
 
-What's new in 1.9
-Three ways to get going and stay aware of time. All are off until you turn them on in Settings.
-• Ends at: while the timer runs, a small line says what time it ends, like "Ends at 2:45 PM".
-• First tiny step: pressing Start asks for the very first step, like "open the doc", and shows it under the timer while you focus. Skipping is always fine.
-• Energy check-in: after a focus session, tap Low, Okay or Great. Stats then shows which times of day tend to go best for you.
+What's new in 1.10
+Five ways to know yourself a little better. All are off until you turn them on in Settings.
+• Daily intention: the first time you open the timer each day, it asks "What matters most today?" and keeps your answer at the top until midnight.
+• Visual timer: a colored disc in place of the numbers, shrinking as time passes, so you can feel how much is left at a glance.
+• Distraction tally: during focus, tap "I drifted" when your attention wanders. Stats compares this week with last week.
+• Weekly look-back: once a week, a short card shows last week's pomodoros, focus time and best day.
+• Keyboard shortcuts: S skips, R restarts, P parks a thought and D notes a drift.
 
-Also recently added: rhythm presets, an evening wrap-up for parked thoughts, right-click shortcuts, a lava lamp background, rain and ocean waves focus sounds, small wins, 30 seconds of slow breathing before focus, an automatic pause when you step away, take-care reminders, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
+Also recently added: an "Ends at" time, a first-tiny-step question, an energy check-in, rhythm presets, an evening wrap-up for parked thoughts, right-click shortcuts, a lava lamp background, rain and ocean waves focus sounds, small wins, 30 seconds of slow breathing before focus, an automatic pause when you step away, take-care reminders, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
 
 Links
 Website: https://tomomomento.com

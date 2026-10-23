@@ -8,6 +8,9 @@ these first.
 
 ### New
 
+- **Starter setups:** one tap at the top of Settings turns on a few options
+  that work well together: Gentle start, Deep work, Low stimulation or Know
+  yourself. Undo puts things back.
 - **Settings search:** a search box at the top of Settings shows only the
   settings that mention what you type.
 

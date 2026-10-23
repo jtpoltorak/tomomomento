@@ -13,6 +13,25 @@
   <p class="note search-result" role="status">{{ matchText() }}</p>
 </div>
 <form [formGroup]="form" (submit)="$event.preventDefault()">
+  <section aria-labelledby="starters-heading">
+    <h2 id="starters-heading">Starter setups</h2>
+    <div class="starters">
+      @for (s of starters; track s.id) {
+        <button type="button" class="starter" [class.on]="starterOn(s)" (click)="applyStarter(s)">
+          <span class="starter-name">{{ s.label }}</span>
+          <span class="starter-blurb">{{ starterOn(s) ? '✓ On' : s.blurb }}</span>
+        </button>
+      }
+    </div>
+    <p class="note" role="status">
+      @if (applied(); as a) {
+        {{ a.starter.label }} turned on {{ a.starter.turnsOn.join(', ') }}.
+        <button type="button" class="link undo" (click)="undoStarter()">Undo</button>
+      } @else {
+        One tap turns on a few options that work well together. Change any of them below.
+      }
+    </p>
+  </section>
   <section>
     <h2>Timers <span class="unit">minutes</span></h2>
     @for (d of durations; track d.key) {

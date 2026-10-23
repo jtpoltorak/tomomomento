@@ -62,6 +62,36 @@ describe('SettingsView', () => {
     expect(store.settings().soundEnabled).toBe(true);
   });
 
+  describe('starter setups', () => {
+    it('turns on a set of options in one tap, and undoes it', async () => {
+      const { store, el, fixture } = await setup();
+      const starter = (name: string) =>
+        Array.from(el.querySelectorAll<HTMLButtonElement>('.starter')).find(
+          (b) => b.querySelector('.starter-name')?.textContent === name,
+        )!;
+      starter('Deep work').click();
+      fixture.detectChanges();
+      vi.advanceTimersByTime(400);
+      await Promise.resolve();
+      fixture.detectChanges();
+      const s = store.settings();
+      expect([s.workMinutes, s.shortBreakMinutes, s.focusSound, s.keepGoing, s.parkingLot]).toEqual(
+        [50, 10, 'brown', true, true],
+      );
+      expect(s.justStart).toBe(false); // nothing else changes
+      expect(starter('Deep work').textContent).toContain('✓ On');
+      const note = el.querySelector('[aria-labelledby=starters-heading] [role=status]')!;
+      expect(note.textContent).toContain('Deep work turned on 50/10 timers, Brown noise');
+
+      note.querySelector<HTMLButtonElement>('.undo')!.click();
+      fixture.detectChanges();
+      vi.advanceTimersByTime(400);
+      await Promise.resolve();
+      expect(store.settings().workMinutes).toBe(25);
+      expect(store.settings().focusSound).toBe('off');
+    });
+  });
+
   describe('search', () => {
     function type(el: HTMLElement, text: string) {
       const box = el.querySelector<HTMLInputElement>('#settings-search')!;
@@ -236,9 +266,9 @@ describe('SettingsView', () => {
       button(el, 'Back up').click();
       fixture.detectChanges();
       expect(clicked[0]?.download).toMatch(/^tomomomento-backup-\d{4}-\d{2}-\d{2}\.json$/);
-      expect(el.querySelector('section [role=status]')?.textContent).toContain(
-        'Backed up to tomomomento-backup-',
-      );
+      expect(
+        el.querySelector('[aria-labelledby=data-heading] [role=status]')?.textContent,
+      ).toContain('Backed up to tomomomento-backup-');
       spy.mockRestore();
     });
 
@@ -265,7 +295,9 @@ describe('SettingsView', () => {
       expect(store.history()['2026-10-01'].pomodoros).toBe(6);
       expect(store.parkingLot().thoughts[0].text).toBe('Buy milk');
       expect((el.querySelector('#workMinutes') as HTMLInputElement).value).toBe('45');
-      expect(el.querySelector('section [role=status]')?.textContent).toContain('Restored');
+      expect(
+        el.querySelector('[aria-labelledby=data-heading] [role=status]')?.textContent,
+      ).toContain('Restored');
     });
 
     it('explains a file that is not a backup', async () => {

@@ -16,6 +16,7 @@ import { MAX_BLOCKED_SITES, normalizeSite, SUGGESTED_SITES } from '../../../shar
 import { FocusSoundPlayer } from '../../../shared/focus-sounds';
 import { WRAP_UP_HOUR } from '../../../shared/parking';
 import { playSound } from '../../../shared/sounds';
+import { STARTERS, starterIsOn, type Starter } from '../../../shared/starters';
 import {
   AWAY_MS,
   CARE_EVERY,
@@ -87,6 +88,29 @@ export class SettingsView {
           ? 'No settings match. Try another word.'
           : `${shown} ${shown === 1 ? 'setting matches' : 'settings match'}`,
     );
+  }
+
+  // Starter setups: one tap turns on a few options that go together, with an undo.
+  protected readonly starters = STARTERS;
+  protected readonly applied = signal<{ starter: Starter; before: Partial<Settings> } | null>(null);
+  protected starterOn(starter: Starter): boolean {
+    return starterIsOn(this.store.settings(), starter);
+  }
+
+  protected applyStarter(starter: Starter): void {
+    const current = this.fromForm();
+    const before = Object.fromEntries(
+      Object.keys(starter.changes).map((key) => [key, current[key as keyof Settings]]),
+    ) as Partial<Settings>;
+    this.applied.set({ starter, before });
+    this.form.patchValue(starter.changes as never);
+  }
+
+  protected undoStarter(): void {
+    const applied = this.applied();
+    if (!applied) return;
+    this.form.patchValue(applied.before as never);
+    this.applied.set(null);
   }
 
   // Back up and restore.

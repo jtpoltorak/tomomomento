@@ -4,6 +4,30 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Starter setups:** one tap at the top of Settings turns on a few options
+  that work well together: Gentle start, Deep work, Low stimulation or Know
+  yourself. Undo puts things back.
+- **Where was I? (optional):** when you pause focus or it ends, jot one line
+  about where you left off. It shows under the timer when you come back. Turn
+  it on under Focus helpers in Settings.
+- **Hourly time check (optional):** on the hour from 8 am to 9 pm, a quiet
+  notification says the time, even with no timer running. Turn it on under
+  Focus helpers in Settings.
+- **Settings search:** a search box at the top of Settings shows only the
+  settings that mention what you type.
+
+### Improved
+
+- **Microsoft Edge:** the listing kit for Edge Add-ons is ready
+  (`store/EDGE.md`), and the extension's wording says "browser" where it
+  meant any browser.
+- **Settle in:** a small countdown beside "Breathe in…" and "Breathe out…"
+  shows the seconds left in each breath.
+
 ## 1.10.0 (2026-10-23)
 
 ### New

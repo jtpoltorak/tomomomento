@@ -404,6 +404,8 @@ describe('TimerView', () => {
     it('guides the breath while the clock waits', async () => {
       const { el } = await breathing(1);
       expect(el.querySelector('.status')?.textContent).toBe('Breathe in…');
+      expect(el.querySelector('.breath-count')?.textContent).toBe('3');
+      expect(el.querySelector('.breath-count')?.getAttribute('aria-hidden')).toBe('true');
       expect(el.querySelector('.clock')?.textContent).toBe('25:00');
       expect(el.querySelector('.bar-fill')?.classList).toContain('settling');
       // One steady line for screen readers, not a new one with every breath.
@@ -416,6 +418,7 @@ describe('TimerView', () => {
     it('breathes out after 4 seconds', async () => {
       const { el } = await breathing(5);
       expect(el.querySelector('.status')?.textContent).toBe('Breathe out…');
+      expect(el.querySelector('.breath-count')?.textContent).toBe('5');
     });
 
     it('can start the clock right away', async () => {
@@ -709,6 +712,40 @@ describe('TimerView', () => {
       expect(el.querySelector('#intention')).toBeNull();
       expect(el.querySelector('.intention')).toBeNull();
       expect(JSON.parse(localStorage.getItem('tomomomento.intention')!).text).toBe('');
+    });
+  });
+
+  describe('where was I', () => {
+    beforeEach(() => localStorage.removeItem('tomomomento.leftOff'));
+
+    it('asks once when focus pauses, and shows the note until that session is done', async () => {
+      const pausedAt = Date.now() - 1000;
+      const { el, fixture, store, button } = await setup({ status: 'paused', pausedAt });
+      expect(el.querySelector('#left-off')).toBeNull();
+      store.settings.update((s) => ({ ...s, whereWasI: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('#left-off-label')?.textContent).toBe('Where did you leave off?');
+      el.querySelector<HTMLInputElement>('#left-off')!.value = 'Halfway through section 2';
+      button('Save').click();
+      await fixture.whenStable();
+      expect(el.querySelector('#left-off')).toBeNull();
+      expect(el.querySelector('.plan-now')?.textContent?.trim()).toBe(
+        'Left off: Halfway through section 2',
+      );
+
+      // That session finishes: the break asks again, and the old note retires.
+      store.state.update((s) => ({
+        ...s,
+        phase: 'shortBreak',
+        status: 'running',
+        lastFocusEnd: Date.now(),
+      }));
+      await fixture.whenStable();
+      expect(el.querySelector('.plan-now')).toBeNull();
+      expect(el.querySelector('#left-off')).toBeTruthy();
+      button('Skip').click();
+      await fixture.whenStable();
+      expect(el.querySelector('#left-off')).toBeNull();
     });
   });
 

@@ -1,4 +1,37 @@
+<div class="search" role="search">
+  <label for="settings-search" class="visually-hidden">Search settings</label>
+  <input
+    #searchBox
+    type="search"
+    id="settings-search"
+    placeholder="Search settings"
+    autocomplete="off"
+    [value]="query()"
+    (input)="search(searchBox.value)"
+    (keydown.escape)="search('')"
+  />
+  <p class="note search-result" role="status">{{ matchText() }}</p>
+</div>
 <form [formGroup]="form" (submit)="$event.preventDefault()">
+  <section aria-labelledby="starters-heading">
+    <h2 id="starters-heading">Starter setups</h2>
+    <div class="starters">
+      @for (s of starters; track s.id) {
+        <button type="button" class="starter" [class.on]="starterOn(s)" (click)="applyStarter(s)">
+          <span class="starter-name">{{ s.label }}</span>
+          <span class="starter-blurb">{{ starterOn(s) ? '✓ On' : s.blurb }}</span>
+        </button>
+      }
+    </div>
+    <p class="note" role="status">
+      @if (applied(); as a) {
+        {{ a.starter.label }} turned on {{ a.starter.turnsOn.join(', ') }}.
+        <button type="button" class="link undo" (click)="undoStarter()">Undo</button>
+      } @else {
+        One tap turns on a few options that work well together. Change any of them below.
+      }
+    </p>
+  </section>
   <section>
     <h2>Timers <span class="unit">minutes</span></h2>
     @for (d of durations; track d.key) {
@@ -131,6 +164,25 @@
     <p class="note">
       Pressing Start asks "What's the first tiny step?" Your answer shows under the timer while you
       focus. Skipping is always fine.
+    </p>
+    <label class="switch-row">
+      <span>Where was I?</span>
+      <input type="checkbox" role="switch" formControlName="whereWasI" />
+    </label>
+    <p class="note">
+      When you pause focus or it ends, jot one line about where you left off. It shows under the
+      timer when you come back, until the next focus session is done.
+    </p>
+    <label class="switch-row">
+      <span>Hourly time check</span>
+      <input type="checkbox" role="switch" formControlName="timeCheck" />
+    </label>
+    <p class="note">
+      On the hour from 8 am to 9 pm, a quiet notification says the time, even with no timer running,
+      for days when time slips away. The soft tone plays too if sound is on.
+      @if (isWeb) {
+        It needs this tab open, and notifications allowed.
+      }
     </p>
     <label class="switch-row">
       <span>Celebrate small wins</span>
@@ -283,7 +335,7 @@
     <h2>Site blocker</h2>
     @if (isWeb) {
       <p class="note">
-        Blocking sites needs the Tomomomento Chrome extension, because a web page can't change what
+        Blocking sites needs the Tomomomento browser extension, because a web page can't change what
         other tabs load.
       </p>
     } @else {
@@ -335,7 +387,9 @@
           }
         </div>
       } @else {
-        <p class="note">Chrome will ask to let Tomomomento redirect sites when you turn this on.</p>
+        <p class="note">
+          Your browser will ask to let Tomomomento redirect sites when you turn this on.
+        </p>
       }
     }
   </section>

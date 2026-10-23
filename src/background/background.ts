@@ -40,6 +40,9 @@ import {
   AWAY_MS,
   focusSoundNow,
   headsUpAt,
+  nextHour,
+  timeCheckDue,
+  timeCheckText,
   canKeepGoing,
   justStart,
   KEEP_GOING_MINUTES,
@@ -65,6 +68,8 @@ import {
 const PHASE_END_ALARM = 'phase-end';
 const BADGE_ALARM = 'badge-refresh';
 const HEADS_UP_ALARM = 'heads-up';
+const TIME_CHECK_ALARM = 'time-check';
+const TIME_CHECK_NOTIFICATION_ID = 'time-check';
 const PAUSE_NUDGE_ALARM = 'pause-nudge';
 const NOTIFICATION_ID = 'phase-complete';
 const PAUSE_NOTIFICATION_ID = 'still-paused';
@@ -188,6 +193,40 @@ function pauseNudge(): Promise<void> {
       silent: true,
       priority: 0,
     });
+  });
+}
+
+/** Keeps the hourly time check's alarm in step with its switch. */
+async function syncTimeCheck(settings?: Settings): Promise<void> {
+  settings ??= await loadSettings();
+  if (!settings.timeCheck) {
+    await chrome.alarms.clear(TIME_CHECK_ALARM);
+    return;
+  }
+  if (await chrome.alarms.get(TIME_CHECK_ALARM)) return;
+  await chrome.alarms.create(TIME_CHECK_ALARM, { when: nextHour(Date.now()), periodInMinutes: 60 });
+}
+
+/** On the hour: a quiet notification with the time, and the soft tone if sound is on. */
+function timeCheck(): Promise<void> {
+  return serialized(async () => {
+    const [state, settings] = await Promise.all([loadState(), loadSettings()]);
+    const hour = timeCheckDue(settings, Date.now());
+    if (hour === null) return;
+    const { title, body } = timeCheckText(state, hour);
+    await chrome.notifications.create(TIME_CHECK_NOTIFICATION_ID, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
+      title,
+      message: body,
+      silent: true,
+      priority: 0,
+    });
+    if (settings.soundEnabled) {
+      await playAlertSound('headsUp', settings.volume).catch((err: unknown) =>
+        console.error('Time check failed', err),
+      );
+    }
   });
 }
 
@@ -441,6 +480,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === PHASE_END_ALARM || alarm.name === BADGE_ALARM) void completeIfDue();
   if (alarm.name === HEADS_UP_ALARM) void headsUp();
   if (alarm.name === PAUSE_NUDGE_ALARM) void pauseNudge();
+  if (alarm.name === TIME_CHECK_ALARM) void timeCheck();
 });
 
 chrome.notifications.onButtonClicked.addListener((id, index) => {
@@ -463,7 +503,12 @@ chrome.notifications.onButtonClicked.addListener((id, index) => {
 });
 
 chrome.notifications.onClicked.addListener((id) => {
-  if (id === NOTIFICATION_ID || id === PAUSE_NOTIFICATION_ID || id === AWAY_NOTIFICATION_ID) {
+  if (
+    id === NOTIFICATION_ID ||
+    id === PAUSE_NOTIFICATION_ID ||
+    id === AWAY_NOTIFICATION_ID ||
+    id === TIME_CHECK_NOTIFICATION_ID
+  ) {
     void chrome.notifications.clear(id);
   }
 });
@@ -475,6 +520,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   void serialized(async () => {
     const [state, settings] = await Promise.all([loadState(), loadSettings()]);
     await syncMenus(settings);
+    await syncTimeCheck(settings);
     if (state.status === 'idle') await commit(reset(state, settings));
     else {
       await syncBlocking(state, settings);
@@ -614,6 +660,7 @@ async function welcomeBack(state: TimerState): Promise<void> {
 chrome.runtime.onInstalled.addListener(() => {
   void serialized(async () => {
     await syncMenus();
+    await syncTimeCheck();
     return commit(await loadState());
   });
 });
@@ -621,6 +668,9 @@ chrome.runtime.onInstalled.addListener(() => {
 // The browser may have been closed when a phase ended; catch up on launch.
 // A focus session still running picks its sound back up.
 chrome.runtime.onStartup.addListener(() => {
-  void serialized(() => syncMenus());
+  void serialized(async () => {
+    await syncMenus();
+    await syncTimeCheck();
+  });
   void completeIfDue().then(() => serialized(async () => syncFocusSound(await loadState())));
 });

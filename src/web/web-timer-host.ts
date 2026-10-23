@@ -25,6 +25,9 @@ import {
   calmMinutes,
   focusSoundNow,
   headsUpAt,
+  nextHour,
+  timeCheckDue,
+  timeCheckText,
   justStart,
   keepGoing,
   DEFAULT_SETTINGS,
@@ -61,6 +64,8 @@ const KEYS = {
   parkingLot: 'tomomomento.parkingLot',
   /** The end time of the phase whose heads-up already played, so only one tab plays it. */
   headsUpFor: 'tomomomento.headsUpFor',
+  /** The hour whose time check already showed, so only one tab shows it. */
+  timeCheckFor: 'tomomomento.timeCheckFor',
   /** When the paused timer's reminder already showed, so only one tab shows it. */
   pauseNudgeFor: 'tomomomento.pauseNudgeFor',
   /**
@@ -124,6 +129,7 @@ export class WebTimerHost implements TimerHost {
   private titleTimer: ReturnType<typeof setInterval> | undefined;
   private headsUpTimer: ReturnType<typeof setTimeout> | undefined;
   private nudgeTimer: ReturnType<typeof setTimeout> | undefined;
+  private timeCheckTimer: ReturnType<typeof setTimeout> | undefined;
   private audio: AudioContext | undefined;
   private focusPlayer: FocusSoundPlayer | undefined;
   private readonly tabId = crypto.randomUUID();
@@ -148,6 +154,7 @@ export class WebTimerHost implements TimerHost {
         localStorage.removeItem(KEYS.focusSoundTab);
     });
     this.schedule(loadState());
+    this.scheduleTimeCheck();
     // A phase may have ended while the page was closed. Catch up quietly.
     void this.completeIfDue(false);
   }
@@ -395,6 +402,44 @@ export class WebTimerHost implements TimerHost {
       window.focus();
       notification.close();
     };
+  }
+
+  /** Wakes on each hour while the page is open; the switch is checked when it fires. */
+  private scheduleTimeCheck(): void {
+    clearTimeout(this.timeCheckTimer);
+    this.timeCheckTimer = setTimeout(
+      () => {
+        void this.timeCheck();
+        this.scheduleTimeCheck();
+      },
+      nextHour(Date.now()) - Date.now() + 50,
+    );
+  }
+
+  /** On the hour: a quiet notification if the browser allows one, and the soft tone if sound is on. */
+  private async timeCheck(): Promise<void> {
+    await withLock(async () => {
+      const settings = loadSettings();
+      const hour = timeCheckDue(settings, Date.now());
+      if (hour === null || read<number>(KEYS.timeCheckFor) === hour) return;
+      write(KEYS.timeCheckFor, hour);
+      if (settings.soundEnabled) {
+        this.playSound('headsUp', settings.volume).catch((err: unknown) =>
+          console.error('Time check failed', err),
+        );
+      }
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      const { title, body } = timeCheckText(loadState(), hour);
+      const options: NotificationOptions = {
+        body,
+        icon: 'icons/icon-192.png',
+        tag: 'time-check',
+        silent: true,
+      };
+      const registration = await navigator.serviceWorker?.getRegistration();
+      if (registration) await registration.showNotification(title, options);
+      else new Notification(title, options);
+    });
   }
 
   /** The quiet tone a minute before the phase ends, for people who turned sound on. */

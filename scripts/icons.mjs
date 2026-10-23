@@ -29,4 +29,12 @@ await render('icon-192.png', 192);
 await render('icon-512.png', 512);
 await render('icon-maskable-512.png', 512, { padded: true });
 await render('apple-touch-icon.png', 180, { padded: true });
+
+// The Edge Add-ons store logo (300x300).
+{
+  const page = await browser.newPage({ viewport: { width: 300, height: 300 } });
+  const sized = svg.replace('<svg ', '<svg width="300" height="300" ');
+  await page.setContent(`<body style="margin:0">${sized}</body>`);
+  await page.screenshot({ path: 'store/images/logo-300.png', omitBackground: true });
+}
 await browser.close();

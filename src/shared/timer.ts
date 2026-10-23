@@ -76,6 +76,10 @@ export interface Settings {
   smallWins: boolean;
   /** Pressing Start on a fresh focus session asks for the first tiny step first. */
   firstStep: boolean;
+  /** When you pause focus or it ends, jot where you left off; it shows when you come back. */
+  whereWasI: boolean;
+  /** A quiet notice on the hour, from 8 am to 9 pm, even with no timer running. */
+  timeCheck: boolean;
   /** After a focus session, a one-tap "how was it?" that Stats turns into best times of day. */
   energyCheck: boolean;
   /** The first time you open the timer each week, a short card about last week. */
@@ -183,6 +187,8 @@ export const DEFAULT_SETTINGS: Settings = {
   takeCare: false,
   smallWins: false,
   firstStep: false,
+  whereWasI: false,
+  timeCheck: false,
   energyCheck: false,
   weeklyLookBack: false,
   driftTally: false,
@@ -410,6 +416,8 @@ export function canSettle(state: TimerState, settings: Settings): boolean {
 
 /** Longest daily intention, so it fits on one line at the top of the timer. */
 export const MAX_INTENTION_LENGTH = 60;
+/** Longest "where did you leave off?" note, so it fits on one line. */
+export const MAX_LEFT_OFF_LENGTH = 80;
 export const MAX_STEP_LENGTH = 80;
 
 /** Whether Start asks for the first tiny step: a focus session that hasn't begun yet. */
@@ -455,6 +463,14 @@ export function skipSettle(state: TimerState, now: number): TimerState {
 export function breathAt(state: TimerState, now: number): 'in' | 'out' {
   const elapsed = now - (state.settleUntil ?? now) + SETTLE_MS;
   return ((elapsed % BREATH_MS) + BREATH_MS) % BREATH_MS < BREATH_IN_MS ? 'in' : 'out';
+}
+
+/** Whole seconds left in the current breath in or out, for the small countdown beside it. */
+export function breathSecondsLeft(state: TimerState, now: number): number {
+  const elapsed = now - (state.settleUntil ?? now) + SETTLE_MS;
+  const into = ((elapsed % BREATH_MS) + BREATH_MS) % BREATH_MS;
+  const end = into < BREATH_IN_MS ? BREATH_IN_MS : BREATH_MS;
+  return Math.max(1, Math.ceil((end - into) / 1000));
 }
 
 /**
@@ -738,6 +754,8 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
     firstStep: input.firstStep ?? d.firstStep,
+    whereWasI: input.whereWasI ?? d.whereWasI,
+    timeCheck: input.timeCheck ?? d.timeCheck,
     energyCheck: input.energyCheck ?? d.energyCheck,
     weeklyLookBack: input.weeklyLookBack ?? d.weeklyLookBack,
     driftTally: input.driftTally ?? d.driftTally,
@@ -754,4 +772,42 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     reduceMotion: input.reduceMotion ?? d.reduceMotion,
     shortcuts: input.shortcuts ?? d.shortcuts,
   };
+}
+
+/** The time check speaks up on the hour from 8 am through 9 pm, never overnight. */
+export const TIME_CHECK_FIRST_HOUR = 8;
+export const TIME_CHECK_LAST_HOUR = 21;
+/** A check that fires later than this (the computer slept) stays quiet. */
+const TIME_CHECK_LATE_MS = 2 * 60_000;
+
+/** The next top of the hour after `now`. */
+export function nextHour(now: number): number {
+  const d = new Date(now);
+  d.setMinutes(0, 0, 0);
+  d.setHours(d.getHours() + 1);
+  return d.getTime();
+}
+
+/**
+ * The hour a time check is due for, or null: it must be on, in waking hours,
+ * and fresh, so a late wake-up doesn't announce an hour that's long gone.
+ */
+export function timeCheckDue(settings: Settings, now: number): number | null {
+  if (!settings.timeCheck) return null;
+  const hour = new Date(now);
+  hour.setMinutes(0, 0, 0);
+  const h = hour.getHours();
+  if (now - hour.getTime() > TIME_CHECK_LATE_MS) return null;
+  return h >= TIME_CHECK_FIRST_HOUR && h <= TIME_CHECK_LAST_HOUR ? hour.getTime() : null;
+}
+
+/** What the time check says: the hour, and how the timer stands if it's running. */
+export function timeCheckText(state: TimerState, hour: number): { title: string; body: string } {
+  const h = new Date(hour).getHours();
+  const title = `It's ${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+  if (state.status !== 'running' || state.endTime === null) {
+    return { title, body: 'A quick time check.' };
+  }
+  const left = Math.max(1, Math.ceil((state.endTime - hour) / 60_000));
+  return { title, body: `${PHASE_LABELS[state.phase]} has ${left} min left.` };
 }

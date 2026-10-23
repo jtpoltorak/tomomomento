@@ -45,13 +45,14 @@ import {
   WIN_WINDOW_MS,
   type Phase,
 } from '../../../shared/timer';
+import { BreathCircle } from '../breath-circle/breath-circle';
 import { VisualTimer } from '../visual-timer/visual-timer';
 import { PomodoroStore } from '../pomodoro-store';
 
 @Component({
   selector: 'app-timer-view',
   host: { '[class.minimal]': 'minimal()' },
-  imports: [VisualTimer],
+  imports: [VisualTimer, BreathCircle],
   templateUrl: './timer-view.html',
   styleUrl: './timer-view.css',
 })
@@ -373,6 +374,10 @@ export class TimerView {
     if (!this.breath()) return null;
     return breathSecondsLeft(this.store.state(), Math.max(this.store.tick(), Date.now()));
   });
+  /** The breathing circle takes the clock's place while settling in, when it's turned on. */
+  protected readonly breathCircle = computed(
+    () => this.breath() !== null && this.store.settings().breathCircle,
+  );
   /** Starts the bar's breathing animation partway through when the popup opens mid-breath. */
   protected readonly breathDelay = computed(() => {
     const until = this.store.state().settleUntil ?? 0;

@@ -57,7 +57,11 @@
 
 <section class="dial" [class.heads-up]="headsUp()" [class.win]="win()">
   <!-- One element per character: a changed digit gets a new key, so animated digits can roll it in. -->
-  @if (visualTimer()) {
+  @if (breathCircle()) {
+    <div class="clock breathing" role="timer" [attr.aria-label]="timeLeftText()">
+      <app-breath-circle [delay]="breathDelay()" />
+    </div>
+  } @else if (visualTimer()) {
     <div class="clock visual" role="timer" [attr.aria-label]="timeLeftText()">
       <app-visual-timer [left]="1 - store.progress()" />
     </div>
@@ -96,7 +100,7 @@
   >
     <div
       class="bar-fill"
-      [class.settling]="breath()"
+      [class.settling]="breath() && !breathCircle()"
       [style.animation-delay.ms]="breath() ? breathDelay() : null"
       [style.transform]="'scaleX(' + (1 - store.progress()) + ')'"
     ></div>

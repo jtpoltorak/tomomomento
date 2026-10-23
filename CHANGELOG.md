@@ -11,6 +11,9 @@ these first.
 - **Live toolbar icon (optional):** while the timer runs, the toolbar icon
   becomes a ring that empties as time passes. Turn it on under Appearance in
   Settings.
+- **Breathing circle (optional):** while settling in, a soft circle grows and
+  shrinks with each breath in place of the clock. Turn it on under Settle in
+  in Settings.
 
 ## 1.11.0 (2026-10-23)
 

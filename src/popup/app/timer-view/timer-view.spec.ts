@@ -415,6 +415,16 @@ describe('TimerView', () => {
       );
     });
 
+    it('shows the breathing circle in place of the clock, when turned on', async () => {
+      const { el, fixture, store } = await breathing(1);
+      expect(el.querySelector('app-breath-circle')).toBeNull();
+      store.settings.update((s) => ({ ...s, breathCircle: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.clock.breathing app-breath-circle')).toBeTruthy();
+      expect(el.querySelector('.digit')).toBeNull();
+      expect(el.querySelector('.bar-fill')?.classList).not.toContain('settling');
+    });
+
     it('breathes out after 4 seconds', async () => {
       const { el } = await breathing(5);
       expect(el.querySelector('.status')?.textContent).toBe('Breathe out…');

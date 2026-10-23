@@ -155,6 +155,7 @@ export class SettingsView {
     lavaLamp: [false],
     pauseNudge: [false],
     settleIn: [false],
+    breathCircle: [false],
     awayCheck: [false],
     rightClick: [false],
     takeCare: [false],

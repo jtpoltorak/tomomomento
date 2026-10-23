@@ -68,6 +68,8 @@ export interface Settings {
   pauseNudge: boolean;
   /** Thirty seconds of slow breathing before a focus session's clock starts. */
   settleIn: boolean;
+  /** While settling in, a circle that grows and shrinks with each breath shows in place of the clock. */
+  breathCircle: boolean;
   /** Pause focus when the computer sits untouched, and ask on return (extension only). */
   awayCheck: boolean;
   /** Right-click selected text to park it, or a page to block its site (extension only). */
@@ -185,6 +187,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lavaLamp: false,
   pauseNudge: false,
   settleIn: false,
+  breathCircle: false,
   awayCheck: false,
   rightClick: false,
   takeCare: false,
@@ -753,6 +756,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     lavaLamp: input.lavaLamp ?? d.lavaLamp,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     settleIn: input.settleIn ?? d.settleIn,
+    breathCircle: input.breathCircle ?? d.breathCircle,
     awayCheck: input.awayCheck ?? d.awayCheck,
     rightClick: input.rightClick ?? d.rightClick,
     takeCare: input.takeCare ?? d.takeCare,

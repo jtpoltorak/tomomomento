@@ -157,6 +157,18 @@
       Pressing Start begins with 30 seconds of slow breathing, so you arrive before the clock
       starts. "Start now" skips it.
     </p>
+    @if (form.controls.settleIn.value) {
+      <div class="sub-options">
+        <label class="switch-row">
+          <span>Breathing circle</span>
+          <input type="checkbox" role="switch" formControlName="breathCircle" />
+        </label>
+        <p class="note">
+          A soft circle grows as you breathe in and shrinks as you breathe out, in place of the
+          clock.
+        </p>
+      </div>
+    }
     <label class="switch-row">
       <span>Ask for the first tiny step</span>
       <input type="checkbox" role="switch" formControlName="firstStep" />

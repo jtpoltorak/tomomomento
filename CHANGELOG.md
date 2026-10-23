@@ -6,6 +6,11 @@ these first.
 
 ## Unreleased
 
+### New
+
+- **Settings search:** a search box at the top of Settings shows only the
+  settings that mention what you type.
+
 ### Improved
 
 - **Settle in:** a small countdown beside "Breathe in…" and "Breathe out…"

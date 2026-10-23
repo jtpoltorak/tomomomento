@@ -89,7 +89,7 @@ describe('HelpView', () => {
     expect(el.textContent).toContain("tab's title shows the time left");
   });
 
-  it('explains Settle in, First tiny step, Step away, Small wins, Energy check-in, Distraction tally, Weekly look-back, Take-care reminders, Just start, Rhythm presets, Heads-up, Paused reminder, Calm clock, Visual timer, Ends at, Keyboard shortcuts, Animated digits, Lava lamp, Minimal timer, Accessibility, Focus sound, Keep going, Stats, Daily intention, Plan my day, the parking lot, day wrap-up, right-click shortcuts, break ideas and backups in the basics', () => {
+  it('explains Settle in, First tiny step, Step away, Small wins, Energy check-in, Distraction tally, Weekly look-back, Take-care reminders, Just start, Rhythm presets, Heads-up, Paused reminder, Calm clock, Visual timer, Ends at, Keyboard shortcuts, Animated digits, Lava lamp, Minimal timer, Accessibility, Focus sound, Keep going, Stats, Daily intention, Plan my day, the parking lot, day wrap-up, right-click shortcuts, break ideas, settings search and backups in the basics', () => {
     const el = setup();
     const headings = Array.from(el.querySelectorAll('h3')).map((h) => h.textContent?.trim());
     expect(headings).toEqual([
@@ -122,6 +122,7 @@ describe('HelpView', () => {
       'Day wrap-up',
       'Right-click shortcuts',
       'Break ideas',
+      'Finding a setting',
       'Back up and restore',
     ]);
     expect(el.querySelectorAll('.plan-steps li').length).toBe(3);

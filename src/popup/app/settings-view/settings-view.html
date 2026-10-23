@@ -1,3 +1,17 @@
+<div class="search" role="search">
+  <label for="settings-search" class="visually-hidden">Search settings</label>
+  <input
+    #searchBox
+    type="search"
+    id="settings-search"
+    placeholder="Search settings"
+    autocomplete="off"
+    [value]="query()"
+    (input)="search(searchBox.value)"
+    (keydown.escape)="search('')"
+  />
+  <p class="note search-result" role="status">{{ matchText() }}</p>
+</div>
 <form [formGroup]="form" (submit)="$event.preventDefault()">
   <section>
     <h2>Timers <span class="unit">minutes</span></h2>

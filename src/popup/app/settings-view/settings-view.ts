@@ -35,6 +35,7 @@ import {
   type ThemeId,
 } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
+import { filterSettings } from './settings-search';
 import { PLATFORM } from '../timer-host';
 
 @Component({
@@ -71,6 +72,22 @@ export class SettingsView {
   private savedTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
+
+  // Search: hides what doesn't match, so a long list of options stays easy to find your way in.
+  protected readonly query = signal('');
+  protected readonly matchText = signal('');
+
+  protected search(query: string): void {
+    this.query.set(query);
+    const shown = filterSettings(this.host.nativeElement, query);
+    this.matchText.set(
+      !query.trim()
+        ? ''
+        : shown === 0
+          ? 'No settings match. Try another word.'
+          : `${shown} ${shown === 1 ? 'setting matches' : 'settings match'}`,
+    );
+  }
 
   // Back up and restore.
   protected readonly dataMessage = signal('');

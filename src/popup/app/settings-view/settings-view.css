@@ -1,6 +1,31 @@
 :host {
   display: block;
 }
+/* Search hides settings with the hidden attribute, which must win over their own display. */
+[hidden] {
+  display: none !important;
+}
+
+.search {
+  margin-bottom: 1.125rem;
+}
+.search input {
+  width: 100%;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--control);
+  border-radius: 0.75rem;
+  background: var(--bg);
+  color: inherit;
+  font: inherit;
+  font-size: 1.25rem;
+}
+.search input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.search-result:empty {
+  margin: 0;
+}
 
 section {
   padding-bottom: 1.125rem;

@@ -62,6 +62,50 @@ describe('SettingsView', () => {
     expect(store.settings().soundEnabled).toBe(true);
   });
 
+  describe('search', () => {
+    function type(el: HTMLElement, text: string) {
+      const box = el.querySelector<HTMLInputElement>('#settings-search')!;
+      box.value = text;
+      box.dispatchEvent(new Event('input'));
+    }
+    const visible = (el: HTMLElement, selector: string) =>
+      Array.from(el.querySelectorAll<HTMLElement>(selector)).filter((e) => !e.closest('[hidden]'));
+
+    it('shows only the settings that mention every word', async () => {
+      const { el, fixture } = await setup();
+      type(el, 'calm  CLOCK');
+      fixture.detectChanges();
+      const rows = visible(el, '.switch-row').map((r) => r.textContent?.trim());
+      expect(rows).toEqual(['Calm clock']);
+      expect(visible(el, 'section h2').map((h) => h.textContent?.trim())).toEqual(['Appearance']);
+      expect(el.querySelector('.search-result')?.textContent).toBe('1 setting matches');
+    });
+
+    it('shows a whole section when its heading matches, and everything once cleared', async () => {
+      const { el, fixture } = await setup();
+      const all = el.querySelectorAll('.switch-row').length;
+      type(el, 'planning');
+      fixture.detectChanges();
+      expect(visible(el, '.switch-row').map((r) => r.textContent?.trim())).toEqual([
+        'Plan my day',
+        'Daily intention',
+        'Parking lot',
+      ]);
+      type(el, 'zebra');
+      fixture.detectChanges();
+      expect(visible(el, '.switch-row').length).toBe(0);
+      expect(el.querySelector('.search-result')?.textContent).toBe(
+        'No settings match. Try another word.',
+      );
+      el.querySelector('#settings-search')!.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape' }),
+      );
+      fixture.detectChanges();
+      expect(visible(el, '.switch-row').length).toBe(all);
+      expect(el.querySelector('.search-result')?.textContent).toBe('');
+    });
+  });
+
   describe('site blocker', () => {
     const blockerSwitch = (el: HTMLElement) =>
       el.querySelector<HTMLInputElement>('input[role=switch]:not([formcontrolname])')!;
@@ -192,7 +236,7 @@ describe('SettingsView', () => {
       button(el, 'Back up').click();
       fixture.detectChanges();
       expect(clicked[0]?.download).toMatch(/^tomomomento-backup-\d{4}-\d{2}-\d{2}\.json$/);
-      expect(el.querySelector('[role=status]')?.textContent).toContain(
+      expect(el.querySelector('section [role=status]')?.textContent).toContain(
         'Backed up to tomomomento-backup-',
       );
       spy.mockRestore();
@@ -221,7 +265,7 @@ describe('SettingsView', () => {
       expect(store.history()['2026-10-01'].pomodoros).toBe(6);
       expect(store.parkingLot().thoughts[0].text).toBe('Buy milk');
       expect((el.querySelector('#workMinutes') as HTMLInputElement).value).toBe('45');
-      expect(el.querySelector('[role=status]')?.textContent).toContain('Restored');
+      expect(el.querySelector('section [role=status]')?.textContent).toContain('Restored');
     });
 
     it('explains a file that is not a backup', async () => {

@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import {
   bestDaypart,
+  driftWeeks,
   energyByDaypart,
   energyWord,
   formatMinutes,
@@ -77,6 +78,24 @@ export class StatsView {
     return best ? `${best.label}s tend to go best for you.` : null;
   });
   protected readonly energyWord = energyWord;
+
+  /** The distraction tally, this week against last. */
+  protected readonly driftOn = computed(() => this.store.settings().driftTally);
+  protected readonly drifts = computed(() => {
+    const { thisWeek, lastWeek } = driftWeeks(this.store.history(), this.now());
+    const line = (w: { drifts: number; pomodoros: number }) =>
+      `${w.drifts === 1 ? '1 drift' : `${w.drifts} drifts`} in ${this.pomodoros(w.pomodoros)}`;
+    const rate = (w: { drifts: number; pomodoros: number }) => w.drifts / w.pomodoros;
+    const fewer =
+      thisWeek.pomodoros > 0 && lastWeek.pomodoros > 0 && rate(thisWeek) < rate(lastWeek);
+    return {
+      thisWeek: line(thisWeek),
+      lastWeek: line(lastWeek),
+      note: fewer
+        ? 'Fewer drifts per pomodoro than last week.'
+        : 'Noticing is the skill. Every tap counts.',
+    };
+  });
 
   protected checkIns(n: number): string {
     return n === 1 ? '1 check-in' : `${n} check-ins`;

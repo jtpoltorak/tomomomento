@@ -16,6 +16,8 @@ export type Command =
   | { command: 'wasWorking' }
   /** The energy check-in for the focus session that just ended. */
   | { command: 'rateEnergy'; level: Energy }
+  /** "I drifted": note a wandering moment during focus, for Stats. */
+  | { command: 'drifted' }
   | { command: 'pause' }
   | { command: 'reset' }
   | { command: 'skip' }

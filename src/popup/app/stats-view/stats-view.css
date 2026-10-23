@@ -207,3 +207,6 @@ h2 {
 .energy .checkins {
   text-align: right;
 }
+#stats-drifts + .energy li {
+  grid-template-columns: 1fr auto;
+}

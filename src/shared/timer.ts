@@ -76,6 +76,8 @@ export interface Settings {
   energyCheck: boolean;
   /** The first time you open the timer each week, a short card about last week. */
   weeklyLookBack: boolean;
+  /** An "I drifted" link during focus, counted in Stats. */
+  driftTally: boolean;
   /** One-tap timer setups (Classic, Short, Deep) on the timer screen before you start. */
   rhythmPresets: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
@@ -92,7 +94,7 @@ export interface Settings {
   easyFont: boolean;
   /** No animations, even when the device doesn't ask for reduced motion. */
   reduceMotion: boolean;
-  /** Single-key shortcuts on the timer screen: S skip, R restart, P park a thought. */
+  /** Single-key shortcuts on the timer screen: S skip, R restart, P park a thought, D drifted. */
   shortcuts: boolean;
 }
 
@@ -177,6 +179,7 @@ export const DEFAULT_SETTINGS: Settings = {
   firstStep: false,
   energyCheck: false,
   weeklyLookBack: false,
+  driftTally: false,
   rhythmPresets: false,
   focusSound: 'off',
   focusVolume: 0.4,
@@ -727,6 +730,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     firstStep: input.firstStep ?? d.firstStep,
     energyCheck: input.energyCheck ?? d.energyCheck,
     weeklyLookBack: input.weeklyLookBack ?? d.weeklyLookBack,
+    driftTally: input.driftTally ?? d.driftTally,
     rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,

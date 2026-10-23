@@ -631,6 +631,29 @@ describe('TimerView', () => {
     });
   });
 
+  describe('distraction tally', () => {
+    it('offers "I drifted" while focusing, and notes the tap', async () => {
+      const { el, fixture, store, button } = await setup({
+        status: 'running',
+        endTime: Date.now() + 600_000,
+      });
+      expect(el.querySelector('.drift-slot')).toBeNull();
+      store.settings.update((s) => ({ ...s, driftTally: true, shortcuts: true }));
+      await fixture.whenStable();
+      button('I drifted').click();
+      await fixture.whenStable();
+      expect(store.sent).toEqual([{ command: 'drifted' }]);
+      expect(el.querySelector('.drift-slot')?.textContent?.trim()).toBe('✓ Noted');
+
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }));
+      expect(store.sent).toEqual([{ command: 'drifted' }, { command: 'drifted' }]);
+
+      store.state.update((s) => ({ ...s, phase: 'shortBreak' }));
+      await fixture.whenStable();
+      expect(el.querySelector('.drift-slot')).toBeNull();
+    });
+  });
+
   describe('ends at', () => {
     it('shows the time the running phase ends, when turned on', async () => {
       const end = new Date();

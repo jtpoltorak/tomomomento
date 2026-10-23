@@ -126,6 +126,23 @@ export class TimerView {
       !this.parkedCard()
     );
   });
+  /** "I drifted": a quiet tap during focus when attention wanders, counted in Stats. */
+  protected readonly driftOffer = computed(() => {
+    const { phase, status } = this.store.state();
+    return (
+      this.store.settings().driftTally && phase === 'work' && status === 'running' && !this.breath()
+    );
+  });
+  protected readonly justDrifted = signal(false);
+  private driftTimer: ReturnType<typeof setTimeout> | undefined;
+
+  protected drifted(): void {
+    void this.store.send({ command: 'drifted' });
+    this.justDrifted.set(true);
+    clearTimeout(this.driftTimer);
+    this.driftTimer = setTimeout(() => this.justDrifted.set(false), 2000);
+  }
+
   /** Once a week: last week at a glance, until it's acknowledged. Other cards come first. */
   private readonly lookedBack = signal(readLookedBack());
   protected readonly lookBack = computed(() => {
@@ -437,6 +454,7 @@ export class TimerView {
       clearInterval(id);
       clearTimeout(this.parkedTimer);
       clearTimeout(this.winTimer);
+      clearTimeout(this.driftTimer);
     });
     // A focus session just finished (or did while the popup was closed): celebrate it once.
     const finished = computed(() => this.store.state().lastFocusEnd);
@@ -639,7 +657,9 @@ export class TimerView {
     event.preventDefault();
     if (action === 'skip') this.skip();
     else if (action === 'reset') this.reset();
-    else if (this.quickPark() && !this.parkOpen()) this.openPark();
+    else if (action === 'drift') {
+      if (this.driftOffer()) this.drifted();
+    } else if (this.quickPark() && !this.parkOpen()) this.openPark();
   }
 
   @HostListener('document:keydown.space', ['$event'])
@@ -652,7 +672,12 @@ export class TimerView {
 }
 
 /** Keyboard shortcuts on the timer screen, when they're turned on. */
-const SHORTCUTS: Record<string, 'skip' | 'reset' | 'park'> = { s: 'skip', r: 'reset', p: 'park' };
+const SHORTCUTS: Record<string, 'skip' | 'reset' | 'park' | 'drift'> = {
+  s: 'skip',
+  r: 'reset',
+  p: 'park',
+  d: 'drift',
+};
 
 /** How long the small-wins line stays before the usual status comes back. */
 const WIN_SHOWN_MS = 5_000;

@@ -9,11 +9,14 @@ these first.
 ### New
 
 - **Keyboard shortcuts (optional):** on the timer, <kbd>S</kbd> skips,
-  <kbd>R</kbd> restarts and <kbd>P</kbd> parks a thought. Turn on
+  <kbd>R</kbd> restarts, <kbd>P</kbd> parks a thought and <kbd>D</kbd> notes a drift. Turn on
   **Keyboard shortcuts** under Accessibility in Settings.
 - **Weekly look-back (optional):** the first time you open the timer each
   week, a short card shows last week's pomodoros, focus time and best day.
   Turn it on under Focus helpers in Settings.
+- **Distraction tally (optional):** during focus, tap **I drifted** when your
+  attention wanders. Stats compares this week's drifts with last week's.
+  Turn on **Distraction tally** under Focus helpers in Settings.
 
 ## 1.9.0 (2026-10-22)
 

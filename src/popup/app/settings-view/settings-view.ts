@@ -118,6 +118,7 @@ export class SettingsView {
     firstStep: [false],
     energyCheck: [false],
     weeklyLookBack: [false],
+    driftTally: [false],
     rhythmPresets: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],

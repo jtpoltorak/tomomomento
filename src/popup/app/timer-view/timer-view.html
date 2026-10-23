@@ -90,6 +90,15 @@
     @if (breath()) {
       <button type="button" class="link just-start" (click)="skipSettle()">Start now</button>
     }
+    @if (driftOffer()) {
+      <span class="drift-slot" aria-live="polite">
+        @if (justDrifted()) {
+          <span class="parked-note">✓ Noted</span>
+        } @else {
+          <button type="button" class="link just-start" (click)="drifted()">I drifted</button>
+        }
+      </span>
+    }
     @if (awayOffer()) {
       <button type="button" class="link just-start" (click)="wasWorking()">I was working</button>
     }

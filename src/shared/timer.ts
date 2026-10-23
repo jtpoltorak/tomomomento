@@ -457,6 +457,14 @@ export function breathAt(state: TimerState, now: number): 'in' | 'out' {
   return ((elapsed % BREATH_MS) + BREATH_MS) % BREATH_MS < BREATH_IN_MS ? 'in' : 'out';
 }
 
+/** Whole seconds left in the current breath in or out, for the small countdown beside it. */
+export function breathSecondsLeft(state: TimerState, now: number): number {
+  const elapsed = now - (state.settleUntil ?? now) + SETTLE_MS;
+  const into = ((elapsed % BREATH_MS) + BREATH_MS) % BREATH_MS;
+  const end = into < BREATH_IN_MS ? BREATH_IN_MS : BREATH_MS;
+  return Math.max(1, Math.ceil((end - into) / 1000));
+}
+
 /**
  * You stepped away during focus: pauses as of when you left, so the time away
  * doesn't run down the clock. Breaks carry on, since stepping away is the point.

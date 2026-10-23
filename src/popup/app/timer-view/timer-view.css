@@ -169,6 +169,16 @@
 }
 .status.settle {
   min-width: 8.5rem;
+  text-align: end; /* sits snug against the countdown */
+}
+/* The seconds left in this breath, quiet beside the words. */
+.breath-count {
+  display: inline-block;
+  min-width: 1ch;
+  font-size: 1.3125rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--fg);
 }
 /* "Ready to focus" with the "just start" link beside it. */
 .just-start.link {

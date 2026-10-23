@@ -5,6 +5,7 @@ import {
   applyRhythm,
   rhythmOf,
   breathAt,
+  breathSecondsLeft,
   canSettle,
   careNudge,
   calmMinutes,
@@ -203,6 +204,15 @@ describe('timer state machine', () => {
       expect(breathAt(st, T0 + 4_000)).toBe('out');
       expect(breathAt(st, T0 + 9_900)).toBe('out');
       expect(breathAt(st, T0 + 10_000)).toBe('in');
+    });
+
+    it('counts down the seconds left in each breath', () => {
+      const st = settleStart(initialState(on, T0), on, T0);
+      expect(breathSecondsLeft(st, T0)).toBe(4);
+      expect(breathSecondsLeft(st, T0 + 3_100)).toBe(1);
+      expect(breathSecondsLeft(st, T0 + 4_000)).toBe(6);
+      expect(breathSecondsLeft(st, T0 + 9_500)).toBe(1);
+      expect(breathSecondsLeft(st, T0 + 10_000)).toBe(4);
     });
 
     it('starts the clock right away on "Start now"', () => {

@@ -19,6 +19,7 @@ import { pickQuote, type Quote } from '../../../shared/quotes';
 import { ENERGY_LABELS, formatMinutes, weekLookBack, type Energy } from '../../../shared/stats';
 import {
   breathAt,
+  breathSecondsLeft,
   canAskFirstStep,
   canJustStart,
   MAX_STEP_LENGTH,
@@ -312,6 +313,11 @@ export class TimerView {
     const state = this.store.state();
     const now = Math.max(this.store.tick(), Date.now());
     return settling(state, now) ? breathAt(state, now) : null;
+  });
+  /** Seconds left in this breath, counting down beside the words. */
+  protected readonly breathCount = computed(() => {
+    if (!this.breath()) return null;
+    return breathSecondsLeft(this.store.state(), Math.max(this.store.tick(), Date.now()));
   });
   /** Starts the bar's breathing animation partway through when the popup opens mid-breath. */
   protected readonly breathDelay = computed(() => {

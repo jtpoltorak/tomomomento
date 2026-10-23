@@ -104,6 +104,9 @@
   <div class="status-row">
     <!-- While settling in, the words change with every breath, so screen readers get one steady line instead. -->
     <div class="status" [class.settle]="breath()" [attr.aria-live]="live()">{{ status() }}</div>
+    @if (breathCount(); as n) {
+      <span class="breath-count" aria-hidden="true">{{ n }}</span>
+    }
     <span class="visually-hidden" aria-live="polite">{{ settleAnnouncement() }}</span>
     @if (breath()) {
       <button type="button" class="link just-start" (click)="skipSettle()">Start now</button>

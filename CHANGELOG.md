@@ -4,6 +4,13 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### Improved
+
+- **Settle in:** a small countdown beside "Breathe in…" and "Breathe out…"
+  shows the seconds left in each breath.
+
 ## 1.10.0 (2026-10-23)
 
 ### New

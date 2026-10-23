@@ -404,6 +404,8 @@ describe('TimerView', () => {
     it('guides the breath while the clock waits', async () => {
       const { el } = await breathing(1);
       expect(el.querySelector('.status')?.textContent).toBe('Breathe in…');
+      expect(el.querySelector('.breath-count')?.textContent).toBe('3');
+      expect(el.querySelector('.breath-count')?.getAttribute('aria-hidden')).toBe('true');
       expect(el.querySelector('.clock')?.textContent).toBe('25:00');
       expect(el.querySelector('.bar-fill')?.classList).toContain('settling');
       // One steady line for screen readers, not a new one with every breath.
@@ -416,6 +418,7 @@ describe('TimerView', () => {
     it('breathes out after 4 seconds', async () => {
       const { el } = await breathing(5);
       expect(el.querySelector('.status')?.textContent).toBe('Breathe out…');
+      expect(el.querySelector('.breath-count')?.textContent).toBe('5');
     });
 
     it('can start the clock right away', async () => {

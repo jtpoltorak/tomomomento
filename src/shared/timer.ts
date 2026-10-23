@@ -54,6 +54,10 @@ export interface Settings {
   calmClock: boolean;
   /** A shrinking disc in place of the digits, so time left reads at a glance. */
   visualTimer: boolean;
+  /** The toolbar icon becomes a ring that empties as the timer runs (extension only). */
+  liveIcon: boolean;
+  /** A button that fills the whole window with the clock, for reading across the room. */
+  bigTimer: boolean;
   /** While the timer runs, show the time of day it ends ("Ends at 2:45 PM"). */
   showEndsAt: boolean;
   /** Each digit of the clock rolls in gently as it changes. */
@@ -66,6 +70,8 @@ export interface Settings {
   pauseNudge: boolean;
   /** Thirty seconds of slow breathing before a focus session's clock starts. */
   settleIn: boolean;
+  /** While settling in, a circle that grows and shrinks with each breath shows in place of the clock. */
+  breathCircle: boolean;
   /** Pause focus when the computer sits untouched, and ask on return (extension only). */
   awayCheck: boolean;
   /** Right-click selected text to park it, or a page to block its site (extension only). */
@@ -74,6 +80,8 @@ export interface Settings {
   takeCare: boolean;
   /** A quick, quiet celebration when a focus session finishes. */
   smallWins: boolean;
+  /** Stats grows a plant for each pomodoro this week, Monday to Sunday. */
+  focusGarden: boolean;
   /** Pressing Start on a fresh focus session asks for the first tiny step first. */
   firstStep: boolean;
   /** When you pause focus or it ends, jot where you left off; it shows when you come back. */
@@ -176,16 +184,20 @@ export const DEFAULT_SETTINGS: Settings = {
   calmClock: false,
   dailyIntention: false,
   visualTimer: false,
+  liveIcon: false,
+  bigTimer: false,
   showEndsAt: false,
   animateDigits: false,
   minimalMode: false,
   lavaLamp: false,
   pauseNudge: false,
   settleIn: false,
+  breathCircle: false,
   awayCheck: false,
   rightClick: false,
   takeCare: false,
   smallWins: false,
+  focusGarden: false,
   firstStep: false,
   whereWasI: false,
   timeCheck: false,
@@ -743,16 +755,20 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     calmClock: input.calmClock ?? d.calmClock,
     dailyIntention: input.dailyIntention ?? d.dailyIntention,
     visualTimer: input.visualTimer ?? d.visualTimer,
+    liveIcon: input.liveIcon ?? d.liveIcon,
+    bigTimer: input.bigTimer ?? d.bigTimer,
     showEndsAt: input.showEndsAt ?? d.showEndsAt,
     animateDigits: input.animateDigits ?? d.animateDigits,
     minimalMode: input.minimalMode ?? d.minimalMode,
     lavaLamp: input.lavaLamp ?? d.lavaLamp,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     settleIn: input.settleIn ?? d.settleIn,
+    breathCircle: input.breathCircle ?? d.breathCircle,
     awayCheck: input.awayCheck ?? d.awayCheck,
     rightClick: input.rightClick ?? d.rightClick,
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
+    focusGarden: input.focusGarden ?? d.focusGarden,
     firstStep: input.firstStep ?? d.firstStep,
     whereWasI: input.whereWasI ?? d.whereWasI,
     timeCheck: input.timeCheck ?? d.timeCheck,

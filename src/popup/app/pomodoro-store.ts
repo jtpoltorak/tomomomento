@@ -226,6 +226,10 @@ export class PomodoroStore {
     return this.host.openSettingsTab();
   }
 
+  openBigTimer(): Promise<boolean> {
+    return this.host.openBigTimer();
+  }
+
   /** Must be called straight from a click, since Chrome only prompts on a user gesture. */
   async requestBlockerAccess(): Promise<boolean> {
     const granted = await this.host.requestBlockerAccess();

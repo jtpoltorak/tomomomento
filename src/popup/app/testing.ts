@@ -132,6 +132,10 @@ export function createFakeStore(overrides: Partial<TimerState> = {}, history: Hi
     async openSettingsTab() {
       fake.openedTab++;
     },
+    async openBigTimer() {
+      if (fake.inPopup) fake.openedTab++;
+      return fake.inPopup;
+    },
     async skipPlanToday() {
       fake.plan.set({ ...fake.plan(), skippedOn: state().todayKey });
     },

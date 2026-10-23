@@ -4,6 +4,23 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Live toolbar icon (optional):** while the timer runs, the toolbar icon
+  becomes a ring that empties as time passes. Turn it on under Appearance in
+  Settings.
+- **Breathing circle (optional):** while settling in, a soft circle grows and
+  shrinks with each breath in place of the clock. Turn it on under Settle in
+  in Settings.
+- **Focus garden (optional):** Stats grows a little plant for each pomodoro
+  you finish this week, with a fresh garden every Monday. Turn it on under
+  Focus helpers in Settings.
+- **Big timer view (optional):** a button that fills the whole window with the
+  clock, the phase color sinking as time passes, for reading across the room.
+  Turn it on under Appearance in Settings.
+
 ## 1.11.0 (2026-10-23)
 
 ### New

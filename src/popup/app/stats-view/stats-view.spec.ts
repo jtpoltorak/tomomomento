@@ -129,4 +129,21 @@ describe('StatsView', () => {
       'Fewer drifts per pomodoro than last week.',
     );
   });
+
+  it('grows a plant for each pomodoro this week, with the focus garden on', async () => {
+    const { el, fixture, store } = await setup({
+      [daysAgo(0)]: { pomodoros: 8, focusMinutes: 200 },
+    });
+    expect(el.querySelector('#stats-garden')).toBeNull();
+    store.settings.update((s) => ({ ...s, focusGarden: true }));
+    await fixture.whenStable();
+    const today = el.querySelector('.garden li.today')!;
+    expect(today.querySelectorAll('.plant').length).toBe(6);
+    expect(today.querySelector('.more')?.textContent?.trim()).toBe('+2');
+    expect(today.querySelector('.visually-hidden')?.textContent).toContain('8 plants');
+    expect(el.querySelectorAll('.garden li').length).toBe(7);
+    expect(el.querySelector('#stats-garden ~ .note')?.textContent?.trim()).toBe(
+      '8 plants so far this week. A fresh garden every Monday.',
+    );
+  });
 });

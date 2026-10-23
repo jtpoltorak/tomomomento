@@ -3,93 +3,102 @@
   <div class="lava" aria-hidden="true"><span></span><span></span><span></span></div>
 }
 
-<header class="topbar">
-  @if (view() !== 'timer') {
-    <button class="icon-btn ghost" (click)="show('timer')" aria-label="Back to timer" title="Back">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z" />
-      </svg>
-    </button>
-    <h1 tabindex="-1">{{ title() }}</h1>
-  } @else {
-    <img src="icons/icon-32.png" class="logo" alt="" />
-    <h1>Tomomomento</h1>
-    <div class="actions">
-      @if (installPrompt && installPrompt.available()) {
+@if (view() !== 'big') {
+  <header class="topbar">
+    @if (view() !== 'timer') {
+      <button
+        class="icon-btn ghost"
+        (click)="show('timer')"
+        aria-label="Back to timer"
+        title="Back"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z" />
+        </svg>
+      </button>
+      <h1 tabindex="-1">{{ title() }}</h1>
+    } @else {
+      <img src="icons/icon-32.png" class="logo" alt="" />
+      <h1>Tomomomento</h1>
+      <div class="actions">
+        @if (installPrompt && installPrompt.available()) {
+          <button
+            class="icon-btn ghost"
+            (click)="installPrompt.install()"
+            aria-label="Install as an app"
+            title="Install as an app"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 20h14v-2H5zM19 9h-4V3H9v6H5l7 7z" />
+            </svg>
+          </button>
+        }
+        @if (store.settings().parkingLot) {
+          <button
+            class="icon-btn ghost parking-btn"
+            data-view="parking"
+            (click)="show('parking')"
+            [attr.aria-label]="parkingLabel()"
+            [title]="parkingLabel()"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5zM7 11v2h10v-2zm0 4v2h7v-2z"
+              />
+            </svg>
+            @if (store.parkedCount()) {
+              <span class="badge" aria-hidden="true">{{ store.parkedCount() }}</span>
+            }
+          </button>
+        }
         <button
           class="icon-btn ghost"
-          (click)="installPrompt.install()"
-          aria-label="Install as an app"
-          title="Install as an app"
+          data-view="stats"
+          (click)="show('stats')"
+          aria-label="Stats"
+          title="Stats"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 20h14v-2H5zM19 9h-4V3H9v6H5l7 7z" />
+            <path d="M4 20V10h3.5v10zm6.25 0V4h3.5v16zm6.25 0v-7H20v7z" />
           </svg>
         </button>
-      }
-      @if (store.settings().parkingLot) {
         <button
-          class="icon-btn ghost parking-btn"
-          data-view="parking"
-          (click)="show('parking')"
-          [attr.aria-label]="parkingLabel()"
-          [title]="parkingLabel()"
+          class="icon-btn ghost"
+          data-view="help"
+          (click)="show('help')"
+          aria-label="Help"
+          title="Help"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
-              d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5zM7 11v2h10v-2zm0 4v2h7v-2z"
+              d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 17h-2v-2h2zm2.1-7.7-.9.9c-.7.7-1.2 1.3-1.2 2.8h-2v-.5c0-1.1.4-2.1 1.2-2.8l1.2-1.3a2 2 0 1 0-3.4-1.4H8a4 4 0 1 1 8 0c0 .9-.4 1.7-.9 2.3z"
             />
           </svg>
-          @if (store.parkedCount()) {
-            <span class="badge" aria-hidden="true">{{ store.parkedCount() }}</span>
-          }
         </button>
-      }
-      <button
-        class="icon-btn ghost"
-        data-view="stats"
-        (click)="show('stats')"
-        aria-label="Stats"
-        title="Stats"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 20V10h3.5v10zm6.25 0V4h3.5v16zm6.25 0v-7H20v7z" />
-        </svg>
-      </button>
-      <button
-        class="icon-btn ghost"
-        data-view="help"
-        (click)="show('help')"
-        aria-label="Help"
-        title="Help"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 17h-2v-2h2zm2.1-7.7-.9.9c-.7.7-1.2 1.3-1.2 2.8h-2v-.5c0-1.1.4-2.1 1.2-2.8l1.2-1.3a2 2 0 1 0-3.4-1.4H8a4 4 0 1 1 8 0c0 .9-.4 1.7-.9 2.3z"
-          />
-        </svg>
-      </button>
-      <button
-        class="icon-btn ghost"
-        data-view="settings"
-        (click)="show('settings')"
-        aria-label="Settings"
-        title="Settings"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.3 2.9a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.3-2.9a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"
-            transform="translate(-1 0)"
-          />
-        </svg>
-      </button>
-    </div>
-  }
-</header>
+        <button
+          class="icon-btn ghost"
+          data-view="settings"
+          (click)="show('settings')"
+          aria-label="Settings"
+          title="Settings"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.3 2.9a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.3-2.9a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"
+              transform="translate(-1 0)"
+            />
+          </svg>
+        </button>
+      </div>
+    }
+  </header>
+}
 
 <main>
   @if (store.loaded()) {
-    @if (view() === 'settings') {
+    @if (view() === 'big') {
+      <app-big-timer (closed)="closeBig()" />
+    } @else if (view() === 'settings') {
       <app-settings-view />
     } @else if (view() === 'help') {
       <app-help-view />
@@ -107,6 +116,7 @@
         (openPlan)="show('plan')"
         (openParking)="show('parking')"
         (openWrapUp)="show('wrapup')"
+        (openBig)="openBig()"
       />
     }
   }

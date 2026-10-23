@@ -104,4 +104,11 @@ export class ChromeTimerHost implements TimerHost {
   async openSettingsTab(): Promise<void> {
     await chrome.runtime.openOptionsPage();
   }
+
+  async openBigTimer(): Promise<boolean> {
+    if ((await chrome.tabs.getCurrent()) !== undefined) return false;
+    await chrome.tabs.create({ url: chrome.runtime.getURL('index.html#big') });
+    window.close();
+    return true;
+  }
 }

@@ -344,3 +344,33 @@ export function formatMinutes(minutes: number): string {
   if (h === 0) return `${m}m`;
   return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
+
+/** The focus garden: one plant per pomodoro, picked in turn so a day looks varied. */
+export const GARDEN_PLANTS = ['🌱', '🌷', '🌿', '🌼', '🍀', '🌻'] as const;
+/** Plants drawn per day; past that, the day shows "+N". */
+export const GARDEN_MAX_PLANTS = 6;
+
+export interface GardenDay {
+  day: Day;
+  plants: string[];
+  /** Pomodoros past the drawn plants. */
+  more: number;
+}
+
+/** This week, Monday to Sunday, with a plant for each pomodoro. Days after today are null. */
+export function weekGarden(history: History, now: number): (GardenDay | null)[] {
+  const today = startOfDay(now);
+  const monday = addDays(today, -((today.getDay() + 6) % 7));
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(monday, i);
+    if (date > today) return null;
+    const day = dayAt(history, date);
+    const shown = Math.min(day.pomodoros, GARDEN_MAX_PLANTS);
+    // Start each weekday on a different plant, so the rows don't all match.
+    const plants = Array.from(
+      { length: shown },
+      (_, p) => GARDEN_PLANTS[(i + p) % GARDEN_PLANTS.length],
+    );
+    return { day, plants, more: day.pomodoros - shown };
+  });
+}

@@ -157,6 +157,18 @@
       Pressing Start begins with 30 seconds of slow breathing, so you arrive before the clock
       starts. "Start now" skips it.
     </p>
+    @if (form.controls.settleIn.value) {
+      <div class="sub-options">
+        <label class="switch-row">
+          <span>Breathing circle</span>
+          <input type="checkbox" role="switch" formControlName="breathCircle" />
+        </label>
+        <p class="note">
+          A soft circle grows as you breathe in and shrinks as you breathe out, in place of the
+          clock.
+        </p>
+      </div>
+    }
     <label class="switch-row">
       <span>Ask for the first tiny step</span>
       <input type="checkbox" role="switch" formControlName="firstStep" />
@@ -191,6 +203,14 @@
     <p class="note">
       When a focus session finishes, the bar glows and a quick "Nice work!" says how many you've
       done today. No streaks, no pressure.
+    </p>
+    <label class="switch-row">
+      <span>Focus garden</span>
+      <input type="checkbox" role="switch" formControlName="focusGarden" />
+    </label>
+    <p class="note">
+      Stats grows a little plant for each pomodoro you finish this week. A fresh garden every
+      Monday, and nothing ever wilts.
     </p>
     <label class="switch-row">
       <span>Energy check-in</span>
@@ -483,6 +503,24 @@
     <p class="note">
       A colored disc in place of the numbers, shrinking as time passes, so you can tell how much is
       left at a glance.
+    </p>
+    @if (!isWeb) {
+      <label class="switch-row">
+        <span>Live toolbar icon</span>
+        <input type="checkbox" role="switch" formControlName="liveIcon" />
+      </label>
+      <p class="note">
+        While the timer runs, the Tomomomento icon in your toolbar becomes a ring that empties as
+        time passes, in place of the minutes badge.
+      </p>
+    }
+    <label class="switch-row">
+      <span>Big timer view</span>
+      <input type="checkbox" role="switch" formControlName="bigTimer" />
+    </label>
+    <p class="note">
+      Adds a button at the top of the timer that fills the whole window with the clock, in the phase
+      color, so you can read it from across the room.
     </p>
     <label class="switch-row">
       <span>Show when it ends</span>

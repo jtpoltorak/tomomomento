@@ -16,13 +16,14 @@ import { ParkingView } from './parking-view/parking-view';
 import { PlanView } from './plan-view/plan-view';
 import { SettingsView } from './settings-view/settings-view';
 import { StatsView } from './stats-view/stats-view';
+import { BigTimer } from './big-timer/big-timer';
 import { applyA11y, applyTheme } from './theme';
 import { TimerView } from './timer-view/timer-view';
 import { WrapUpView } from './wrap-up-view/wrap-up-view';
 
-type View = 'timer' | 'settings' | 'help' | 'stats' | 'plan' | 'parking' | 'wrapup';
+type View = 'timer' | 'settings' | 'help' | 'stats' | 'plan' | 'parking' | 'wrapup' | 'big';
 
-const TITLES: Record<Exclude<View, 'timer'>, string> = {
+const TITLES: Record<Exclude<View, 'timer' | 'big'>, string> = {
   settings: 'Settings',
   help: 'Help',
   stats: 'Stats',
@@ -33,7 +34,16 @@ const TITLES: Record<Exclude<View, 'timer'>, string> = {
 
 @Component({
   selector: 'app-root',
-  imports: [TimerView, SettingsView, HelpView, StatsView, PlanView, ParkingView, WrapUpView],
+  imports: [
+    BigTimer,
+    TimerView,
+    SettingsView,
+    HelpView,
+    StatsView,
+    PlanView,
+    ParkingView,
+    WrapUpView,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -42,11 +52,13 @@ export class App {
   protected readonly installPrompt = inject(INSTALL_PROMPT);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
-  // The Options page links here with #settings.
-  protected readonly view = signal<View>(location.hash === '#settings' ? 'settings' : 'timer');
+  // The Options page links here with #settings, and the popup opens #big in a tab.
+  protected readonly view = signal<View>(
+    location.hash === '#settings' ? 'settings' : location.hash === '#big' ? 'big' : 'timer',
+  );
   protected readonly title = computed(() => {
     const view = this.view();
-    return view === 'timer' ? '' : TITLES[view];
+    return view === 'timer' || view === 'big' ? '' : TITLES[view];
   });
 
   constructor() {
@@ -68,6 +80,16 @@ export class App {
     return n === 0 ? 'Parking lot' : `Parking lot, ${thoughtsText(n)}`;
   });
 
+  /** The extension popup is too small for it, so there it opens in a tab. */
+  protected async openBig(): Promise<void> {
+    if (!(await this.store.openBigTimer())) this.show('big');
+  }
+
+  protected closeBig(): void {
+    if (location.hash === '#big') history.replaceState(null, '', location.pathname);
+    this.show('timer');
+  }
+
   protected show(view: View): void {
     const from = this.view();
     this.view.set(view);
@@ -76,6 +98,8 @@ export class App {
     afterNextRender(
       () => {
         const el = this.host.nativeElement;
+        // The big timer moves focus to its own button.
+        if (view === 'big') return;
         const target =
           view === 'timer'
             ? // The card that opened the view may be gone by now (the day wrap-up), so fall back to Start.

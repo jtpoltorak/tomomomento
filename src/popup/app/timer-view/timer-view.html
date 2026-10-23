@@ -56,8 +56,26 @@
 }
 
 <section class="dial" [class.heads-up]="headsUp()" [class.win]="win()">
+  @if (bigTimer()) {
+    <button
+      type="button"
+      class="icon-btn ghost big-btn"
+      data-view="big"
+      (click)="openBig.emit()"
+      aria-label="Big timer"
+      title="Big timer"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 14H5v5h5v-2H7zm-2-4h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z" />
+      </svg>
+    </button>
+  }
   <!-- One element per character: a changed digit gets a new key, so animated digits can roll it in. -->
-  @if (visualTimer()) {
+  @if (breathCircle()) {
+    <div class="clock breathing" role="timer" [attr.aria-label]="timeLeftText()">
+      <app-breath-circle [delay]="breathDelay()" />
+    </div>
+  } @else if (visualTimer()) {
     <div class="clock visual" role="timer" [attr.aria-label]="timeLeftText()">
       <app-visual-timer [left]="1 - store.progress()" />
     </div>
@@ -96,7 +114,7 @@
   >
     <div
       class="bar-fill"
-      [class.settling]="breath()"
+      [class.settling]="breath() && !breathCircle()"
       [style.animation-delay.ms]="breath() ? breathDelay() : null"
       [style.transform]="'scaleX(' + (1 - store.progress()) + ')'"
     ></div>

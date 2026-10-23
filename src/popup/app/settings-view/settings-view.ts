@@ -159,6 +159,7 @@ export class SettingsView {
     takeCare: [false],
     smallWins: [false],
     firstStep: [false],
+    whereWasI: [false],
     energyCheck: [false],
     weeklyLookBack: [false],
     driftTally: [false],

@@ -76,6 +76,8 @@ export interface Settings {
   smallWins: boolean;
   /** Pressing Start on a fresh focus session asks for the first tiny step first. */
   firstStep: boolean;
+  /** When you pause focus or it ends, jot where you left off; it shows when you come back. */
+  whereWasI: boolean;
   /** After a focus session, a one-tap "how was it?" that Stats turns into best times of day. */
   energyCheck: boolean;
   /** The first time you open the timer each week, a short card about last week. */
@@ -183,6 +185,7 @@ export const DEFAULT_SETTINGS: Settings = {
   takeCare: false,
   smallWins: false,
   firstStep: false,
+  whereWasI: false,
   energyCheck: false,
   weeklyLookBack: false,
   driftTally: false,
@@ -410,6 +413,8 @@ export function canSettle(state: TimerState, settings: Settings): boolean {
 
 /** Longest daily intention, so it fits on one line at the top of the timer. */
 export const MAX_INTENTION_LENGTH = 60;
+/** Longest "where did you leave off?" note, so it fits on one line. */
+export const MAX_LEFT_OFF_LENGTH = 80;
 export const MAX_STEP_LENGTH = 80;
 
 /** Whether Start asks for the first tiny step: a focus session that hasn't begun yet. */
@@ -746,6 +751,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
     firstStep: input.firstStep ?? d.firstStep,
+    whereWasI: input.whereWasI ?? d.whereWasI,
     energyCheck: input.energyCheck ?? d.energyCheck,
     weeklyLookBack: input.weeklyLookBack ?? d.weeklyLookBack,
     driftTally: input.driftTally ?? d.driftTally,

@@ -685,18 +685,18 @@
 :host:has(.intention-card):has(.plan-strip, .plan-add) .clock {
   font-size: 4.25rem;
 }
-.intention-card {
+.ask-card {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 0.375rem;
 }
-.intention-card label {
+.ask-card label {
   font-weight: 600;
 }
-.intention-card .link {
+.ask-card .link {
   font-size: 1.125rem;
 }
-.intention-card .quick-park {
+.ask-card .quick-park {
   grid-column: 1 / -1;
 }

@@ -11,6 +11,9 @@ these first.
 - **Starter setups:** one tap at the top of Settings turns on a few options
   that work well together: Gentle start, Deep work, Low stimulation or Know
   yourself. Undo puts things back.
+- **Where was I? (optional):** when you pause focus or it ends, jot one line
+  about where you left off. It shows under the timer when you come back. Turn
+  it on under Focus helpers in Settings.
 - **Settings search:** a search box at the top of Settings shows only the
   settings that mention what you type.
 

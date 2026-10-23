@@ -278,7 +278,7 @@
   }
 
   @if (askIntention()) {
-    <aside class="parked-card intention-card" aria-labelledby="intention-label">
+    <aside class="parked-card ask-card intention-card" aria-labelledby="intention-label">
       <label id="intention-label" for="intention">What matters most today?</label>
       @if (!editingIntention()) {
         <button type="button" class="link" (click)="setIntention('')">Not today</button>
@@ -325,6 +325,26 @@
             {{ e.label }}
           </button>
         }
+      </div>
+    </aside>
+  } @else if (askLeftOff()) {
+    <aside class="parked-card ask-card" aria-labelledby="left-off-label">
+      <label id="left-off-label" for="left-off">Where did you leave off?</label>
+      <button type="button" class="link" (click)="saveLeftOff('')">Skip</button>
+      <div class="quick-park">
+        <input
+          #leftOffBox
+          type="text"
+          id="left-off"
+          [maxLength]="maxLeftOff"
+          placeholder="Like “halfway through section 2”"
+          autocomplete="off"
+          (keydown.enter)="saveLeftOff(leftOffBox.value)"
+          (keydown.escape)="saveLeftOff('')"
+        />
+        <button type="button" class="pill-btn solid" (click)="saveLeftOff(leftOffBox.value)">
+          Save
+        </button>
       </div>
     </aside>
   } @else if (lookBack(); as back) {

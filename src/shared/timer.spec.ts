@@ -563,6 +563,7 @@ describe('timer state machine', () => {
     expect(sanitizeSettings({}).calmClock).toBe(false);
     expect(sanitizeSettings({}).visualTimer).toBe(false);
     expect(sanitizeSettings({}).dailyIntention).toBe(false);
+    expect(sanitizeSettings({}).whereWasI).toBe(false);
   });
 
   describe('paused reminder', () => {

@@ -24,6 +24,7 @@ import {
   canJustStart,
   MAX_STEP_LENGTH,
   MAX_INTENTION_LENGTH,
+  MAX_LEFT_OFF_LENGTH,
   localDateKey,
   careNudge,
   canKeepGoing,
@@ -131,6 +132,57 @@ export class TimerView {
       !this.parkedCard()
     );
   });
+  /**
+   * "Where was I?": when you pause focus, or on the break after it, a card asks
+   * where you left off. The note shows under the timer until the next focus
+   * session finishes, so it's there when you come back. Kept on this device.
+   */
+  private readonly leftOff = signal(readLeftOff());
+  protected readonly maxLeftOff = MAX_LEFT_OFF_LENGTH;
+  /** The moment being asked about: this pause, or the focus session that just ended. */
+  private readonly leftOffMoment = computed(() => {
+    const { phase, status, pausedAt, lastFocusEnd } = this.store.state();
+    if (phase === 'work') return status === 'paused' ? (pausedAt ?? null) : null;
+    return lastFocusEnd !== undefined && this.store.tick() - lastFocusEnd < WIN_WINDOW_MS
+      ? lastFocusEnd
+      : null;
+  });
+  protected readonly leftOffNote = computed(() => {
+    const note = this.leftOff();
+    if (!this.store.settings().whereWasI || !note?.text) return null;
+    const since = this.store.state().lastFocusEnd ?? 0;
+    return note.day === localDateKey(this.store.tick()) && note.at > since ? note.text : null;
+  });
+  protected readonly askLeftOff = computed(() => {
+    const moment = this.leftOffMoment();
+    return (
+      this.store.settings().whereWasI &&
+      this.full() &&
+      moment !== null &&
+      this.leftOff()?.for !== moment &&
+      !this.store.showPlanPrompt() &&
+      !this.helpersCard() &&
+      !this.wrapCard() &&
+      !this.parkedCard() &&
+      !this.energyCard()
+    );
+  });
+
+  protected saveLeftOff(text: string): void {
+    const moment = this.leftOffMoment();
+    if (moment === null) return;
+    const now = Math.max(this.store.tick(), Date.now());
+    const clean = text.trim().slice(0, MAX_LEFT_OFF_LENGTH);
+    // Skipping keeps an earlier note; writing a new one replaces it.
+    const previous = this.leftOff();
+    const note: LeftOff = clean
+      ? { day: localDateKey(now), text: clean, at: now, for: moment }
+      : { ...(previous ?? { day: '', text: '', at: 0 }), for: moment };
+    this.leftOff.set(note);
+    writeLeftOff(note);
+    this.focusSoon('.primary-btn');
+  }
+
   /** "I drifted": a quiet tap during focus when attention wanders, counted in Stats. */
   protected readonly driftOffer = computed(() => {
     const { phase, status } = this.store.state();
@@ -167,6 +219,7 @@ export class TimerView {
     !this.wrapCard() &&
     !this.parkedCard() &&
     !this.energyCard() &&
+    !this.askLeftOff() &&
     !this.lookBack()
       ? this.intentionToday() || null
       : null,
@@ -192,7 +245,7 @@ export class TimerView {
     const { phase, status } = this.store.state();
     if (phase === 'work' && status === 'running') return null;
     if (this.store.showPlanPrompt() || this.helpersCard() || this.wrapCard()) return null;
-    if (this.parkedCard() || this.energyCard()) return null;
+    if (this.parkedCard() || this.energyCard() || this.askLeftOff()) return null;
     const back = weekLookBack(this.store.history(), this.store.tick());
     if (!back || back.week === this.lookedBack()) return null;
     const { pomodoros, focusMinutes } = back.totals;
@@ -214,6 +267,7 @@ export class TimerView {
   protected readonly quote = computed(() =>
     this.store.settings().showQuotes &&
     !this.askIntention() &&
+    !this.askLeftOff() &&
     !this.intentionLine() &&
     !this.store.showPlanPrompt() &&
     !this.helpersCard() &&
@@ -479,6 +533,8 @@ export class TimerView {
   protected readonly planLabelNow = computed(() => {
     // The step you named for this session is the most useful thing to see.
     const { phase, firstStep } = this.store.state();
+    const leftOff = this.leftOffNote();
+    if (leftOff) return { prefix: 'Left off', label: leftOff };
     if (phase === 'work' && firstStep) return { prefix: 'First step', label: firstStep };
     // Extra time goes with the pomodoro that just finished.
     const index = this.planDone() - (this.store.state().extending ? 1 : 0);
@@ -804,6 +860,35 @@ function readIntention(): Intention | null {
 function writeIntention(value: Intention): void {
   try {
     localStorage.setItem(INTENTION_KEY, JSON.stringify(value));
+  } catch {
+    // Private browsing: it may ask again next time, which is fine.
+  }
+}
+
+const LEFT_OFF_KEY = 'tomomomento.leftOff';
+
+interface LeftOff {
+  /** Local date it was written, so it clears itself overnight. */
+  day: string;
+  text: string;
+  /** When it was written, so the next finished focus session can retire it. */
+  at: number;
+  /** The pause or finished session it answered, so each is asked about once. */
+  for?: number;
+}
+
+function readLeftOff(): LeftOff | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(LEFT_OFF_KEY) ?? 'null');
+    return typeof value?.text === 'string' && typeof value?.at === 'number' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLeftOff(value: LeftOff): void {
+  try {
+    localStorage.setItem(LEFT_OFF_KEY, JSON.stringify(value));
   } catch {
     // Private browsing: it may ask again next time, which is fine.
   }

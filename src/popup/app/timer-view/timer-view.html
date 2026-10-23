@@ -43,7 +43,11 @@
 
 <section class="dial" [class.heads-up]="headsUp()" [class.win]="win()">
   <!-- One element per character: a changed digit gets a new key, so animated digits can roll it in. -->
-  @if (calmClock(); as minutes) {
+  @if (visualTimer()) {
+    <div class="clock visual" role="timer" [attr.aria-label]="timeLeftText()">
+      <app-visual-timer [left]="1 - store.progress()" />
+    </div>
+  } @else if (calmClock(); as minutes) {
     <div
       class="clock calm"
       [class.rolling]="rolling()"

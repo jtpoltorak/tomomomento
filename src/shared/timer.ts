@@ -50,6 +50,8 @@ export interface Settings {
   headsUp: boolean;
   /** Show whole minutes instead of a ticking minutes-and-seconds clock. */
   calmClock: boolean;
+  /** A shrinking disc in place of the digits, so time left reads at a glance. */
+  visualTimer: boolean;
   /** While the timer runs, show the time of day it ends ("Ends at 2:45 PM"). */
   showEndsAt: boolean;
   /** Each digit of the clock rolls in gently as it changes. */
@@ -166,6 +168,7 @@ export const DEFAULT_SETTINGS: Settings = {
   keepGoing: false,
   headsUp: false,
   calmClock: false,
+  visualTimer: false,
   showEndsAt: false,
   animateDigits: false,
   minimalMode: false,
@@ -717,6 +720,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     keepGoing: input.keepGoing ?? d.keepGoing,
     headsUp: input.headsUp ?? d.headsUp,
     calmClock: input.calmClock ?? d.calmClock,
+    visualTimer: input.visualTimer ?? d.visualTimer,
     showEndsAt: input.showEndsAt ?? d.showEndsAt,
     animateDigits: input.animateDigits ?? d.animateDigits,
     minimalMode: input.minimalMode ?? d.minimalMode,

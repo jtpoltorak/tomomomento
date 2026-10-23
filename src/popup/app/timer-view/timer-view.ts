@@ -41,11 +41,13 @@ import {
   WIN_WINDOW_MS,
   type Phase,
 } from '../../../shared/timer';
+import { VisualTimer } from '../visual-timer/visual-timer';
 import { PomodoroStore } from '../pomodoro-store';
 
 @Component({
   selector: 'app-timer-view',
   host: { '[class.minimal]': 'minimal()' },
+  imports: [VisualTimer],
   templateUrl: './timer-view.html',
   styleUrl: './timer-view.css',
 })
@@ -233,6 +235,7 @@ export class TimerView {
   protected minutesText(n: number): string {
     return `${n} ${n === 1 ? 'minute' : 'minutes'}`;
   }
+  protected readonly visualTimer = computed(() => this.store.settings().visualTimer);
   // The bar empties as time passes, like sand running out.
   protected readonly percentLeft = computed(() => Math.round(100 * (1 - this.store.progress())));
   /** Whole minutes, so screen readers aren't flooded with a new value every second. */

@@ -654,6 +654,20 @@ describe('TimerView', () => {
     });
   });
 
+  describe('visual timer', () => {
+    it('shows a shrinking disc in place of the digits, with the time left for screen readers', async () => {
+      const { el, fixture, store } = await setup();
+      expect(el.querySelector('app-visual-timer')).toBeNull();
+      store.settings.update((s) => ({ ...s, visualTimer: true }));
+      await fixture.whenStable();
+      const clock = el.querySelector('.clock.visual')!;
+      expect(clock.querySelector('app-visual-timer')).toBeTruthy();
+      expect(clock.querySelector('.digit')).toBeNull();
+      expect(clock.getAttribute('role')).toBe('timer');
+      expect(clock.getAttribute('aria-label')).toBe('25 of 25 minutes left');
+    });
+  });
+
   describe('ends at', () => {
     it('shows the time the running phase ends, when turned on', async () => {
       const end = new Date();

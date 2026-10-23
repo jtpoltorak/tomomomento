@@ -17,6 +17,8 @@ these first.
 - **Distraction tally (optional):** during focus, tap **I drifted** when your
   attention wanders. Stats compares this week's drifts with last week's.
   Turn on **Distraction tally** under Focus helpers in Settings.
+- **Visual timer (optional):** a colored disc in place of the numbers that
+  shrinks as time passes. Turn on **Visual timer** under Appearance in Settings.
 
 ## 1.9.0 (2026-10-22)
 

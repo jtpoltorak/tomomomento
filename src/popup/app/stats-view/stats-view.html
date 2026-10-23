@@ -89,6 +89,21 @@
   </section>
 }
 
+@if (driftOn()) {
+  <section aria-labelledby="stats-drifts">
+    <h2 id="stats-drifts">Drifting</h2>
+    <ul class="energy">
+      <li>
+        <span class="part">This week</span><span class="checkins">{{ drifts().thisWeek }}</span>
+      </li>
+      <li>
+        <span class="part">Last week</span><span class="checkins">{{ drifts().lastWeek }}</span>
+      </li>
+    </ul>
+    <p class="note">{{ drifts().note }}</p>
+  </section>
+}
+
 <section class="reset-section">
   @if (confirming()) {
     <div class="confirm" role="group" aria-labelledby="reset-question">

@@ -34,6 +34,8 @@ export interface Settings {
   showQuotes: boolean;
   /** "Plan my day": pick how many pomodoros to do today and track them under the timer. */
   planEnabled: boolean;
+  /** Ask "What matters most today?" on the first open each day and keep the answer on the timer. */
+  dailyIntention: boolean;
   /** With planning on, offer a card on the first open of each day. */
   planPrompt: boolean;
   /** The parking lot: jot stray thoughts during focus, look at them on a break. */
@@ -50,6 +52,8 @@ export interface Settings {
   headsUp: boolean;
   /** Show whole minutes instead of a ticking minutes-and-seconds clock. */
   calmClock: boolean;
+  /** A shrinking disc in place of the digits, so time left reads at a glance. */
+  visualTimer: boolean;
   /** While the timer runs, show the time of day it ends ("Ends at 2:45 PM"). */
   showEndsAt: boolean;
   /** Each digit of the clock rolls in gently as it changes. */
@@ -74,6 +78,10 @@ export interface Settings {
   firstStep: boolean;
   /** After a focus session, a one-tap "how was it?" that Stats turns into best times of day. */
   energyCheck: boolean;
+  /** The first time you open the timer each week, a short card about last week. */
+  weeklyLookBack: boolean;
+  /** An "I drifted" link during focus, counted in Stats. */
+  driftTally: boolean;
   /** One-tap timer setups (Classic, Short, Deep) on the timer screen before you start. */
   rhythmPresets: boolean;
   /** A background sound while focus runs: soft ticking or brown noise. */
@@ -90,6 +98,8 @@ export interface Settings {
   easyFont: boolean;
   /** No animations, even when the device doesn't ask for reduced motion. */
   reduceMotion: boolean;
+  /** Single-key shortcuts on the timer screen: S skip, R restart, P park a thought, D drifted. */
+  shortcuts: boolean;
 }
 
 export interface TimerState {
@@ -160,6 +170,8 @@ export const DEFAULT_SETTINGS: Settings = {
   keepGoing: false,
   headsUp: false,
   calmClock: false,
+  dailyIntention: false,
+  visualTimer: false,
   showEndsAt: false,
   animateDigits: false,
   minimalMode: false,
@@ -172,6 +184,8 @@ export const DEFAULT_SETTINGS: Settings = {
   smallWins: false,
   firstStep: false,
   energyCheck: false,
+  weeklyLookBack: false,
+  driftTally: false,
   rhythmPresets: false,
   focusSound: 'off',
   focusVolume: 0.4,
@@ -180,6 +194,7 @@ export const DEFAULT_SETTINGS: Settings = {
   textSize: 'normal',
   easyFont: false,
   reduceMotion: false,
+  shortcuts: false,
 };
 
 /** How long a "Just start" focus session runs. */
@@ -393,6 +408,8 @@ export function canSettle(state: TimerState, settings: Settings): boolean {
   );
 }
 
+/** Longest daily intention, so it fits on one line at the top of the timer. */
+export const MAX_INTENTION_LENGTH = 60;
 export const MAX_STEP_LENGTH = 80;
 
 /** Whether Start asks for the first tiny step: a focus session that hasn't begun yet. */
@@ -708,6 +725,8 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     keepGoing: input.keepGoing ?? d.keepGoing,
     headsUp: input.headsUp ?? d.headsUp,
     calmClock: input.calmClock ?? d.calmClock,
+    dailyIntention: input.dailyIntention ?? d.dailyIntention,
+    visualTimer: input.visualTimer ?? d.visualTimer,
     showEndsAt: input.showEndsAt ?? d.showEndsAt,
     animateDigits: input.animateDigits ?? d.animateDigits,
     minimalMode: input.minimalMode ?? d.minimalMode,
@@ -720,6 +739,8 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     smallWins: input.smallWins ?? d.smallWins,
     firstStep: input.firstStep ?? d.firstStep,
     energyCheck: input.energyCheck ?? d.energyCheck,
+    weeklyLookBack: input.weeklyLookBack ?? d.weeklyLookBack,
+    driftTally: input.driftTally ?? d.driftTally,
     rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,
@@ -731,5 +752,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     textSize: input.textSize && input.textSize in TEXT_SIZE_LABELS ? input.textSize : d.textSize,
     easyFont: input.easyFont ?? d.easyFont,
     reduceMotion: input.reduceMotion ?? d.reduceMotion,
+    shortcuts: input.shortcuts ?? d.shortcuts,
   };
 }

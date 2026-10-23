@@ -4,6 +4,25 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Keyboard shortcuts (optional):** on the timer, <kbd>S</kbd> skips,
+  <kbd>R</kbd> restarts, <kbd>P</kbd> parks a thought and <kbd>D</kbd> notes a drift. Turn on
+  **Keyboard shortcuts** under Accessibility in Settings.
+- **Weekly look-back (optional):** the first time you open the timer each
+  week, a short card shows last week's pomodoros, focus time and best day.
+  Turn it on under Focus helpers in Settings.
+- **Distraction tally (optional):** during focus, tap **I drifted** when your
+  attention wanders. Stats compares this week's drifts with last week's.
+  Turn on **Distraction tally** under Focus helpers in Settings.
+- **Visual timer (optional):** a colored disc in place of the numbers that
+  shrinks as time passes. Turn on **Visual timer** under Appearance in Settings.
+- **Daily intention (optional):** the first time you open the timer each day,
+  it asks "What matters most today?" and keeps your answer at the top until
+  midnight. Turn on **Daily intention** under Planning in Settings.
+
 ## 1.9.0 (2026-10-22)
 
 ### New

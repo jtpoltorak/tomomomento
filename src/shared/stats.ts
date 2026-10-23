@@ -8,6 +8,8 @@ import { localDateKey, type Settings, type TimerState } from './timer';
 export interface DayStats {
   pomodoros: number;
   focusMinutes: number;
+  /** Taps on "I drifted" during focus. Absent until the first one. */
+  drifts?: number;
   /** Energy check-ins, tallied by time of day. Absent until the first one. */
   energy?: Partial<Record<Daypart, EnergyTally>>;
 }
@@ -177,8 +179,15 @@ export function sanitizeHistory(input: unknown): History {
     const { pomodoros, focusMinutes } = value as Partial<DayStats>;
     const p = Math.floor(Number(pomodoros));
     const m = Math.floor(Number(focusMinutes));
-    if (!Number.isFinite(p) || p <= 0) continue;
-    out[key] = { pomodoros: p, focusMinutes: Number.isFinite(m) && m > 0 ? m : 0 };
+    const d = Math.floor(Number((value as Partial<DayStats>).drifts));
+    const drifts = Number.isFinite(d) && d > 0 ? d : 0;
+    // A day counts once it has a pomodoro, or a drift noted before the first one finished.
+    if (!(Number.isFinite(p) && p > 0) && !drifts) continue;
+    out[key] = {
+      pomodoros: Number.isFinite(p) && p > 0 ? p : 0,
+      focusMinutes: Number.isFinite(m) && m > 0 ? m : 0,
+    };
+    if (drifts) out[key].drifts = drifts;
     const energy = sanitizeEnergy((value as Partial<DayStats>).energy);
     if (energy) out[key].energy = energy;
   }
@@ -269,6 +278,63 @@ export function heatLevel(pomodoros: number): 0 | 1 | 2 | 3 | 4 {
   if (pomodoros <= 4) return 2;
   if (pomodoros <= 7) return 3;
   return 4;
+}
+
+/** Notes one "I drifted" on the day it happened. */
+export function recordDrift(history: History, now: number): History {
+  const key = localDateKey(now);
+  const day = history[key] ?? { pomodoros: 0, focusMinutes: 0 };
+  return { ...history, [key]: { ...day, drifts: (day.drifts ?? 0) + 1 } };
+}
+
+export interface DriftWeek {
+  drifts: number;
+  pomodoros: number;
+}
+
+/** Drifts and pomodoros this week and last, Monday to Sunday, to compare the two. */
+export function driftWeeks(
+  history: History,
+  now: number,
+): { thisWeek: DriftWeek; lastWeek: DriftWeek } {
+  const today = startOfDay(now);
+  const monday = addDays(today, -((today.getDay() + 6) % 7));
+  const week = (from: Date): DriftWeek => {
+    let drifts = 0;
+    let pomodoros = 0;
+    for (let i = 0; i < 7; i++) {
+      const day = history[localDateKey(addDays(from, i).getTime())];
+      drifts += day?.drifts ?? 0;
+      pomodoros += day?.pomodoros ?? 0;
+    }
+    return { drifts, pomodoros };
+  };
+  return { thisWeek: week(monday), lastWeek: week(addDays(monday, -7)) };
+}
+
+export interface LookBack {
+  /** Local date (YYYY-MM-DD) of the Monday the current week started, which keys the card. */
+  week: string;
+  totals: Totals;
+  /** The day of last week with the most pomodoros. */
+  best: Day;
+}
+
+/** Last week, Monday to Sunday, once there's something in it to look back on. */
+export function weekLookBack(history: History, now: number): LookBack | null {
+  const today = startOfDay(now);
+  const monday = addDays(today, -((today.getDay() + 6) % 7));
+  const days = Array.from({ length: 7 }, (_, i) => dayAt(history, addDays(monday, i - 7)));
+  const totals = days.reduce(
+    (t, d) => ({
+      pomodoros: t.pomodoros + d.pomodoros,
+      focusMinutes: t.focusMinutes + d.focusMinutes,
+    }),
+    { pomodoros: 0, focusMinutes: 0 },
+  );
+  if (totals.pomodoros === 0) return null;
+  const best = days.reduce((a, b) => (b.pomodoros > a.pomodoros ? b : a));
+  return { week: localDateKey(monday.getTime()), totals, best };
 }
 
 /** "0m", "45m", "2h 5m", "3h". */

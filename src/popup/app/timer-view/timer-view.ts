@@ -16,12 +16,14 @@ import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
 import { breakIdea } from '../../../shared/break-ideas';
 import { MAX_THOUGHT_LENGTH, thoughtsText, wrapUpDue } from '../../../shared/parking';
 import { pickQuote, type Quote } from '../../../shared/quotes';
-import { ENERGY_LABELS, type Energy } from '../../../shared/stats';
+import { ENERGY_LABELS, formatMinutes, weekLookBack, type Energy } from '../../../shared/stats';
 import {
   breathAt,
   canAskFirstStep,
   canJustStart,
   MAX_STEP_LENGTH,
+  MAX_INTENTION_LENGTH,
+  localDateKey,
   careNudge,
   canKeepGoing,
   calmMinutes,
@@ -41,11 +43,13 @@ import {
   WIN_WINDOW_MS,
   type Phase,
 } from '../../../shared/timer';
+import { VisualTimer } from '../visual-timer/visual-timer';
 import { PomodoroStore } from '../pomodoro-store';
 
 @Component({
   selector: 'app-timer-view',
   host: { '[class.minimal]': 'minimal()' },
+  imports: [VisualTimer],
   templateUrl: './timer-view.html',
   styleUrl: './timer-view.css',
 })
@@ -126,20 +130,96 @@ export class TimerView {
       !this.parkedCard()
     );
   });
+  /** "I drifted": a quiet tap during focus when attention wanders, counted in Stats. */
+  protected readonly driftOffer = computed(() => {
+    const { phase, status } = this.store.state();
+    return (
+      this.store.settings().driftTally && phase === 'work' && status === 'running' && !this.breath()
+    );
+  });
+  protected readonly justDrifted = signal(false);
+  private driftTimer: ReturnType<typeof setTimeout> | undefined;
+
+  protected drifted(): void {
+    void this.store.send({ command: 'drifted' });
+    this.justDrifted.set(true);
+    clearTimeout(this.driftTimer);
+    this.driftTimer = setTimeout(() => this.justDrifted.set(false), 2000);
+  }
+
+  /**
+   * The daily intention: asked on the first open each day, then kept at the top
+   * of the timer until midnight. A skipped day is saved as an empty answer.
+   */
+  private readonly intention = signal(readIntention());
+  protected readonly maxIntention = MAX_INTENTION_LENGTH;
+  private readonly intentionToday = computed(() => {
+    if (!this.store.settings().dailyIntention) return null;
+    const saved = this.intention();
+    return saved?.day === localDateKey(this.store.tick()) ? saved.text : null;
+  });
+  /** Steps aside while another card is up, so the popup still fits. */
+  protected readonly intentionLine = computed(() =>
+    this.full() &&
+    !this.store.showPlanPrompt() &&
+    !this.helpersCard() &&
+    !this.wrapCard() &&
+    !this.parkedCard() &&
+    !this.energyCard() &&
+    !this.lookBack()
+      ? this.intentionToday() || null
+      : null,
+  );
+  protected readonly editingIntention = signal(false);
+  /** Stays out of a running focus session, and the plan and helpers cards come first. */
+  protected readonly askIntention = computed(() => {
+    if (!this.store.settings().dailyIntention || !this.full() || this.askStep()) return false;
+    if (this.editingIntention()) return true;
+    const { phase, status } = this.store.state();
+    return (
+      this.intentionToday() === null &&
+      !(phase === 'work' && status === 'running') &&
+      !this.store.showPlanPrompt() &&
+      !this.helpersCard()
+    );
+  });
+
+  /** Once a week: last week at a glance, until it's acknowledged. Other cards come first. */
+  private readonly lookedBack = signal(readLookedBack());
+  protected readonly lookBack = computed(() => {
+    if (!this.store.settings().weeklyLookBack) return null;
+    const { phase, status } = this.store.state();
+    if (phase === 'work' && status === 'running') return null;
+    if (this.store.showPlanPrompt() || this.helpersCard() || this.wrapCard()) return null;
+    if (this.parkedCard() || this.energyCard()) return null;
+    const back = weekLookBack(this.store.history(), this.store.tick());
+    if (!back || back.week === this.lookedBack()) return null;
+    const { pomodoros, focusMinutes } = back.totals;
+    const day = back.best.date.toLocaleDateString('en-US', { weekday: 'long' });
+    return {
+      week: back.week,
+      title: `Last week: ${pomodoros === 1 ? '1 pomodoro' : `${pomodoros} pomodoros`}, ${formatMinutes(focusMinutes)} focused`,
+      best: `Best day: ${day}, with ${back.best.pomodoros}.`,
+    };
+  });
+
   protected readonly energyLevels = ([1, 2, 3] as const).map((level) => ({
     level,
     label: ENERGY_LABELS[level],
   }));
   // The popup only has room for one extra line of text under the controls, so
-  // the daily plan card, the parked thoughts card and your own label for this
-  // pomodoro come before a quote.
+  // the daily plan card, the parked thoughts card, today's intention and your
+  // own label for this pomodoro come before a quote.
   protected readonly quote = computed(() =>
     this.store.settings().showQuotes &&
+    !this.askIntention() &&
+    !this.intentionLine() &&
     !this.store.showPlanPrompt() &&
     !this.helpersCard() &&
     !this.parkedCard() &&
     !this.wrapCard() &&
     !this.energyCard() &&
+    !this.lookBack() &&
     !this.askStep() &&
     !this.planLabelNow()
       ? this.phaseQuote()
@@ -196,6 +276,7 @@ export class TimerView {
   protected minutesText(n: number): string {
     return `${n} ${n === 1 ? 'minute' : 'minutes'}`;
   }
+  protected readonly visualTimer = computed(() => this.store.settings().visualTimer);
   // The bar empties as time passes, like sand running out.
   protected readonly percentLeft = computed(() => Math.round(100 * (1 - this.store.progress())));
   /** Whole minutes, so screen readers aren't flooded with a new value every second. */
@@ -417,6 +498,7 @@ export class TimerView {
       clearInterval(id);
       clearTimeout(this.parkedTimer);
       clearTimeout(this.winTimer);
+      clearTimeout(this.driftTimer);
     });
     // A focus session just finished (or did while the popup was closed): celebrate it once.
     const finished = computed(() => this.store.state().lastFocusEnd);
@@ -510,6 +592,28 @@ export class TimerView {
     this.ideaOffset.update((n) => n + 1);
   }
 
+  protected setIntention(text: string): void {
+    const entry = {
+      day: localDateKey(this.store.tick()),
+      text: text.trim().slice(0, MAX_INTENTION_LENGTH),
+    };
+    this.intention.set(entry);
+    writeIntention(entry);
+    this.editingIntention.set(false);
+    this.focusSoon('.primary-btn');
+  }
+
+  protected changeIntention(): void {
+    this.editingIntention.set(true);
+    this.focusSoon('#intention');
+  }
+
+  protected doneLookingBack(week: string): void {
+    this.lookedBack.set(week);
+    writeLookedBack(week);
+    this.focusSoon('.primary-btn');
+  }
+
   protected async rateEnergy(level: Energy): Promise<void> {
     await this.store.send({ command: 'rateEnergy', level });
     this.focusSoon('.primary-btn');
@@ -601,6 +705,23 @@ export class TimerView {
     if (phase !== this.store.state().phase) void this.store.send({ command: 'setPhase', phase });
   }
 
+  /** Optional single-key shortcuts. Off by default, so typing never sets one off by surprise. */
+  @HostListener('document:keydown', ['$event'])
+  protected onKey(event: KeyboardEvent): void {
+    if (!this.store.settings().shortcuts) return;
+    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('input, select, textarea, [contenteditable]')) return;
+    const action = SHORTCUTS[event.key.toLowerCase()];
+    if (!action || !this.full()) return;
+    event.preventDefault();
+    if (action === 'skip') this.skip();
+    else if (action === 'reset') this.reset();
+    else if (action === 'drift') {
+      if (this.driftOffer()) this.drifted();
+    } else if (this.quickPark() && !this.parkOpen()) this.openPark();
+  }
+
   @HostListener('document:keydown.space', ['$event'])
   protected onSpace(event: Event): void {
     const target = event.target as HTMLElement | null;
@@ -609,6 +730,14 @@ export class TimerView {
     this.toggle();
   }
 }
+
+/** Keyboard shortcuts on the timer screen, when they're turned on. */
+const SHORTCUTS: Record<string, 'skip' | 'reset' | 'park' | 'drift'> = {
+  s: 'skip',
+  r: 'reset',
+  p: 'park',
+  d: 'drift',
+};
 
 /** How long the small-wins line stays before the usual status comes back. */
 const WIN_SHOWN_MS = 5_000;
@@ -628,5 +757,48 @@ function writeCelebrated(at: number): void {
     localStorage.setItem(CELEBRATED_KEY, String(at));
   } catch {
     // Private browsing: it may celebrate again next time, which is fine.
+  }
+}
+
+const LOOKED_BACK_KEY = 'tomomomento.lookedBack';
+
+function readLookedBack(): string | null {
+  try {
+    return localStorage.getItem(LOOKED_BACK_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeLookedBack(week: string): void {
+  try {
+    localStorage.setItem(LOOKED_BACK_KEY, week);
+  } catch {
+    // Private browsing: the card may come back next time, which is fine.
+  }
+}
+
+const INTENTION_KEY = 'tomomomento.intention';
+
+interface Intention {
+  /** Local date (YYYY-MM-DD) it was set, so it clears itself overnight. */
+  day: string;
+  text: string;
+}
+
+function readIntention(): Intention | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(INTENTION_KEY) ?? 'null');
+    return typeof value?.day === 'string' && typeof value?.text === 'string' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeIntention(value: Intention): void {
+  try {
+    localStorage.setItem(INTENTION_KEY, JSON.stringify(value));
+  } catch {
+    // Private browsing: it may ask again next time, which is fine.
   }
 }

@@ -1,3 +1,4 @@
+import { localDateKey } from '../../../shared/timer';
 import { TestBed } from '@angular/core/testing';
 import { savePlan } from '../../../shared/plan';
 import { SHORT_BREAK_IDEAS } from '../../../shared/break-ideas';
@@ -576,6 +577,138 @@ describe('TimerView', () => {
       store.state.update((s) => ({ ...s, energyFor: ended }));
       await fixture.whenStable();
       expect(el.querySelector('#energy-card-title')).toBeNull();
+    });
+  });
+
+  describe('weekly look-back', () => {
+    beforeEach(() => localStorage.removeItem('tomomomento.lookedBack'));
+
+    it('sums up last week once, until acknowledged', async () => {
+      const lastWed = new Date();
+      lastWed.setHours(12, 0, 0, 0);
+      lastWed.setDate(lastWed.getDate() - ((lastWed.getDay() + 6) % 7) - 5);
+      const key = localDateKey(lastWed.getTime());
+      const store = createFakeStore({}, { [key]: { pomodoros: 4, focusMinutes: 100 } });
+      store.settings.update((s) => ({ ...s, weeklyLookBack: true }));
+      TestBed.configureTestingModule({
+        imports: [TimerView],
+        providers: [provideFakeStore(store)],
+      });
+      const fixture = TestBed.createComponent(TimerView);
+      await fixture.whenStable();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('#look-back-title')?.textContent).toBe(
+        'Last week: 4 pomodoros, 1h 40m focused',
+      );
+      expect(el.querySelector('.look-back-best')?.textContent).toBe('Best day: Wednesday, with 4.');
+      el.querySelector<HTMLButtonElement>('.look-back .pill-btn')!.click();
+      await fixture.whenStable();
+      expect(el.querySelector('.look-back')).toBeNull();
+      expect(localStorage.getItem('tomomomento.lookedBack')).toBeTruthy();
+    });
+  });
+
+  describe('keyboard shortcuts', () => {
+    const press = (key: string, target: EventTarget = document.body) =>
+      target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+
+    it('skips, restarts and parks with single keys, when turned on', async () => {
+      const { el, fixture, store } = await setup();
+      press('s');
+      expect(store.sent).toEqual([]);
+
+      store.settings.update((s) => ({ ...s, shortcuts: true, parkingLot: true }));
+      await fixture.whenStable();
+      press('s');
+      press('R');
+      expect(store.sent).toEqual([{ command: 'skip' }, { command: 'reset' }]);
+      press('p');
+      await fixture.whenStable();
+      const box = el.querySelector<HTMLInputElement>('#quick-thought')!;
+      expect(box).toBeTruthy();
+      press('s', box); // typing in a box is just typing
+      expect(store.sent.length).toBe(2);
+    });
+  });
+
+  describe('distraction tally', () => {
+    it('offers "I drifted" while focusing, and notes the tap', async () => {
+      const { el, fixture, store, button } = await setup({
+        status: 'running',
+        endTime: Date.now() + 600_000,
+      });
+      expect(el.querySelector('.drift-slot')).toBeNull();
+      store.settings.update((s) => ({ ...s, driftTally: true, shortcuts: true }));
+      await fixture.whenStable();
+      button('I drifted').click();
+      await fixture.whenStable();
+      expect(store.sent).toEqual([{ command: 'drifted' }]);
+      expect(el.querySelector('.drift-slot')?.textContent?.trim()).toBe('✓ Noted');
+
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }));
+      expect(store.sent).toEqual([{ command: 'drifted' }, { command: 'drifted' }]);
+
+      store.state.update((s) => ({ ...s, phase: 'shortBreak' }));
+      await fixture.whenStable();
+      expect(el.querySelector('.drift-slot')).toBeNull();
+    });
+  });
+
+  describe('visual timer', () => {
+    it('shows a shrinking disc in place of the digits, with the time left for screen readers', async () => {
+      const { el, fixture, store } = await setup();
+      expect(el.querySelector('app-visual-timer')).toBeNull();
+      store.settings.update((s) => ({ ...s, visualTimer: true }));
+      await fixture.whenStable();
+      const clock = el.querySelector('.clock.visual')!;
+      expect(clock.querySelector('app-visual-timer')).toBeTruthy();
+      expect(clock.querySelector('.digit')).toBeNull();
+      expect(clock.getAttribute('role')).toBe('timer');
+      expect(clock.getAttribute('aria-label')).toBe('25 of 25 minutes left');
+    });
+  });
+
+  describe('daily intention', () => {
+    beforeEach(() => localStorage.removeItem('tomomomento.intention'));
+
+    it('asks once a day and keeps the answer at the top', async () => {
+      const { el, fixture, store, button } = await setup();
+      expect(el.querySelector('#intention')).toBeNull();
+      store.settings.update((s) => ({ ...s, dailyIntention: true }));
+      await fixture.whenStable();
+      const box = el.querySelector<HTMLInputElement>('#intention')!;
+      expect(el.querySelector('#intention-label')?.textContent).toBe('What matters most today?');
+      box.value = '  Send the proposal  ';
+      button('Set').click();
+      await fixture.whenStable();
+      expect(el.querySelector('#intention')).toBeNull();
+      expect(el.querySelector('.intention-text')?.textContent).toBe('Send the proposal');
+
+      button('Change').click();
+      await fixture.whenStable();
+      expect(el.querySelector<HTMLInputElement>('#intention')?.value).toBe('Send the proposal');
+      el.querySelector('#intention')!.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape' }),
+      );
+      await fixture.whenStable();
+      expect(el.querySelector('#intention')).toBeNull();
+      expect(el.querySelector('.intention-text')?.textContent).toBe('Send the proposal');
+    });
+
+    it('lets a day be skipped, and asks again tomorrow', async () => {
+      localStorage.setItem(
+        'tomomomento.intention',
+        JSON.stringify({ day: '2020-01-01', text: 'Old news' }),
+      );
+      const { el, fixture, store, button } = await setup();
+      store.settings.update((s) => ({ ...s, dailyIntention: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('.intention')).toBeNull();
+      button('Not today').click();
+      await fixture.whenStable();
+      expect(el.querySelector('#intention')).toBeNull();
+      expect(el.querySelector('.intention')).toBeNull();
+      expect(JSON.parse(localStorage.getItem('tomomomento.intention')!).text).toBe('');
     });
   });
 

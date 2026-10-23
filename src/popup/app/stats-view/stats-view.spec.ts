@@ -111,4 +111,22 @@ describe('StatsView', () => {
       'Mornings tend to go best for you.',
     );
   });
+  it('compares drifts with last week, with the distraction tally on', async () => {
+    const { el, fixture, store } = await setup({
+      [daysAgo(0)]: { pomodoros: 4, focusMinutes: 100, drifts: 1 },
+      [daysAgo(7)]: { pomodoros: 2, focusMinutes: 50, drifts: 3 },
+    });
+    expect(el.querySelector('#stats-drifts')).toBeNull();
+    store.settings.update((s) => ({ ...s, driftTally: true }));
+    await fixture.whenStable();
+    const rows = Array.from(el.querySelectorAll('#stats-drifts + .energy li')).map((li) =>
+      Array.from(li.children)
+        .map((c) => c.textContent?.trim())
+        .join(' '),
+    );
+    expect(rows).toEqual(['This week 1 drift in 4 pomodoros', 'Last week 3 drifts in 2 pomodoros']);
+    expect(el.querySelector('#stats-drifts + .energy + .note')?.textContent?.trim()).toBe(
+      'Fewer drifts per pomodoro than last week.',
+    );
+  });
 });

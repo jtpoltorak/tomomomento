@@ -2,6 +2,8 @@ import {
   addFocusMinutes,
   bestDaypart,
   daypartOf,
+  driftWeeks,
+  recordDrift,
   energyByDaypart,
   energyWord,
   recordEnergy,
@@ -13,6 +15,7 @@ import {
   sanitizeHistory,
   seedHistory,
   summarize,
+  weekLookBack,
 } from './stats';
 import { DEFAULT_SETTINGS, initialState, localDateKey } from './timer';
 
@@ -164,5 +167,39 @@ describe('stats', () => {
       expect(energyWord(8 / 3)).toBe('Great');
       expect(energyWord(4 / 3)).toBe('Low');
     });
+  });
+
+  it('looks back on last week, Monday to Sunday', () => {
+    // NOW is Tuesday Oct 13; last week ran Mon Oct 5 to Sun Oct 11.
+    let h = recordPomodoro({}, day(10, 4), 25); // the week before: left out
+    h = recordPomodoro(h, day(10, 7), 25);
+    h = recordPomodoro(h, day(10, 7), 25);
+    h = recordPomodoro(h, day(10, 11), 50);
+    h = recordPomodoro(h, day(10, 12), 25); // this week: left out
+    const back = weekLookBack(h, NOW)!;
+    expect(back.week).toBe('2026-10-12');
+    expect(back.totals).toEqual({ pomodoros: 3, focusMinutes: 100 });
+    expect(back.best.key).toBe('2026-10-07');
+    expect(weekLookBack({}, NOW)).toBeNull();
+  });
+
+  it('counts drifts per day and compares this week with last', () => {
+    let h = recordDrift({}, day(10, 13)); // a day with no pomodoros yet
+    h = recordDrift(h, day(10, 13));
+    expect(h['2026-10-13']).toEqual({ pomodoros: 0, focusMinutes: 0, drifts: 2 });
+    h = recordPomodoro(h, day(10, 13), 25);
+    expect(h['2026-10-13']).toEqual({ pomodoros: 1, focusMinutes: 25, drifts: 2 });
+    h = recordDrift(h, day(10, 6));
+    h = recordPomodoro(h, day(10, 6), 25);
+    expect(driftWeeks(h, NOW)).toEqual({
+      thisWeek: { drifts: 2, pomodoros: 1 },
+      lastWeek: { drifts: 1, pomodoros: 1 },
+    });
+    // A day with drifts but no pomodoros survives a reload.
+    expect(sanitizeHistory({ '2026-10-14': { pomodoros: 0, focusMinutes: 0, drifts: 3 } })).toEqual(
+      {
+        '2026-10-14': { pomodoros: 0, focusMinutes: 0, drifts: 3 },
+      },
+    );
   });
 });

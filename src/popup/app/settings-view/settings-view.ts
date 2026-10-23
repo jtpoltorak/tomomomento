@@ -105,6 +105,8 @@ export class SettingsView {
     keepGoing: [false],
     headsUp: [false],
     calmClock: [false],
+    dailyIntention: [false],
+    visualTimer: [false],
     showEndsAt: [false],
     animateDigits: [false],
     minimalMode: [false],
@@ -117,6 +119,8 @@ export class SettingsView {
     smallWins: [false],
     firstStep: [false],
     energyCheck: [false],
+    weeklyLookBack: [false],
+    driftTally: [false],
     rhythmPresets: [false],
     focusSound: ['off' as FocusSoundId],
     focusVolumePercent: [40],
@@ -125,6 +129,7 @@ export class SettingsView {
     textSize: ['normal' as TextSizeId],
     easyFont: [false],
     reduceMotion: [false],
+    shortcuts: [false],
   });
 
   constructor() {

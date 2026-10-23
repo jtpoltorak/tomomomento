@@ -149,6 +149,22 @@
       for you.
     </p>
     <label class="switch-row">
+      <span>Distraction tally</span>
+      <input type="checkbox" role="switch" formControlName="driftTally" />
+    </label>
+    <p class="note">
+      During focus, tap "I drifted" whenever your attention wanders, then come back. Stats compares
+      this week with last. Noticing is the skill, so every tap counts.
+    </p>
+    <label class="switch-row">
+      <span>Weekly look-back</span>
+      <input type="checkbox" role="switch" formControlName="weeklyLookBack" />
+    </label>
+    <p class="note">
+      The first time you open the timer each week, a short card says how last week went and which
+      day was best. No streaks, no pressure.
+    </p>
+    <label class="switch-row">
       <span>Take-care reminders</span>
       <input type="checkbox" role="switch" formControlName="takeCare" />
     </label>
@@ -347,6 +363,14 @@
       </div>
     }
     <label class="switch-row">
+      <span>Daily intention</span>
+      <input type="checkbox" role="switch" formControlName="dailyIntention" />
+    </label>
+    <p class="note">
+      The first time you open the timer each day, it asks "What matters most today?" Your answer
+      stays at the top of the timer until midnight.
+    </p>
+    <label class="switch-row">
       <span>Parking lot</span>
       <input type="checkbox" role="switch" formControlName="parkingLot" />
     </label>
@@ -397,6 +421,14 @@
     <p class="note">
       Shows whole minutes instead of a ticking countdown, for when watching the seconds feels
       stressful.
+    </p>
+    <label class="switch-row">
+      <span>Visual timer</span>
+      <input type="checkbox" role="switch" formControlName="visualTimer" />
+    </label>
+    <p class="note">
+      A colored disc in place of the numbers, shrinking as time passes, so you can tell how much is
+      left at a glance.
     </p>
     <label class="switch-row">
       <span>Show when it ends</span>
@@ -468,6 +500,14 @@
       <input type="checkbox" role="switch" formControlName="reduceMotion" />
     </label>
     <p class="note">Turns off animations, even if your device doesn't ask for less motion.</p>
+    <label class="switch-row">
+      <span>Keyboard shortcuts</span>
+      <input type="checkbox" role="switch" formControlName="shortcuts" />
+    </label>
+    <p class="note">
+      On the timer: <kbd>S</kbd> skips, <kbd>R</kbd> restarts, <kbd>P</kbd> parks a thought, and
+      <kbd>D</kbd> notes a drift. <kbd>Space</kbd> always starts or pauses.
+    </p>
   </section>
 
   <section aria-labelledby="data-heading">

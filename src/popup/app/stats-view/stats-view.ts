@@ -17,6 +17,7 @@ import {
   heatmap,
   lastDays,
   summarize,
+  weekGarden,
   type Day,
 } from '../../../shared/stats';
 import { PomodoroStore } from '../pomodoro-store';
@@ -69,6 +70,19 @@ export class StatsView {
     const count = days.length === 1 ? '1 day' : `${days.length} days`;
     return `${count} with focus in the last ${HEATMAP_WEEKS} weeks. Best day: ${this.longDate(best)}, ${this.pomodoros(best.pomodoros)}.`;
   });
+
+  /** The focus garden: a plant for each pomodoro this week, when that's turned on. */
+  protected readonly gardenOn = computed(() => this.store.settings().focusGarden);
+  protected readonly garden = computed(() => weekGarden(this.store.history(), this.now()));
+  protected readonly gardenNote = computed(() => {
+    const total = this.garden().reduce((n, bed) => n + (bed?.day.pomodoros ?? 0), 0);
+    if (total === 0) return 'Finish a focus session to plant the first seed of the week.';
+    return `${total === 1 ? '1 plant' : `${total} plants`} so far this week. A fresh garden every Monday.`;
+  });
+
+  protected plants(n: number): string {
+    return n === 1 ? '1 plant' : `${n} plants`;
+  }
 
   /** Energy check-ins by time of day, when that's turned on. */
   protected readonly energyOn = computed(() => this.store.settings().energyCheck);

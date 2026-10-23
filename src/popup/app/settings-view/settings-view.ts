@@ -160,6 +160,7 @@ export class SettingsView {
     rightClick: [false],
     takeCare: [false],
     smallWins: [false],
+    focusGarden: [false],
     firstStep: [false],
     whereWasI: [false],
     timeCheck: [false],

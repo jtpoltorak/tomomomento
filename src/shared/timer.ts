@@ -78,6 +78,8 @@ export interface Settings {
   takeCare: boolean;
   /** A quick, quiet celebration when a focus session finishes. */
   smallWins: boolean;
+  /** Stats grows a plant for each pomodoro this week, Monday to Sunday. */
+  focusGarden: boolean;
   /** Pressing Start on a fresh focus session asks for the first tiny step first. */
   firstStep: boolean;
   /** When you pause focus or it ends, jot where you left off; it shows when you come back. */
@@ -192,6 +194,7 @@ export const DEFAULT_SETTINGS: Settings = {
   rightClick: false,
   takeCare: false,
   smallWins: false,
+  focusGarden: false,
   firstStep: false,
   whereWasI: false,
   timeCheck: false,
@@ -761,6 +764,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     rightClick: input.rightClick ?? d.rightClick,
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
+    focusGarden: input.focusGarden ?? d.focusGarden,
     firstStep: input.firstStep ?? d.firstStep,
     whereWasI: input.whereWasI ?? d.whereWasI,
     timeCheck: input.timeCheck ?? d.timeCheck,

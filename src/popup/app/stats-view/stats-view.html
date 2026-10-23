@@ -14,6 +14,33 @@
   }
 </section>
 
+@if (gardenOn()) {
+  <section aria-labelledby="stats-garden">
+    <h2 id="stats-garden">This week's garden</h2>
+    <ol class="garden">
+      @for (bed of garden(); track $index; let i = $index) {
+        <li [class.today]="bed && !garden()[i + 1]" [attr.aria-hidden]="bed ? null : 'true'">
+          @if (bed) {
+            <span class="visually-hidden"
+              >{{ longDate(bed.day) }}: {{ plants(bed.day.pomodoros) }}</span
+            >
+          }
+          <span class="bed" aria-hidden="true">
+            @for (plant of bed?.plants ?? []; track $index) {
+              <span class="plant">{{ plant }}</span>
+            }
+            @if (bed?.more) {
+              <span class="more">+{{ bed?.more }}</span>
+            }
+          </span>
+          <span class="day" aria-hidden="true">{{ weekdays[i] }}</span>
+        </li>
+      }
+    </ol>
+    <p class="note">{{ gardenNote() }}</p>
+  </section>
+}
+
 <section aria-labelledby="stats-week">
   <h2 id="stats-week">Last 7 days</h2>
   <ol class="bars">

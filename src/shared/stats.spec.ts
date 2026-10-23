@@ -15,7 +15,9 @@ import {
   sanitizeHistory,
   seedHistory,
   summarize,
+  weekGarden,
   weekLookBack,
+  GARDEN_MAX_PLANTS,
 } from './stats';
 import { DEFAULT_SETTINGS, initialState, localDateKey } from './timer';
 
@@ -201,5 +203,21 @@ describe('stats', () => {
         '2026-10-14': { pomodoros: 0, focusMinutes: 0, drifts: 3 },
       },
     );
+  });
+
+  it('grows a garden for this week, Monday to today', () => {
+    // NOW is Tuesday Oct 13, so the week started Monday Oct 12.
+    let h = recordPomodoro({}, day(10, 11), 25); // last Sunday: left out
+    h = recordPomodoro(h, day(10, 12), 25);
+    for (let i = 0; i < GARDEN_MAX_PLANTS + 2; i++) h = recordPomodoro(h, day(10, 13), 25);
+    const garden = weekGarden(h, NOW);
+    expect(garden.length).toBe(7);
+    expect(garden[0]!.day.key).toBe('2026-10-12');
+    expect(garden[0]!.plants.length).toBe(1);
+    expect(garden[1]!.plants.length).toBe(GARDEN_MAX_PLANTS);
+    expect(garden[1]!.more).toBe(2);
+    // Each day starts on a different plant.
+    expect(garden[1]!.plants[0]).not.toBe(garden[0]!.plants[0]);
+    expect(garden.slice(2).every((d) => d === null)).toBe(true);
   });
 });

@@ -14,6 +14,9 @@ these first.
 - **Breathing circle (optional):** while settling in, a soft circle grows and
   shrinks with each breath in place of the clock. Turn it on under Settle in
   in Settings.
+- **Focus garden (optional):** Stats grows a little plant for each pomodoro
+  you finish this week, with a fresh garden every Monday. Turn it on under
+  Focus helpers in Settings.
 
 ## 1.11.0 (2026-10-23)
 

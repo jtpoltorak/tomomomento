@@ -567,6 +567,7 @@ describe('timer state machine', () => {
     expect(sanitizeSettings({}).visualTimer).toBe(false);
     expect(sanitizeSettings({}).liveIcon).toBe(false);
     expect(sanitizeSettings({}).breathCircle).toBe(false);
+    expect(sanitizeSettings({}).focusGarden).toBe(false);
     expect(sanitizeSettings({}).dailyIntention).toBe(false);
     expect(sanitizeSettings({}).whereWasI).toBe(false);
     expect(sanitizeSettings({}).timeCheck).toBe(false);

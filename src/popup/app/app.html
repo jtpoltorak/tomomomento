@@ -105,7 +105,7 @@
     } @else if (view() === 'stats') {
       <app-stats-view />
     } @else if (view() === 'parking') {
-      <app-parking-view />
+      <app-parking-view (started)="show('timer')" />
     } @else if (view() === 'wrapup') {
       <app-wrap-up-view (finished)="show('timer')" />
     } @else if (view() === 'plan') {

@@ -95,6 +95,8 @@ export interface Settings {
   energyCheck: boolean;
   /** The first time you open the timer each week, a short card about last week. */
   weeklyLookBack: boolean;
+  /** In the parking lot, a button that picks one thought for you when choosing feels hard. */
+  pickForMe: boolean;
   /** An "I drifted" link during focus, counted in Stats. */
   driftTally: boolean;
   /** One-tap timer setups (Classic, Short, Deep) on the timer screen before you start. */
@@ -208,6 +210,7 @@ export const DEFAULT_SETTINGS: Settings = {
   energyCheck: false,
   weeklyLookBack: false,
   driftTally: false,
+  pickForMe: false,
   rhythmPresets: false,
   focusSound: 'off',
   focusVolume: 0.4,
@@ -784,6 +787,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     energyCheck: input.energyCheck ?? d.energyCheck,
     weeklyLookBack: input.weeklyLookBack ?? d.weeklyLookBack,
     driftTally: input.driftTally ?? d.driftTally,
+    pickForMe: input.pickForMe ?? d.pickForMe,
     rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,

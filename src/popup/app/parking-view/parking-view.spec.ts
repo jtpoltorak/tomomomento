@@ -74,4 +74,36 @@ describe('ParkingView', () => {
     expect(texts()).toEqual([]);
     expect(el.querySelector('[role="status"]')?.textContent?.trim()).toBe('Cleared 2 thoughts.');
   });
+
+  it('picks one thought for you and can start focus on it', async () => {
+    const { store, fixture, el, type, button } = await setup((s) =>
+      s.settings.update((v) => ({ ...v, pickForMe: true })),
+    );
+    expect(el.querySelector('.pick-btn')).toBeNull();
+    await type('Call the dentist');
+    await type('Water the plants');
+    vi.useFakeTimers();
+    try {
+      button('Pick one for me').click();
+      vi.advanceTimersByTime(2000);
+      fixture.detectChanges();
+      const picked = el.querySelector('.picked strong')?.textContent;
+      expect(['Call the dentist', 'Water the plants']).toContain(picked);
+      expect(el.querySelector('.thoughts li.lit .text')?.textContent).toBe(picked);
+      let started = 0;
+      fixture.componentInstance.started.subscribe(() => started++);
+      button('Start focus on it').click();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(store.sent).toEqual([{ command: 'start', step: picked }]);
+      expect(started).toBe(1);
+      // Picking again always lands on a different thought.
+      button('Pick again').click();
+      vi.advanceTimersByTime(2000);
+      fixture.detectChanges();
+      expect(el.querySelector('.picked strong')?.textContent).not.toBe(picked);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

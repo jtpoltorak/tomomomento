@@ -13,6 +13,9 @@ these first.
 - **Color themes (optional):** Forest, Ocean, Sunset or Lavender in place of
   the classic orange, green and blue. Pick one under Appearance in Settings;
   Classic stays the default.
+- **Pick for me (optional):** when choosing feels hard, the parking lot picks
+  one thought for you and can start a focus session on it. Turn it on under
+  Planning in Settings.
 
 ## 1.12.0 (2026-10-23)
 

@@ -22,9 +22,28 @@
 
 <section aria-labelledby="parked-heading">
   <h2 id="parked-heading">{{ heading() }}</h2>
+  @if (pickOn()) {
+    <div class="pick">
+      <button type="button" class="text-btn pick-btn" [disabled]="picking()" (click)="pick()">
+        {{ picked() ? 'Pick again' : 'Pick one for me' }}
+      </button>
+      <p class="picked" role="status">
+        @if (picked(); as p) {
+          Try this one: <strong>{{ p.text }}</strong>
+        }
+      </p>
+      @if (picked(); as p) {
+        @if (canStart()) {
+          <button type="button" class="text-btn solid" (click)="startOn(p.text)">
+            Start focus on it
+          </button>
+        }
+      }
+    </div>
+  }
   <ul class="thoughts">
     @for (t of thoughts(); track t.id) {
-      <li>
+      <li [class.lit]="lit() === t.id">
         <span class="text">{{ t.text }}</span>
         <button
           type="button"

@@ -365,6 +365,18 @@
         </button>
       </div>
     </aside>
+  } @else if (newSticker(); as st) {
+    <aside class="parked-card" aria-labelledby="sticker-card-title">
+      <p id="sticker-card-title">
+        New sticker! <span aria-hidden="true">{{ st.emoji }}</span> {{ st.name }}
+      </p>
+      <div class="parked-card-actions">
+        <button type="button" class="pill-btn solid" data-view="stats" (click)="openStats.emit()">
+          See it
+        </button>
+        <button type="button" class="pill-btn" (click)="stickerSeen()">Nice</button>
+      </div>
+    </aside>
   } @else if (lookBack(); as back) {
     <aside class="parked-card look-back" aria-labelledby="look-back-title">
       <div>

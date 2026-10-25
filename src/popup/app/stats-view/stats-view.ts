@@ -2,6 +2,7 @@ import {
   afterNextRender,
   Component,
   computed,
+  effect,
   ElementRef,
   inject,
   Injector,
@@ -20,7 +21,9 @@ import {
   weekGarden,
   type Day,
 } from '../../../shared/stats';
+import { earnedStickers, STICKERS } from '../../../shared/stickers';
 import { PomodoroStore } from '../pomodoro-store';
+import { writeSeenStickers } from '../stickers-seen';
 
 const HEATMAP_WEEKS = 16;
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -79,6 +82,28 @@ export class StatsView {
     if (total === 0) return 'Finish a focus session to plant the first seed of the week.';
     return `${total === 1 ? '1 plant' : `${total} plants`} so far this week. A fresh garden every Monday.`;
   });
+
+  /** The sticker book: earned stickers in color, the rest waiting with a hint of how. */
+  protected readonly stickersOn = computed(() => this.store.settings().stickerBook);
+  private readonly earned = computed(() => earnedStickers(this.store.history()));
+  protected readonly stickers = computed(() => {
+    const earned = new Set(this.earned());
+    return STICKERS.map((s) => ({ ...s, earned: earned.has(s.id) }));
+  });
+  protected readonly stickerNote = computed(() => {
+    const n = this.earned().length;
+    const next = this.stickers().find((s) => !s.earned);
+    if (n === 0) return `Your first sticker: ${lowerFirst(next?.how ?? '')}.`;
+    const got = `${n} of ${STICKERS.length} stickers.`;
+    return next ? `${got} Next up: ${lowerFirst(next.how)}.` : `${got} The whole book!`;
+  });
+
+  constructor() {
+    // Opening Stats counts as seeing every sticker, so the timer's "new sticker" card goes quiet.
+    effect(() => {
+      if (this.stickersOn()) writeSeenStickers(this.earned());
+    });
+  }
 
   protected plants(n: number): string {
     return n === 1 ? '1 plant' : `${n} plants`;
@@ -158,4 +183,8 @@ export class StatsView {
       injector: this.injector,
     });
   }
+}
+
+function lowerFirst(text: string): string {
+  return text.charAt(0).toLowerCase() + text.slice(1);
 }

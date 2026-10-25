@@ -146,4 +146,22 @@ describe('StatsView', () => {
       '8 plants so far this week. A fresh garden every Monday.',
     );
   });
+
+  it('shows the sticker book and counts every sticker as seen', async () => {
+    localStorage.removeItem('tomomomento.stickersSeen');
+    const { el, fixture, store } = await setup({
+      '2026-10-13': { pomodoros: 1, focusMinutes: 25 },
+    });
+    expect(el.querySelector('#stats-stickers')).toBeNull();
+    store.settings.update((s) => ({ ...s, stickerBook: true }));
+    await fixture.whenStable();
+    const earned = Array.from(el.querySelectorAll('.stickers li.earned .sticker-name')).map((n) =>
+      n.textContent?.trim(),
+    );
+    expect(earned).toEqual(['First one']);
+    expect(el.querySelector('#stats-stickers ~ .note')?.textContent?.trim()).toBe(
+      '1 of 14 stickers. Next up: finish 10 pomodoros.',
+    );
+    expect(JSON.parse(localStorage.getItem('tomomomento.stickersSeen')!)).toEqual(['first']);
+  });
 });

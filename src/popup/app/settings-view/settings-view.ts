@@ -165,6 +165,7 @@ export class SettingsView {
     takeCare: [false],
     smallWins: [false],
     focusGarden: [false],
+    stickerBook: [false],
     firstStep: [false],
     whereWasI: [false],
     timeCheck: [false],

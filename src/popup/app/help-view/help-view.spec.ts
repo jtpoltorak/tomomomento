@@ -89,7 +89,7 @@ describe('HelpView', () => {
     expect(el.textContent).toContain("tab's title shows the time left");
   });
 
-  it('explains Settle in, First tiny step, Where was I?, Step away, Small wins, Focus garden, Energy check-in, Distraction tally, Weekly look-back, Take-care reminders, Just start, Rhythm presets, Heads-up, Paused reminder, Hourly time check, Calm clock, Visual timer, Color themes, Live toolbar icon, Big timer view, Ends at, Keyboard shortcuts, Animated digits, Lava lamp, Minimal timer, Accessibility, Focus sound, time’s-up sounds, Keep going, Stats, Daily intention, Plan my day, the parking lot, day wrap-up, Pick for me, right-click shortcuts, break ideas, starter setups, settings search and backups in the basics', () => {
+  it('explains Settle in, First tiny step, Where was I?, Step away, Small wins, Focus garden, Sticker book, Energy check-in, Distraction tally, Weekly look-back, Take-care reminders, Just start, Rhythm presets, Heads-up, Paused reminder, Hourly time check, Calm clock, Visual timer, Color themes, Live toolbar icon, Big timer view, Ends at, Keyboard shortcuts, Animated digits, Lava lamp, Minimal timer, Accessibility, Focus sound, time’s-up sounds, Keep going, Stats, Daily intention, Plan my day, the parking lot, day wrap-up, Pick for me, right-click shortcuts, break ideas, starter setups, settings search and backups in the basics', () => {
     const el = setup();
     const headings = Array.from(el.querySelectorAll('h3')).map((h) => h.textContent?.trim());
     expect(headings).toEqual([
@@ -99,6 +99,7 @@ describe('HelpView', () => {
       'Step away',
       'Small wins',
       'Focus garden',
+      'Sticker book',
       'Energy check-in',
       'Distraction tally',
       'Weekly look-back',

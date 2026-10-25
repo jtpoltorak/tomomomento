@@ -16,6 +16,9 @@ these first.
 - **Pick for me (optional):** when choosing feels hard, the parking lot picks
   one thought for you and can start a focus session on it. Turn it on under
   Planning in Settings.
+- **Sticker book (optional):** collect a sticker for gentle milestones, kept
+  in Stats, with a card on the timer for each new one. No streaks, nothing to
+  lose. Turn it on under Focus helpers in Settings.
 
 ## 1.12.0 (2026-10-23)
 

@@ -45,7 +45,9 @@ import {
   WIN_WINDOW_MS,
   type Phase,
 } from '../../../shared/timer';
+import { earnedStickers, newSticker } from '../../../shared/stickers';
 import { BreathCircle } from '../breath-circle/breath-circle';
+import { readSeenStickers, writeSeenStickers } from '../stickers-seen';
 import { VisualTimer } from '../visual-timer/visual-timer';
 import { PomodoroStore } from '../pomodoro-store';
 
@@ -63,6 +65,7 @@ export class TimerView {
   readonly openParking = output<void>();
   readonly openWrapUp = output<void>();
   readonly openBig = output<void>();
+  readonly openStats = output<void>();
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
 
@@ -222,6 +225,7 @@ export class TimerView {
     !this.parkedCard() &&
     !this.energyCard() &&
     !this.askLeftOff() &&
+    !this.newSticker() &&
     !this.lookBack()
       ? this.intentionToday() || null
       : null,
@@ -276,6 +280,7 @@ export class TimerView {
     !this.parkedCard() &&
     !this.wrapCard() &&
     !this.energyCard() &&
+    !this.newSticker() &&
     !this.lookBack() &&
     !this.askStep() &&
     !this.planLabelNow()
@@ -334,6 +339,21 @@ export class TimerView {
     return `${n} ${n === 1 ? 'minute' : 'minutes'}`;
   }
   protected readonly visualTimer = computed(() => this.store.settings().visualTimer);
+
+  /** The sticker book: a card for the newest sticker not seen yet, never while focus runs. */
+  private readonly seenStickers = signal(readSeenStickers());
+  private readonly earnedStickers = computed(() => earnedStickers(this.store.history()));
+  protected readonly newSticker = computed(() => {
+    const { phase, status } = this.store.state();
+    if (!this.store.settings().stickerBook || (phase === 'work' && status === 'running'))
+      return null;
+    return newSticker(this.earnedStickers(), this.seenStickers());
+  });
+  protected stickerSeen(): void {
+    writeSeenStickers(this.earnedStickers());
+    this.seenStickers.set(this.earnedStickers());
+    this.focusSoon('.primary-btn');
+  }
   protected readonly bigTimer = computed(() => this.store.settings().bigTimer && this.full());
   // The bar empties as time passes, like sand running out.
   protected readonly percentLeft = computed(() => Math.round(100 * (1 - this.store.progress())));

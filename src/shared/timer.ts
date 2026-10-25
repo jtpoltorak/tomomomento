@@ -85,6 +85,8 @@ export interface Settings {
   smallWins: boolean;
   /** Stats grows a plant for each pomodoro this week, Monday to Sunday. */
   focusGarden: boolean;
+  /** Stickers for gentle milestones, kept in Stats, with a card on the timer for each new one. */
+  stickerBook: boolean;
   /** Pressing Start on a fresh focus session asks for the first tiny step first. */
   firstStep: boolean;
   /** When you pause focus or it ends, jot where you left off; it shows when you come back. */
@@ -204,6 +206,7 @@ export const DEFAULT_SETTINGS: Settings = {
   takeCare: false,
   smallWins: false,
   focusGarden: false,
+  stickerBook: false,
   firstStep: false,
   whereWasI: false,
   timeCheck: false,
@@ -781,6 +784,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
     focusGarden: input.focusGarden ?? d.focusGarden,
+    stickerBook: input.stickerBook ?? d.stickerBook,
     firstStep: input.firstStep ?? d.firstStep,
     whereWasI: input.whereWasI ?? d.whereWasI,
     timeCheck: input.timeCheck ?? d.timeCheck,

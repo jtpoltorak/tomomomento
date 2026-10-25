@@ -5,7 +5,7 @@ import { sanitizeSites } from './blocker';
 
 export type Phase = 'work' | 'shortBreak' | 'longBreak';
 export type Status = 'idle' | 'running' | 'paused';
-export type SoundId = 'bell' | 'chime' | 'digital';
+export type SoundId = 'bell' | 'chime' | 'digital' | 'marimba' | 'birdsong' | 'gong';
 export type ThemeId = 'system' | 'light' | 'dark';
 export type TextSizeId = 'normal' | 'large' | 'xlarge';
 /** A quiet sound that plays during focus sessions, or 'off'. */
@@ -301,6 +301,9 @@ export const SOUND_LABELS: Record<SoundId, string> = {
   bell: 'Bell',
   chime: 'Chime',
   digital: 'Digital beep',
+  marimba: 'Marimba',
+  birdsong: 'Birdsong',
+  gong: 'Soft gong',
 };
 
 export const FOCUS_SOUND_LABELS: Record<FocusSoundId, string> = {

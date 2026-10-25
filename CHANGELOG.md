@@ -4,6 +4,13 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **More time's up sounds:** marimba, birdsong and a soft gong join the bell,
+  chime and digital beep. Pick one under When time's up in Settings.
+
 ## 1.12.0 (2026-10-23)
 
 ### New

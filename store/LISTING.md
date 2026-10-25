@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Everything to paste into the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-for Tomomomento 1.12.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
+for Tomomomento 1.13.0 (what changed: [CHANGELOG.md](../CHANGELOG.md)). Images are in [`images/`](images); regenerate them with
 `node scripts/store-images.mjs` after UI changes.
 
 ## Store listing tab
@@ -67,6 +67,10 @@ Features
 • An optional live toolbar icon: a ring that empties as the timer runs
 • An optional big timer view that fills the window, for reading from across the room
 • An optional focus garden: a little plant in Stats for each pomodoro this week
+• An optional focus buddy: a little cat that works beside you and naps on your breaks
+• An optional sticker book: stickers for gentle milestones, with no streaks to lose
+• Optional "Pick for me": when choosing feels hard, the parking lot picks a thought for you
+• Color themes: Forest, Ocean, Sunset or Lavender, or the classic colors
 • A built-in guide to the technique and how to use it
 • Light and dark themes that follow your system, or pick one yourself
 • Optional quotes on the timer screen: focus quotes while you work, rest quotes on breaks
@@ -79,14 +83,15 @@ Tomomomento has no account, no ads, no analytics, and no tracking. It makes no n
 Free and open source
 Tomomomento is free and always will be. The code is open under the MIT License. It was built with Claude Code, Anthropic's AI coding assistant. Prefer not to install anything? The same timer runs in any browser on the website below.
 
-What's new in 1.12
-Fun to look at, and the classic look stays the default. Each one is off until you turn it on in Settings.
-• Live toolbar icon: while the timer runs, the toolbar icon becomes a ring in the phase's color that empties as time passes.
-• Big timer view: one button fills the whole window with the clock, the color sinking down the screen as time passes. Great on a second screen.
-• Focus garden: Stats grows a little plant for each pomodoro you finish this week. A fresh garden every Monday, and nothing ever wilts.
-• Breathing circle: while settling in, a soft circle grows and shrinks with each breath in place of the clock.
+What's new in 1.13
+More fun, same calm timer. The classic look stays the default, and each new option is off until you turn it on in Settings.
+• Focus buddy: a little cat beside the clock types away while you focus and naps on your breaks. Working alongside someone, even a pretend someone, can make it easier to stay on task.
+• Sticker book: collect stickers for gentle milestones, like your first pomodoro or a big day. No streaks, nothing to lose.
+• Pick for me: can't decide what to do next? The parking lot picks one thought for you and can start a focus session on it.
+• Color themes: Forest, Ocean, Sunset or Lavender in place of orange, green and blue.
+• New time's up sounds: marimba, birdsong and a soft gong.
 
-Also recently added: starter setups, settings search, "Where was I?", an hourly time check, a daily intention, a visual timer, a distraction tally, a weekly look-back, keyboard shortcuts, an "Ends at" time, a first-tiny-step question, an energy check-in, rhythm presets, an evening wrap-up for parked thoughts, right-click shortcuts, a lava lamp background, rain and ocean waves focus sounds, small wins, 30 seconds of slow breathing before focus, an automatic pause when you step away, take-care reminders, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
+Also recently added: a live toolbar icon, a big timer view, a focus garden, a breathing circle, starter setups, settings search, "Where was I?", an hourly time check, a daily intention, a visual timer, a distraction tally, a weekly look-back, keyboard shortcuts, an "Ends at" time, a first-tiny-step question, an energy check-in, rhythm presets, an evening wrap-up for parked thoughts, right-click shortcuts, a lava lamp background, rain and ocean waves focus sounds, small wins, 30 seconds of slow breathing before focus, an automatic pause when you step away, take-care reminders, a minimal timer, and accessibility options like larger text, high contrast, and color-blind friendly colors.
 
 Links
 Website: https://tomomomento.com

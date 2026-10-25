@@ -19,6 +19,9 @@ these first.
 - **Sticker book (optional):** collect a sticker for gentle milestones, kept
   in Stats, with a card on the timer for each new one. No streaks, nothing to
   lose. Turn it on under Focus helpers in Settings.
+- **Focus buddy (optional):** a little cat beside the clock types away while
+  you focus and naps on your breaks, for a bit of body doubling. Turn it on
+  under Appearance in Settings.
 
 ## 1.12.0 (2026-10-23)
 

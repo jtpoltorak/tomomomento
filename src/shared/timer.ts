@@ -59,6 +59,8 @@ export interface Settings {
   visualTimer: boolean;
   /** The toolbar icon becomes a ring that empties as the timer runs (extension only). */
   liveIcon: boolean;
+  /** A little cat beside the clock that works while you focus and naps on breaks. */
+  focusBuddy: boolean;
   /** A button that fills the whole window with the clock, for reading across the room. */
   bigTimer: boolean;
   /** While the timer runs, show the time of day it ends ("Ends at 2:45 PM"). */
@@ -193,6 +195,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dailyIntention: false,
   visualTimer: false,
   liveIcon: false,
+  focusBuddy: false,
   bigTimer: false,
   showEndsAt: false,
   animateDigits: false,
@@ -771,6 +774,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     dailyIntention: input.dailyIntention ?? d.dailyIntention,
     visualTimer: input.visualTimer ?? d.visualTimer,
     liveIcon: input.liveIcon ?? d.liveIcon,
+    focusBuddy: input.focusBuddy ?? d.focusBuddy,
     bigTimer: input.bigTimer ?? d.bigTimer,
     showEndsAt: input.showEndsAt ?? d.showEndsAt,
     animateDigits: input.animateDigits ?? d.animateDigits,

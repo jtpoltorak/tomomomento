@@ -76,6 +76,11 @@
   top: 0;
   right: -0.5rem;
 }
+.buddy {
+  position: absolute;
+  top: 0.75rem;
+  left: -0.25rem;
+}
 .clock {
   font-size: 5.5rem;
   font-weight: 600;

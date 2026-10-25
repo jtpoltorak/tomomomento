@@ -692,6 +692,23 @@ describe('TimerView', () => {
     expect(opened).toBe(1);
   });
 
+  it('shows the focus buddy working, napping or waiting with the timer', async () => {
+    const { el, fixture, store } = await setup();
+    expect(el.querySelector('app-focus-buddy')).toBeNull();
+    store.settings.update((s) => ({ ...s, focusBuddy: true }));
+    await fixture.whenStable();
+    const mode = () => el.querySelector('app-focus-buddy')?.getAttribute('data-mode');
+    expect(mode()).toBe('idle');
+    store.state.update((s) => ({ ...s, status: 'running', endTime: Date.now() + 60_000 }));
+    await fixture.whenStable();
+    expect(mode()).toBe('work');
+    expect(el.querySelector('app-focus-buddy .screen')).toBeTruthy();
+    store.state.update((s) => ({ ...s, phase: 'shortBreak' }));
+    await fixture.whenStable();
+    expect(mode()).toBe('rest');
+    expect(el.querySelector('app-focus-buddy .z')).toBeTruthy();
+  });
+
   describe('sticker book', () => {
     beforeEach(() => localStorage.removeItem('tomomomento.stickersSeen'));
 

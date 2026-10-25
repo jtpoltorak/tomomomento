@@ -152,6 +152,7 @@ export class SettingsView {
     dailyIntention: [false],
     visualTimer: [false],
     liveIcon: [false],
+    focusBuddy: [false],
     bigTimer: [false],
     showEndsAt: [false],
     animateDigits: [false],

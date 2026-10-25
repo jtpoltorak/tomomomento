@@ -47,6 +47,7 @@ import {
 } from '../../../shared/timer';
 import { earnedStickers, newSticker } from '../../../shared/stickers';
 import { BreathCircle } from '../breath-circle/breath-circle';
+import { FocusBuddy, type BuddyMode } from '../focus-buddy/focus-buddy';
 import { readSeenStickers, writeSeenStickers } from '../stickers-seen';
 import { VisualTimer } from '../visual-timer/visual-timer';
 import { PomodoroStore } from '../pomodoro-store';
@@ -54,7 +55,7 @@ import { PomodoroStore } from '../pomodoro-store';
 @Component({
   selector: 'app-timer-view',
   host: { '[class.minimal]': 'minimal()' },
-  imports: [VisualTimer, BreathCircle],
+  imports: [VisualTimer, BreathCircle, FocusBuddy],
   templateUrl: './timer-view.html',
   styleUrl: './timer-view.css',
 })
@@ -355,6 +356,13 @@ export class TimerView {
     this.focusSoon('.primary-btn');
   }
   protected readonly bigTimer = computed(() => this.store.settings().bigTimer && this.full());
+  /** The focus buddy types while focus runs and naps while a break runs. */
+  protected readonly buddy = computed((): BuddyMode | null => {
+    if (!this.store.settings().focusBuddy || !this.full()) return null;
+    const { phase, status } = this.store.state();
+    if (status !== 'running') return 'idle';
+    return phase === 'work' ? 'work' : 'rest';
+  });
   // The bar empties as time passes, like sand running out.
   protected readonly percentLeft = computed(() => Math.round(100 * (1 - this.store.progress())));
   /** Whole minutes, so screen readers aren't flooded with a new value every second. */

@@ -692,6 +692,46 @@ describe('TimerView', () => {
     expect(opened).toBe(1);
   });
 
+  it('shows the focus buddy working, napping or waiting with the timer', async () => {
+    const { el, fixture, store } = await setup();
+    expect(el.querySelector('app-focus-buddy')).toBeNull();
+    store.settings.update((s) => ({ ...s, focusBuddy: true }));
+    await fixture.whenStable();
+    const mode = () => el.querySelector('app-focus-buddy')?.getAttribute('data-mode');
+    expect(mode()).toBe('idle');
+    store.state.update((s) => ({ ...s, status: 'running', endTime: Date.now() + 60_000 }));
+    await fixture.whenStable();
+    expect(mode()).toBe('work');
+    expect(el.querySelector('app-focus-buddy .screen')).toBeTruthy();
+    store.state.update((s) => ({ ...s, phase: 'shortBreak' }));
+    await fixture.whenStable();
+    expect(mode()).toBe('rest');
+    expect(el.querySelector('app-focus-buddy .z')).toBeTruthy();
+  });
+
+  describe('sticker book', () => {
+    beforeEach(() => localStorage.removeItem('tomomomento.stickersSeen'));
+
+    it('shows a card for a new sticker until it is seen', async () => {
+      const { el, fixture, store, button } = await setup();
+      // A Tuesday, so the weekend sticker stays out of it.
+      store.history.set({ '2026-10-13': { pomodoros: 1, focusMinutes: 25 } });
+      await fixture.whenStable();
+      expect(el.querySelector('#sticker-card-title')).toBeNull();
+      store.settings.update((s) => ({ ...s, stickerBook: true }));
+      await fixture.whenStable();
+      expect(el.querySelector('#sticker-card-title')?.textContent).toContain('First one');
+      let opened = 0;
+      fixture.componentInstance.openStats.subscribe(() => opened++);
+      button('See it').click();
+      expect(opened).toBe(1);
+      button('Nice').click();
+      await fixture.whenStable();
+      expect(el.querySelector('#sticker-card-title')).toBeNull();
+      expect(JSON.parse(localStorage.getItem('tomomomento.stickersSeen')!)).toEqual(['first']);
+    });
+  });
+
   describe('daily intention', () => {
     beforeEach(() => localStorage.removeItem('tomomomento.intention'));
 

@@ -1,11 +1,12 @@
 // Pure timer logic shared by the background worker, popup, and options page.
 // Nothing in this file touches `chrome.*`, so it can be unit tested in Node.
 
+import { COLOR_THEMES, type ColorThemeId } from './color-themes';
 import { sanitizeSites } from './blocker';
 
 export type Phase = 'work' | 'shortBreak' | 'longBreak';
 export type Status = 'idle' | 'running' | 'paused';
-export type SoundId = 'bell' | 'chime' | 'digital';
+export type SoundId = 'bell' | 'chime' | 'digital' | 'marimba' | 'birdsong' | 'gong';
 export type ThemeId = 'system' | 'light' | 'dark';
 export type TextSizeId = 'normal' | 'large' | 'xlarge';
 /** A quiet sound that plays during focus sessions, or 'off'. */
@@ -30,6 +31,8 @@ export interface Settings {
   blockedSites: string[];
   /** 'system' follows the device's light or dark mode. */
   theme: ThemeId;
+  /** Which set of phase colors to use; Classic is orange, green and blue. */
+  colorTheme: ColorThemeId;
   /** Show a short quote under the timer, one per phase. */
   showQuotes: boolean;
   /** "Plan my day": pick how many pomodoros to do today and track them under the timer. */
@@ -56,6 +59,8 @@ export interface Settings {
   visualTimer: boolean;
   /** The toolbar icon becomes a ring that empties as the timer runs (extension only). */
   liveIcon: boolean;
+  /** A little cat beside the clock that works while you focus and naps on breaks. */
+  focusBuddy: boolean;
   /** A button that fills the whole window with the clock, for reading across the room. */
   bigTimer: boolean;
   /** While the timer runs, show the time of day it ends ("Ends at 2:45 PM"). */
@@ -82,6 +87,8 @@ export interface Settings {
   smallWins: boolean;
   /** Stats grows a plant for each pomodoro this week, Monday to Sunday. */
   focusGarden: boolean;
+  /** Stickers for gentle milestones, kept in Stats, with a card on the timer for each new one. */
+  stickerBook: boolean;
   /** Pressing Start on a fresh focus session asks for the first tiny step first. */
   firstStep: boolean;
   /** When you pause focus or it ends, jot where you left off; it shows when you come back. */
@@ -92,6 +99,8 @@ export interface Settings {
   energyCheck: boolean;
   /** The first time you open the timer each week, a short card about last week. */
   weeklyLookBack: boolean;
+  /** In the parking lot, a button that picks one thought for you when choosing feels hard. */
+  pickForMe: boolean;
   /** An "I drifted" link during focus, counted in Stats. */
   driftTally: boolean;
   /** One-tap timer setups (Classic, Short, Deep) on the timer screen before you start. */
@@ -171,6 +180,7 @@ export const DEFAULT_SETTINGS: Settings = {
   blockSites: false,
   blockedSites: [],
   theme: 'system',
+  colorTheme: 'classic',
   showQuotes: false,
   // Planning is opt-in. Once someone turns it on, they've asked to be asked.
   planEnabled: false,
@@ -185,6 +195,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dailyIntention: false,
   visualTimer: false,
   liveIcon: false,
+  focusBuddy: false,
   bigTimer: false,
   showEndsAt: false,
   animateDigits: false,
@@ -198,12 +209,14 @@ export const DEFAULT_SETTINGS: Settings = {
   takeCare: false,
   smallWins: false,
   focusGarden: false,
+  stickerBook: false,
   firstStep: false,
   whereWasI: false,
   timeCheck: false,
   energyCheck: false,
   weeklyLookBack: false,
   driftTally: false,
+  pickForMe: false,
   rhythmPresets: false,
   focusSound: 'off',
   focusVolume: 0.4,
@@ -301,6 +314,9 @@ export const SOUND_LABELS: Record<SoundId, string> = {
   bell: 'Bell',
   chime: 'Chime',
   digital: 'Digital beep',
+  marimba: 'Marimba',
+  birdsong: 'Birdsong',
+  gong: 'Soft gong',
 };
 
 export const FOCUS_SOUND_LABELS: Record<FocusSoundId, string> = {
@@ -743,6 +759,8 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     blockedSites:
       input.blockedSites === undefined ? d.blockedSites : sanitizeSites(input.blockedSites),
     theme: input.theme && input.theme in THEME_LABELS ? input.theme : d.theme,
+    colorTheme:
+      input.colorTheme && input.colorTheme in COLOR_THEMES ? input.colorTheme : d.colorTheme,
     showQuotes: input.showQuotes ?? d.showQuotes,
     planEnabled: input.planEnabled ?? d.planEnabled,
     planPrompt: input.planPrompt ?? d.planPrompt,
@@ -756,6 +774,7 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     dailyIntention: input.dailyIntention ?? d.dailyIntention,
     visualTimer: input.visualTimer ?? d.visualTimer,
     liveIcon: input.liveIcon ?? d.liveIcon,
+    focusBuddy: input.focusBuddy ?? d.focusBuddy,
     bigTimer: input.bigTimer ?? d.bigTimer,
     showEndsAt: input.showEndsAt ?? d.showEndsAt,
     animateDigits: input.animateDigits ?? d.animateDigits,
@@ -769,12 +788,14 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     takeCare: input.takeCare ?? d.takeCare,
     smallWins: input.smallWins ?? d.smallWins,
     focusGarden: input.focusGarden ?? d.focusGarden,
+    stickerBook: input.stickerBook ?? d.stickerBook,
     firstStep: input.firstStep ?? d.firstStep,
     whereWasI: input.whereWasI ?? d.whereWasI,
     timeCheck: input.timeCheck ?? d.timeCheck,
     energyCheck: input.energyCheck ?? d.energyCheck,
     weeklyLookBack: input.weeklyLookBack ?? d.weeklyLookBack,
     driftTally: input.driftTally ?? d.driftTally,
+    pickForMe: input.pickForMe ?? d.pickForMe,
     rhythmPresets: input.rhythmPresets ?? d.rhythmPresets,
     focusSound:
       input.focusSound && input.focusSound in FOCUS_SOUND_LABELS ? input.focusSound : d.focusSound,

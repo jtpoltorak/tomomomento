@@ -213,6 +213,14 @@
       Monday, and nothing ever wilts.
     </p>
     <label class="switch-row">
+      <span>Sticker book</span>
+      <input type="checkbox" role="switch" formControlName="stickerBook" />
+    </label>
+    <p class="note">
+      Collect a sticker for gentle milestones, like your first pomodoro or a big day. They live in
+      Stats, and once earned they're yours to keep.
+    </p>
+    <label class="switch-row">
       <span>Energy check-in</span>
       <input type="checkbox" role="switch" formControlName="energyCheck" />
     </label>
@@ -462,6 +470,14 @@
           After {{ wrapUpTime }}, if anything is still parked, the timer offers to go through it one
           thought at a time: keep it for tomorrow, mark it done, or let it go.
         </p>
+        <label class="switch-row">
+          <span>Pick for me</span>
+          <input type="checkbox" role="switch" formControlName="pickForMe" />
+        </label>
+        <p class="note">
+          Can't decide what to do next? A button in the parking lot picks one thought for you, and
+          can start a focus session on it.
+        </p>
       </div>
     }
   </section>
@@ -479,6 +495,28 @@
       </div>
     </fieldset>
     <p class="note">System matches your device's light or dark mode.</p>
+    <fieldset class="colors">
+      <legend>Colors</legend>
+      <div class="swatches">
+        @for (c of colorThemes; track c[0]) {
+          <label>
+            <input type="radio" formControlName="colorTheme" [value]="c[0]" />
+            <span class="swatch">
+              <span class="dots" aria-hidden="true">
+                <span [style.background]="c[1].light.work"></span>
+                <span [style.background]="c[1].light.shortBreak"></span>
+                <span [style.background]="c[1].light.longBreak"></span>
+              </span>
+              {{ c[1].label }}
+            </span>
+          </label>
+        }
+      </div>
+    </fieldset>
+    <p class="note">
+      The colors for focus, short breaks and long breaks. Color-blind friendly colors and high
+      contrast, under Accessibility, take over when they're on.
+    </p>
     <label class="switch-row">
       <span>Minimal timer</span>
       <input type="checkbox" role="switch" formControlName="minimalMode" />
@@ -514,6 +552,14 @@
         time passes, in place of the minutes badge.
       </p>
     }
+    <label class="switch-row">
+      <span>Focus buddy</span>
+      <input type="checkbox" role="switch" formControlName="focusBuddy" />
+    </label>
+    <p class="note">
+      A little cat beside the clock that types away while you focus and naps on your breaks. Some
+      people find it easier to stay on task with someone working alongside them.
+    </p>
     <label class="switch-row">
       <span>Big timer view</span>
       <input type="checkbox" role="switch" formControlName="bigTimer" />

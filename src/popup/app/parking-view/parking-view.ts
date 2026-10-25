@@ -5,6 +5,7 @@ import {
   ElementRef,
   inject,
   Injector,
+  output,
   signal,
 } from '@angular/core';
 import { MAX_THOUGHT_LENGTH, MAX_THOUGHTS, thoughtsText } from '../../../shared/parking';
@@ -29,6 +30,25 @@ export class ParkingView {
   /** Said once after each park or clear, for everyone and for screen readers. */
   protected readonly message = signal('');
   protected readonly confirming = signal(false);
+  /** Tells the app to show the timer after "Start focus on it". */
+  readonly started = output<void>();
+
+  /** Pick for me: with two or more thoughts, one button chooses for you. */
+  protected readonly pickOn = computed(
+    () => this.store.settings().pickForMe && this.thoughts().length > 1,
+  );
+  /** The thought the highlight is on while it hops around, then the one picked. */
+  protected readonly lit = signal<string | null>(null);
+  protected readonly picking = signal(false);
+  private readonly pickedId = signal<string | null>(null);
+  protected readonly picked = computed(
+    () => this.thoughts().find((t) => t.id === this.pickedId()) ?? null,
+  );
+  /** Only a focus session that hasn't started yet can start on the picked thought. */
+  protected readonly canStart = computed(() => {
+    const { phase, status } = this.store.state();
+    return phase === 'work' && status === 'idle';
+  });
 
   constructor() {
     // Looking here counts as seeing what's parked, so the break card stays quiet.
@@ -58,6 +78,39 @@ export class ParkingView {
     const buttons = this.host.nativeElement.querySelectorAll<HTMLElement>('.done');
     const next = buttons[Math.min(index, buttons.length - 1)];
     this.focus(next ? null : '#thought', next);
+  }
+
+  /** Hops the highlight around the list for a moment, like a game show, then lands on one. */
+  protected pick(): void {
+    const choices = this.thoughts().filter((t) => t.id !== this.pickedId());
+    const choice = choices[Math.floor(Math.random() * choices.length)];
+    if (!choice) return;
+    const done = () => {
+      this.picking.set(false);
+      this.lit.set(choice.id);
+      this.pickedId.set(choice.id);
+    };
+    const calm =
+      document.documentElement.dataset['motion'] === 'reduce' ||
+      (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+    if (calm) return done();
+    this.picking.set(true);
+    this.pickedId.set(null);
+    let hops = 0;
+    const timer = setInterval(() => {
+      const all = this.thoughts();
+      this.lit.set(all[hops % all.length]?.id ?? null);
+      if (++hops >= PICK_HOPS) {
+        clearInterval(timer);
+        done();
+      }
+    }, PICK_HOP_MS);
+  }
+
+  /** Starts a fresh focus session with the picked thought as its first tiny step. */
+  protected async startOn(text: string): Promise<void> {
+    await this.store.send({ command: 'start', step: text });
+    this.started.emit();
   }
 
   protected askClear(): void {
@@ -91,3 +144,7 @@ export class ParkingView {
     );
   }
 }
+
+/** How the highlight hops before it lands: about a second in all. */
+const PICK_HOPS = 9;
+const PICK_HOP_MS = 110;

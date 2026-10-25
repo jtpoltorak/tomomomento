@@ -4,6 +4,25 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **More time's up sounds:** marimba, birdsong and a soft gong join the bell,
+  chime and digital beep. Pick one under When time's up in Settings.
+- **Color themes (optional):** Forest, Ocean, Sunset or Lavender in place of
+  the classic orange, green and blue. Pick one under Appearance in Settings;
+  Classic stays the default.
+- **Pick for me (optional):** when choosing feels hard, the parking lot picks
+  one thought for you and can start a focus session on it. Turn it on under
+  Planning in Settings.
+- **Sticker book (optional):** collect a sticker for gentle milestones, kept
+  in Stats, with a card on the timer for each new one. No streaks, nothing to
+  lose. Turn it on under Focus helpers in Settings.
+- **Focus buddy (optional):** a little cat beside the clock types away while
+  you focus and naps on your breaks, for a bit of body doubling. Turn it on
+  under Appearance in Settings.
+
 ## 1.12.0 (2026-10-23)
 
 ### New

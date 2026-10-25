@@ -41,6 +41,24 @@
   </section>
 }
 
+@if (stickersOn()) {
+  <section aria-labelledby="stats-stickers">
+    <h2 id="stats-stickers">Stickers</h2>
+    <ul class="stickers">
+      @for (s of stickers(); track s.id) {
+        <li [class.earned]="s.earned">
+          <span class="sticker" aria-hidden="true">{{ s.emoji }}</span>
+          <span class="sticker-name">{{ s.name }}</span>
+          @if (!s.earned) {
+            <span class="visually-hidden">, not yet: {{ s.how }}</span>
+          }
+        </li>
+      }
+    </ul>
+    <p class="note">{{ stickerNote() }}</p>
+  </section>
+}
+
 <section aria-labelledby="stats-week">
   <h2 id="stats-week">Last 7 days</h2>
   <ol class="bars">

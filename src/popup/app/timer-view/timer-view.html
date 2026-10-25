@@ -56,6 +56,9 @@
 }
 
 <section class="dial" [class.heads-up]="headsUp()" [class.win]="win()">
+  @if (buddy(); as mode) {
+    <app-focus-buddy class="buddy" [mode]="mode" />
+  }
   @if (bigTimer()) {
     <button
       type="button"
@@ -363,6 +366,18 @@
         <button type="button" class="pill-btn solid" (click)="saveLeftOff(leftOffBox.value)">
           Save
         </button>
+      </div>
+    </aside>
+  } @else if (newSticker(); as st) {
+    <aside class="parked-card" aria-labelledby="sticker-card-title">
+      <p id="sticker-card-title">
+        New sticker! <span aria-hidden="true">{{ st.emoji }}</span> {{ st.name }}
+      </p>
+      <div class="parked-card-actions">
+        <button type="button" class="pill-btn solid" data-view="stats" (click)="openStats.emit()">
+          See it
+        </button>
+        <button type="button" class="pill-btn" (click)="stickerSeen()">Nice</button>
       </div>
     </aside>
   } @else if (lookBack(); as back) {

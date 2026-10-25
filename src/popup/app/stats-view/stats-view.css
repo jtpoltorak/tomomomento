@@ -100,6 +100,43 @@ h2 {
   font-weight: 600;
 }
 
+/* Sticker book: earned stickers in full color, the rest faded until they're earned. */
+.stickers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.stickers li {
+  display: grid;
+  justify-items: center;
+  gap: 0.125rem;
+  padding: 0.5rem 0.25rem;
+  border-radius: 0.75rem;
+  background: var(--surface);
+  text-align: center;
+}
+.sticker {
+  font-size: 2rem;
+  line-height: 1.2;
+  filter: grayscale(1);
+  opacity: 0.3;
+}
+.earned .sticker {
+  filter: none;
+  opacity: 1;
+}
+.sticker-name {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+.earned .sticker-name {
+  color: var(--fg);
+}
+
 /* Last 7 days: one bar per day, count printed on top so there's no axis to read. */
 .bars {
   display: grid;

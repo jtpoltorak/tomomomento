@@ -111,6 +111,74 @@
 }
 
 /*
+ * Color themes (data-accent, see shared/color-themes.ts): other sets of phase
+ * colors. They come before the accessibility settings below, so color-blind
+ * safe and high contrast still win when they're on.
+ */
+:root[data-accent='forest'] {
+  --focus-accent: #2b6e3f;
+  --short-accent: #8b5a2b;
+  --long-accent: #2f6f8f;
+}
+:root[data-accent='ocean'] {
+  --focus-accent: #0b6e99;
+  --short-accent: #0f7c74;
+  --long-accent: #4a5bb5;
+}
+:root[data-accent='sunset'] {
+  --focus-accent: #c2255c;
+  --short-accent: #a85400;
+  --long-accent: #7048a8;
+}
+:root[data-accent='lavender'] {
+  --focus-accent: #7e3fb0;
+  --short-accent: #a23b72;
+  --long-accent: #3d5fa8;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-accent='forest']:not([data-theme='light']) {
+    --focus-accent: #6fcf8f;
+    --short-accent: #e0a96d;
+    --long-accent: #7cc4e4;
+  }
+  :root[data-accent='ocean']:not([data-theme='light']) {
+    --focus-accent: #5cc8f0;
+    --short-accent: #4fd1c5;
+    --long-accent: #9aa8ff;
+  }
+  :root[data-accent='sunset']:not([data-theme='light']) {
+    --focus-accent: #ff7aa2;
+    --short-accent: #ffb366;
+    --long-accent: #c3a1ff;
+  }
+  :root[data-accent='lavender']:not([data-theme='light']) {
+    --focus-accent: #c9a0f0;
+    --short-accent: #f29ac7;
+    --long-accent: #9db4ff;
+  }
+}
+:root[data-accent='forest'][data-theme='dark'] {
+  --focus-accent: #6fcf8f;
+  --short-accent: #e0a96d;
+  --long-accent: #7cc4e4;
+}
+:root[data-accent='ocean'][data-theme='dark'] {
+  --focus-accent: #5cc8f0;
+  --short-accent: #4fd1c5;
+  --long-accent: #9aa8ff;
+}
+:root[data-accent='sunset'][data-theme='dark'] {
+  --focus-accent: #ff7aa2;
+  --short-accent: #ffb366;
+  --long-accent: #c3a1ff;
+}
+:root[data-accent='lavender'][data-theme='dark'] {
+  --focus-accent: #c9a0f0;
+  --short-accent: #f29ac7;
+  --long-accent: #9db4ff;
+}
+
+/*
  * Accessibility settings, as <html> data attributes (see theme.ts). Each theme
  * gets its own values, and the dark ones repeat for the system and the
  * Settings choice, like the themes above.

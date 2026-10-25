@@ -31,12 +31,13 @@ export function applyTheme(theme: ThemeId): void {
 
 export type A11ySettings = Pick<
   Settings,
-  'highContrast' | 'colorSafe' | 'textSize' | 'easyFont' | 'reduceMotion'
+  'colorTheme' | 'highContrast' | 'colorSafe' | 'textSize' | 'easyFont' | 'reduceMotion'
 >;
 
 /** <html> data attributes the stylesheets key off, one per accessibility setting. */
 export function a11yAttributes(a: A11ySettings): Record<string, string | undefined> {
   return {
+    accent: !a.colorTheme || a.colorTheme === 'classic' ? undefined : a.colorTheme,
     contrast: a.highContrast ? 'high' : undefined,
     palette: a.colorSafe ? 'safe' : undefined,
     text: a.textSize === 'normal' ? undefined : a.textSize,
@@ -53,10 +54,10 @@ export function applyA11y(a: A11ySettings): void {
     else root.dataset[key] = value;
   }
   try {
-    const { highContrast, colorSafe, textSize, easyFont, reduceMotion } = a;
+    const { colorTheme, highContrast, colorSafe, textSize, easyFont, reduceMotion } = a;
     localStorage.setItem(
       A11Y_KEY,
-      JSON.stringify({ highContrast, colorSafe, textSize, easyFont, reduceMotion }),
+      JSON.stringify({ colorTheme, highContrast, colorSafe, textSize, easyFont, reduceMotion }),
     );
   } catch {
     // Storage blocked: the choices still apply once settings load.

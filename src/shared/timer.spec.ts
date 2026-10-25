@@ -569,6 +569,11 @@ describe('timer state machine', () => {
     expect(sanitizeSettings({}).bigTimer).toBe(false);
     expect(sanitizeSettings({}).breathCircle).toBe(false);
     expect(sanitizeSettings({}).focusGarden).toBe(false);
+    expect(sanitizeSettings({}).colorTheme).toBe('classic');
+    expect(sanitizeSettings({}).pickForMe).toBe(false);
+    expect(sanitizeSettings({}).stickerBook).toBe(false);
+    expect(sanitizeSettings({}).focusBuddy).toBe(false);
+    expect(sanitizeSettings({ colorTheme: 'neon' as never }).colorTheme).toBe('classic');
     expect(sanitizeSettings({}).dailyIntention).toBe(false);
     expect(sanitizeSettings({}).whereWasI).toBe(false);
     expect(sanitizeSettings({}).timeCheck).toBe(false);

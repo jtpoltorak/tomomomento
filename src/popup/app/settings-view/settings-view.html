@@ -479,6 +479,28 @@
       </div>
     </fieldset>
     <p class="note">System matches your device's light or dark mode.</p>
+    <fieldset class="colors">
+      <legend>Colors</legend>
+      <div class="swatches">
+        @for (c of colorThemes; track c[0]) {
+          <label>
+            <input type="radio" formControlName="colorTheme" [value]="c[0]" />
+            <span class="swatch">
+              <span class="dots" aria-hidden="true">
+                <span [style.background]="c[1].light.work"></span>
+                <span [style.background]="c[1].light.shortBreak"></span>
+                <span [style.background]="c[1].light.longBreak"></span>
+              </span>
+              {{ c[1].label }}
+            </span>
+          </label>
+        }
+      </div>
+    </fieldset>
+    <p class="note">
+      The colors for focus, short breaks and long breaks. Color-blind friendly colors and high
+      contrast, under Accessibility, take over when they're on.
+    </p>
     <label class="switch-row">
       <span>Minimal timer</span>
       <input type="checkbox" role="switch" formControlName="minimalMode" />

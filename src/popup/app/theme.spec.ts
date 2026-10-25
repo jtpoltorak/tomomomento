@@ -5,7 +5,8 @@ describe('accessibility settings on <html>', () => {
   const root = document.documentElement;
   afterEach(() => {
     localStorage.clear();
-    for (const key of ['contrast', 'palette', 'text', 'font', 'motion']) delete root.dataset[key];
+    for (const key of ['accent', 'contrast', 'palette', 'text', 'font', 'motion'])
+      delete root.dataset[key];
   });
 
   it('sets nothing for the defaults', () => {
@@ -16,6 +17,7 @@ describe('accessibility settings on <html>', () => {
 
   it('sets one attribute per choice, and clears them again', () => {
     applyA11y({
+      colorTheme: 'ocean',
       highContrast: true,
       colorSafe: true,
       textSize: 'xlarge',
@@ -23,6 +25,7 @@ describe('accessibility settings on <html>', () => {
       reduceMotion: true,
     });
     expect({ ...root.dataset }).toMatchObject({
+      accent: 'ocean',
       contrast: 'high',
       palette: 'safe',
       text: 'xlarge',
@@ -30,6 +33,7 @@ describe('accessibility settings on <html>', () => {
       motion: 'reduce',
     });
     applyA11y(DEFAULT_SETTINGS);
+    expect(root.dataset['accent']).toBeUndefined();
     expect(root.dataset['contrast']).toBeUndefined();
     expect(root.dataset['text']).toBeUndefined();
   });
@@ -41,5 +45,11 @@ describe('accessibility settings on <html>', () => {
     restoreTheme();
     expect(root.dataset['text']).toBe('large');
     expect(root.dataset['contrast']).toBe('high');
+  });
+
+  it('keeps the classic colors when an older saved choice has no color theme', () => {
+    localStorage.setItem('tomomomento.a11y', JSON.stringify({ textSize: 'large' }));
+    restoreTheme();
+    expect(root.dataset['accent']).toBeUndefined();
   });
 });

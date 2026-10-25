@@ -1,6 +1,7 @@
 // Pure timer logic shared by the background worker, popup, and options page.
 // Nothing in this file touches `chrome.*`, so it can be unit tested in Node.
 
+import { COLOR_THEMES, type ColorThemeId } from './color-themes';
 import { sanitizeSites } from './blocker';
 
 export type Phase = 'work' | 'shortBreak' | 'longBreak';
@@ -30,6 +31,8 @@ export interface Settings {
   blockedSites: string[];
   /** 'system' follows the device's light or dark mode. */
   theme: ThemeId;
+  /** Which set of phase colors to use; Classic is orange, green and blue. */
+  colorTheme: ColorThemeId;
   /** Show a short quote under the timer, one per phase. */
   showQuotes: boolean;
   /** "Plan my day": pick how many pomodoros to do today and track them under the timer. */
@@ -171,6 +174,7 @@ export const DEFAULT_SETTINGS: Settings = {
   blockSites: false,
   blockedSites: [],
   theme: 'system',
+  colorTheme: 'classic',
   showQuotes: false,
   // Planning is opt-in. Once someone turns it on, they've asked to be asked.
   planEnabled: false,
@@ -746,6 +750,8 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     blockedSites:
       input.blockedSites === undefined ? d.blockedSites : sanitizeSites(input.blockedSites),
     theme: input.theme && input.theme in THEME_LABELS ? input.theme : d.theme,
+    colorTheme:
+      input.colorTheme && input.colorTheme in COLOR_THEMES ? input.colorTheme : d.colorTheme,
     showQuotes: input.showQuotes ?? d.showQuotes,
     planEnabled: input.planEnabled ?? d.planEnabled,
     planPrompt: input.planPrompt ?? d.planPrompt,

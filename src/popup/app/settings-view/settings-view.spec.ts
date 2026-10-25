@@ -36,6 +36,23 @@ describe('SettingsView', () => {
     expect(store.settings().workMinutes).toBe(26);
   });
 
+  it('picks a color theme, starting from Classic', async () => {
+    const { store, el, fixture } = await setup();
+    const radios = Array.from(el.querySelectorAll<HTMLInputElement>('.colors input[type=radio]'));
+    expect(radios.map((r) => r.parentElement?.textContent?.trim())).toEqual([
+      'Classic',
+      'Forest',
+      'Ocean',
+      'Sunset',
+      'Lavender',
+    ]);
+    expect(radios[0].checked).toBe(true);
+    radios[2].click();
+    vi.advanceTimersByTime(400);
+    await fixture.whenStable();
+    expect(store.settings().colorTheme).toBe('ocean');
+  });
+
   it('picks a theme, starting from the system one', async () => {
     const { store, el, fixture } = await setup();
     const radios = Array.from(el.querySelectorAll<HTMLInputElement>('.theme input[type=radio]'));

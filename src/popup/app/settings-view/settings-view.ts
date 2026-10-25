@@ -1,3 +1,4 @@
+import { COLOR_THEMES, type ColorTheme, type ColorThemeId } from '../../../shared/color-themes';
 import {
   afterNextRender,
   Component,
@@ -55,6 +56,7 @@ export class SettingsView {
   protected readonly sounds = Object.entries(SOUND_LABELS) as [SoundId, string][];
   protected readonly focusSounds = Object.entries(FOCUS_SOUND_LABELS) as [FocusSoundId, string][];
   protected readonly themes = Object.entries(THEME_LABELS) as [ThemeId, string][];
+  protected readonly colorThemes = Object.entries(COLOR_THEMES) as [ColorThemeId, ColorTheme][];
   protected readonly textSizes = Object.entries(TEXT_SIZE_LABELS) as [TextSizeId, string][];
   protected readonly saved = signal(false);
   protected readonly justStartMinutes = JUST_START_MINUTES;
@@ -136,6 +138,7 @@ export class SettingsView {
     sound: ['bell' as SoundId],
     volumePercent: [70],
     theme: ['system' as ThemeId],
+    colorTheme: ['classic' as ColorThemeId],
     showQuotes: [false],
     planEnabled: [false],
     planPrompt: [true],

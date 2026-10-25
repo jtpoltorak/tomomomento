@@ -19,6 +19,7 @@ import {
   shouldBlock,
   SUGGESTED_SITES,
 } from '../shared/blocker';
+import { COLOR_THEMES } from '../shared/color-themes';
 import { parkThought } from '../shared/parking';
 import { planDoneMessage } from '../shared/plan';
 import type { AlertSound } from '../shared/sounds';
@@ -88,6 +89,12 @@ const SAFE_BADGE_COLORS: Record<Phase, string> = {
   longBreak: '#9c3c78',
 };
 const PAUSED_BADGE_COLOR = '#868e96';
+
+/** Badge colors for the phases: color-blind safe wins, then the chosen color theme. */
+function badgeColors(settings: Settings): Record<Phase, string> {
+  if (settings.colorSafe) return SAFE_BADGE_COLORS;
+  return settings.colorTheme === 'classic' ? BADGE_COLORS : COLOR_THEMES[settings.colorTheme].light;
+}
 
 // Serialize every state mutation so a click and an alarm can't interleave.
 let queue: Promise<unknown> = Promise.resolve();
@@ -247,7 +254,7 @@ function headsUp(): Promise<void> {
 
 async function updateBadge(state: TimerState, justFinished = false): Promise<void> {
   const settings = await loadSettings();
-  const colors = settings.colorSafe ? SAFE_BADGE_COLORS : BADGE_COLORS;
+  const colors = badgeColors(settings);
   if (state.status === 'idle') await showUsualIcon();
   if (state.status === 'idle' && justFinished) {
     // A quiet "time's up" cue for people who leave sounds and notifications off.
@@ -604,7 +611,7 @@ async function syncMenus(settings?: Settings): Promise<void> {
 async function confirmOnBadge(): Promise<void> {
   if ((await chrome.action.getBadgeText({})) === '✓') return;
   const [state, settings] = await Promise.all([loadState(), loadSettings()]);
-  const colors = settings.colorSafe ? SAFE_BADGE_COLORS : BADGE_COLORS;
+  const colors = badgeColors(settings);
   await chrome.action.setBadgeBackgroundColor({ color: colors[state.phase] });
   await chrome.action.setBadgeText({ text: '✓' });
   setTimeout(() => void serialized(async () => updateBadge(await loadState())), 1500);

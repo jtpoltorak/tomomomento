@@ -10,6 +10,9 @@ these first.
 
 - **More time's up sounds:** marimba, birdsong and a soft gong join the bell,
   chime and digital beep. Pick one under When time's up in Settings.
+- **Color themes (optional):** Forest, Ocean, Sunset or Lavender in place of
+  the classic orange, green and blue. Pick one under Appearance in Settings;
+  Classic stays the default.
 
 ## 1.12.0 (2026-10-23)
 

@@ -1,6 +1,8 @@
 @if (store.settings().lavaLamp) {
   <!-- The lava lamp background: decoration only, behind everything. -->
-  <div class="lava" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="lava" [attr.data-strength]="store.settings().lavaStrength" aria-hidden="true">
+    <span></span><span></span><span></span>
+  </div>
 }
 
 @if (view() !== 'big') {

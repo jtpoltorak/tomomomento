@@ -629,6 +629,22 @@
       Soft colors drift slowly behind the timer, warm for focus and cool for breaks. It holds still
       with reduced motion, and steps aside for high contrast.
     </p>
+    @if (form.controls.lavaLamp.value) {
+      <div class="sub-options">
+        <div class="row">
+          <label for="lava-strength">Strength</label>
+          <select id="lava-strength" formControlName="lavaStrength">
+            @for (l of lavaStrengths; track l[0]) {
+              <option [value]="l[0]">{{ l[1] }}</option>
+            }
+          </select>
+        </div>
+        <p class="note">
+          Medium and Bold show more color and drift a little faster. Text firms up a touch so it
+          stays easy to read.
+        </p>
+      </div>
+    }
     <label class="switch-row">
       <span>Show a quote on the timer</span>
       <input type="checkbox" role="switch" formControlName="showQuotes" />

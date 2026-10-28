@@ -37,10 +37,12 @@ import {
   type ThemeId,
   BLOB_CLOCK_LABELS,
   BLOB_SPEED_LABELS,
+  LAVA_STRENGTH_LABELS,
   BLOB_STYLE_LABELS,
   type BlobClockId,
   type BlobSpeedId,
   type BlobStyleId,
+  type LavaStrengthId,
 } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
 import { filterSettings } from './settings-search';
@@ -67,6 +69,10 @@ export class SettingsView {
   protected readonly blobStyles = Object.entries(BLOB_STYLE_LABELS) as [BlobStyleId, string][];
   protected readonly blobClocks = Object.entries(BLOB_CLOCK_LABELS) as [BlobClockId, string][];
   protected readonly blobSpeeds = Object.entries(BLOB_SPEED_LABELS) as [BlobSpeedId, string][];
+  protected readonly lavaStrengths = Object.entries(LAVA_STRENGTH_LABELS) as [
+    LavaStrengthId,
+    string,
+  ][];
   protected readonly saved = signal(false);
   protected readonly justStartMinutes = JUST_START_MINUTES;
   protected readonly keepGoingMinutes = KEEP_GOING_MINUTES;
@@ -171,6 +177,7 @@ export class SettingsView {
     animateDigits: [false],
     minimalMode: [false],
     lavaLamp: [false],
+    lavaStrength: ['subtle' as LavaStrengthId],
     pauseNudge: [false],
     settleIn: [false],
     breathCircle: [false],

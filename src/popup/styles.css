@@ -360,9 +360,12 @@ button {
 
 /*
  * The lava lamp: three soft blobs in the phase color drift slowly behind
- * everything. The whole layer is faint (its opacity caps any overlap), kept
- * low enough that text, links and controls on top keep their contrast. With
- * reduced motion the blobs hold still, and high contrast leaves them out.
+ * everything. The layer's opacity caps any overlap, so the strongest tint
+ * anywhere is that opacity of the accent. Strength (data-strength) raises it
+ * and speeds the drift; to keep text at 4.5:1 and control edges at 3:1 on the
+ * strongest tint of every accent, the stronger settings nudge gray text,
+ * control edges and accent text toward the text color. With reduced motion
+ * the blobs hold still, and high contrast leaves them out.
  */
 .lava {
   position: fixed;
@@ -370,20 +373,78 @@ button {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  color: var(--accent);
-  opacity: 0.065;
+  color: var(--focus-accent);
+  opacity: var(--lava-opacity, 0.065);
   transition: color 3s ease;
+}
+/* The blobs keep the pure phase colors, whatever the accent text does. */
+:root[data-phase='shortBreak'] .lava {
+  color: var(--short-accent);
+}
+:root[data-phase='longBreak'] .lava {
+  color: var(--long-accent);
 }
 :root[data-contrast='high'] .lava {
   display: none;
 }
+:root:not([data-contrast='high']):has(.lava[data-strength='medium']) {
+  --lava-opacity: 0.14;
+  --lava-pace: 0.6;
+  --control: #777e86;
+  --lava-ink: 12%;
+}
+:root:not([data-contrast='high']):has(.lava[data-strength='bold']) {
+  --lava-opacity: 0.24;
+  --lava-pace: 0.4;
+  --muted: #505964;
+  --control: #6c737b;
+  --lava-ink: 25%;
+}
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .lava {
-    opacity: 0.12;
+  :root:not([data-theme='light']):not([data-contrast='high']):has(.lava) {
+    --lava-opacity: 0.12;
+    --muted: #989fa8;
+  }
+  :root:not([data-theme='light']):not([data-contrast='high']):has(.lava[data-strength='medium']) {
+    --lava-opacity: 0.2;
+    --muted: #a9b0b8;
+    --control: #888f9a;
+    --lava-ink: 0%;
+  }
+  :root:not([data-theme='light']):not([data-contrast='high']):has(.lava[data-strength='bold']) {
+    --lava-opacity: 0.3;
+    --muted: #c0c7ce;
+    --control: #9da4ae;
+    --lava-ink: 30%;
   }
 }
-:root[data-theme='dark'] .lava {
-  opacity: 0.12;
+:root[data-theme='dark']:not([data-contrast='high']):has(.lava) {
+  --lava-opacity: 0.12;
+  --muted: #989fa8;
+}
+:root[data-theme='dark']:not([data-contrast='high']):has(.lava[data-strength='medium']) {
+  --lava-opacity: 0.2;
+  --muted: #a9b0b8;
+  --control: #888f9a;
+  --lava-ink: 0%;
+}
+:root[data-theme='dark']:not([data-contrast='high']):has(.lava[data-strength='bold']) {
+  --lava-opacity: 0.3;
+  --muted: #c0c7ce;
+  --control: #9da4ae;
+  --lava-ink: 30%;
+}
+/* At Medium and Bold, accent text and controls lean toward the text color by --lava-ink. */
+:root:not([data-contrast='high']):has(.lava:not([data-strength='subtle'])) {
+  --accent: color-mix(in srgb, var(--focus-accent), var(--fg) var(--lava-ink, 0%));
+}
+:root[data-phase='shortBreak']:not([data-contrast='high']):has(
+    .lava:not([data-strength='subtle'])
+  ) {
+  --accent: color-mix(in srgb, var(--short-accent), var(--fg) var(--lava-ink, 0%));
+}
+:root[data-phase='longBreak']:not([data-contrast='high']):has(.lava:not([data-strength='subtle'])) {
+  --accent: color-mix(in srgb, var(--long-accent), var(--fg) var(--lava-ink, 0%));
 }
 .lava span {
   position: absolute;
@@ -392,7 +453,7 @@ button {
   border-radius: 50%;
   /* A full-strength core with a soft edge, so each blob reads as a shape. */
   background: radial-gradient(circle closest-side, currentColor 35%, transparent);
-  animation: lava-a 47s ease-in-out infinite alternate;
+  animation: lava-a calc(47s * var(--lava-pace, 1)) ease-in-out infinite alternate;
 }
 .lava span:nth-child(1) {
   left: -30vmax;
@@ -402,13 +463,13 @@ button {
   right: -35vmax;
   top: 10vmax;
   animation-name: lava-b;
-  animation-duration: 59s;
+  animation-duration: calc(59s * var(--lava-pace, 1));
 }
 .lava span:nth-child(3) {
   left: -10vmax;
   bottom: -40vmax;
   animation-name: lava-c;
-  animation-duration: 71s;
+  animation-duration: calc(71s * var(--lava-pace, 1));
 }
 @keyframes lava-a {
   50% {

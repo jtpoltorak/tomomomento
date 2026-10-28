@@ -542,6 +542,46 @@
       A colored disc in place of the numbers, shrinking as time passes, so you can tell how much is
       left at a glance.
     </p>
+    <label class="switch-row">
+      <span>Blob timer</span>
+      <input type="checkbox" role="switch" formControlName="blobTimer" />
+    </label>
+    <p class="note">
+      Soft blobs in place of the numbers that slowly join and drift apart, filling in as time
+      passes. Reduce motion under Accessibility holds them still.
+    </p>
+    @if (form.controls.blobTimer.value) {
+      <div class="sub-options">
+        <div class="row">
+          <label for="blob-style">Style</label>
+          <select id="blob-style" formControlName="blobStyle">
+            @for (b of blobStyles; track b[0]) {
+              <option [value]="b[0]">{{ b[1] }}</option>
+            }
+          </select>
+        </div>
+        <p class="note">
+          Dots: one dot for each minute, filling in as they pass. Mosaic: the same in a mix of
+          colors. Drift: blobs that gather into one by the end.
+        </p>
+        <div class="row">
+          <label for="blob-clock">Time</label>
+          <select id="blob-clock" formControlName="blobClock">
+            @for (b of blobClocks; track b[0]) {
+              <option [value]="b[0]">{{ b[1] }}</option>
+            }
+          </select>
+        </div>
+        <div class="row">
+          <label for="blob-speed">Movement</label>
+          <select id="blob-speed" formControlName="blobSpeed">
+            @for (b of blobSpeeds; track b[0]) {
+              <option [value]="b[0]">{{ b[1] }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    }
     @if (!isWeb) {
       <label class="switch-row">
         <span>Live toolbar icon</span>

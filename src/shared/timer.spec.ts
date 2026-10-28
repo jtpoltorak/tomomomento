@@ -166,6 +166,24 @@ describe('timer state machine', () => {
     expect(s.notificationsEnabled).toBe(false);
   });
 
+  it('the blob timer is off by default, and odd choices fall back to the defaults', () => {
+    const d = sanitizeSettings({});
+    expect([d.blobTimer, d.blobStyle, d.blobClock, d.blobSpeed]).toEqual([
+      false,
+      'dots',
+      'below',
+      'gentle',
+    ]);
+    const odd = sanitizeSettings({
+      blobStyle: 'lava' as never,
+      blobClock: 'up' as never,
+      blobSpeed: 'warp' as never,
+    });
+    expect([odd.blobStyle, odd.blobClock, odd.blobSpeed]).toEqual(['dots', 'below', 'gentle']);
+    const set = sanitizeSettings({ blobStyle: 'drift', blobClock: 'hidden', blobSpeed: 'speedy' });
+    expect([set.blobStyle, set.blobClock, set.blobSpeed]).toEqual(['drift', 'hidden', 'speedy']);
+  });
+
   it('sanitizeSettings clamps bad input', () => {
     const out = sanitizeSettings({ workMinutes: 0, shortBreakMinutes: 999, longBreakMinutes: NaN });
     expect(out.workMinutes).toBe(1);
@@ -565,6 +583,7 @@ describe('timer state machine', () => {
     expect(calmMinutes(0)).toBe(0);
     expect(sanitizeSettings({}).calmClock).toBe(false);
     expect(sanitizeSettings({}).visualTimer).toBe(false);
+    expect(sanitizeSettings({}).blobTimer).toBe(false);
     expect(sanitizeSettings({}).liveIcon).toBe(false);
     expect(sanitizeSettings({}).bigTimer).toBe(false);
     expect(sanitizeSettings({}).breathCircle).toBe(false);

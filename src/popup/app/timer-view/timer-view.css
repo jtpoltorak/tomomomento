@@ -102,6 +102,30 @@
     transform: translateY(-0.25em);
   }
 }
+/* The blob timer: the blobs in place of the digits, with the time small below or on top. */
+.clock.blobs {
+  display: grid;
+  justify-items: center;
+  gap: 0.06em;
+}
+.clock.blobs .blob-time {
+  font-size: 0.36em;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.clock.blobs.inside > * {
+  grid-area: 1 / 1;
+  align-self: center;
+}
+/* On top of the blobs, a soft halo in the background color keeps the time readable. */
+.clock.blobs.inside .blob-time {
+  font-size: 0.4em;
+  font-weight: 600;
+  text-shadow:
+    0 0 0.15em var(--bg),
+    0 0 0.3em var(--bg),
+    0 0 0.5em var(--bg);
+}
 /* The calm clock: whole minutes, with a small unit beside them. */
 .clock.calm .unit {
   margin-left: 0.25em;

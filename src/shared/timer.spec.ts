@@ -184,6 +184,12 @@ describe('timer state machine', () => {
     expect([set.blobStyle, set.blobClock, set.blobSpeed]).toEqual(['drift', 'hidden', 'speedy']);
   });
 
+  it('sanitizeSettings keeps the lava lamp subtle unless a known strength is picked', () => {
+    expect(sanitizeSettings({}).lavaStrength).toBe('subtle');
+    expect(sanitizeSettings({ lavaStrength: 'loud' as never }).lavaStrength).toBe('subtle');
+    expect(sanitizeSettings({ lavaStrength: 'bold' }).lavaStrength).toBe('bold');
+  });
+
   it('sanitizeSettings clamps bad input', () => {
     const out = sanitizeSettings({ workMinutes: 0, shortBreakMinutes: 999, longBreakMinutes: NaN });
     expect(out.workMinutes).toBe(1);

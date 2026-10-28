@@ -17,6 +17,8 @@ export type BlobStyleId = 'dots' | 'mosaic' | 'drift';
 export type BlobClockId = 'below' | 'inside' | 'hidden';
 /** How quickly the blobs move, from the gentlest pace up. */
 export type BlobSpeedId = 'gentle' | 'lively' | 'brisk' | 'speedy';
+/** How strongly the lava lamp background shows, from barely there up. */
+export type LavaStrengthId = 'subtle' | 'medium' | 'bold';
 
 export interface Settings {
   workMinutes: number;
@@ -82,6 +84,7 @@ export interface Settings {
   minimalMode: boolean;
   /** Soft colors drift slowly behind everything, like a lava lamp. */
   lavaLamp: boolean;
+  lavaStrength: LavaStrengthId;
   /** A quiet reminder when the timer has sat paused for a while. */
   pauseNudge: boolean;
   /** Thirty seconds of slow breathing before a focus session's clock starts. */
@@ -216,6 +219,7 @@ export const DEFAULT_SETTINGS: Settings = {
   animateDigits: false,
   minimalMode: false,
   lavaLamp: false,
+  lavaStrength: 'subtle',
   pauseNudge: false,
   settleIn: false,
   breathCircle: false,
@@ -359,6 +363,12 @@ export const BLOB_SPEED_LABELS: Record<BlobSpeedId, string> = {
   lively: 'Lively',
   brisk: 'Brisk',
   speedy: 'Speedy',
+};
+
+export const LAVA_STRENGTH_LABELS: Record<LavaStrengthId, string> = {
+  subtle: 'Subtle',
+  medium: 'Medium',
+  bold: 'Bold',
 };
 
 export const TEXT_SIZE_LABELS: Record<TextSizeId, string> = {
@@ -821,6 +831,10 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     animateDigits: input.animateDigits ?? d.animateDigits,
     minimalMode: input.minimalMode ?? d.minimalMode,
     lavaLamp: input.lavaLamp ?? d.lavaLamp,
+    lavaStrength:
+      input.lavaStrength && input.lavaStrength in LAVA_STRENGTH_LABELS
+        ? input.lavaStrength
+        : d.lavaStrength,
     pauseNudge: input.pauseNudge ?? d.pauseNudge,
     settleIn: input.settleIn ?? d.settleIn,
     breathCircle: input.breathCircle ?? d.breathCircle,

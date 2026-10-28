@@ -78,6 +78,26 @@
     <div class="clock breathing" role="timer" [attr.aria-label]="timeLeftText()">
       <app-breath-circle [delay]="breathDelay()" />
     </div>
+  } @else if (blobTimer(); as blob) {
+    <div
+      class="clock blobs"
+      [class.inside]="blob.clock === 'inside'"
+      role="timer"
+      [attr.aria-label]="timeLeftText()"
+    >
+      <app-blob-timer
+        [progress]="store.progress()"
+        [minutes]="phaseMinutes()"
+        [blobStyle]="blob.style"
+        [speed]="blob.speed"
+        [still]="still()"
+      />
+      @if (blob.clock !== 'hidden') {
+        <span class="blob-time" aria-hidden="true">{{
+          calmClock() === null ? clock() : calmClock() + ' min'
+        }}</span>
+      }
+    </div>
   } @else if (visualTimer()) {
     <div class="clock visual" role="timer" [attr.aria-label]="timeLeftText()">
       <app-visual-timer [left]="1 - store.progress()" />

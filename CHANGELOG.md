@@ -4,6 +4,16 @@ What changed in each release of the Chrome extension. The web app at
 https://tomomomento.com updates from `main` as changes land, so it gets each of
 these first.
 
+## Unreleased
+
+### New
+
+- **Blob timer:** soft blobs in place of the numbers that slowly join and drift
+  apart as time passes. Pick Dots (one dot a minute), Mosaic (the same in the
+  phase colors) or Drift (blobs that gather into one), show the time below the
+  blobs, on top of them or not at all, and pick how fast they move, from Gentle
+  to Speedy. Off by default; turn it on under Appearance in Settings.
+
 ## 1.13.0 (2026-10-25)
 
 ### New

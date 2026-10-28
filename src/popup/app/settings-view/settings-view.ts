@@ -35,6 +35,12 @@ import {
   FOCUS_SOUND_LABELS,
   type FocusSoundId,
   type ThemeId,
+  BLOB_CLOCK_LABELS,
+  BLOB_SPEED_LABELS,
+  BLOB_STYLE_LABELS,
+  type BlobClockId,
+  type BlobSpeedId,
+  type BlobStyleId,
 } from '../../../shared/timer';
 import { PomodoroStore } from '../pomodoro-store';
 import { filterSettings } from './settings-search';
@@ -58,6 +64,9 @@ export class SettingsView {
   protected readonly themes = Object.entries(THEME_LABELS) as [ThemeId, string][];
   protected readonly colorThemes = Object.entries(COLOR_THEMES) as [ColorThemeId, ColorTheme][];
   protected readonly textSizes = Object.entries(TEXT_SIZE_LABELS) as [TextSizeId, string][];
+  protected readonly blobStyles = Object.entries(BLOB_STYLE_LABELS) as [BlobStyleId, string][];
+  protected readonly blobClocks = Object.entries(BLOB_CLOCK_LABELS) as [BlobClockId, string][];
+  protected readonly blobSpeeds = Object.entries(BLOB_SPEED_LABELS) as [BlobSpeedId, string][];
   protected readonly saved = signal(false);
   protected readonly justStartMinutes = JUST_START_MINUTES;
   protected readonly keepGoingMinutes = KEEP_GOING_MINUTES;
@@ -151,6 +160,10 @@ export class SettingsView {
     calmClock: [false],
     dailyIntention: [false],
     visualTimer: [false],
+    blobTimer: [false],
+    blobStyle: ['dots' as BlobStyleId],
+    blobClock: ['below' as BlobClockId],
+    blobSpeed: ['gentle' as BlobSpeedId],
     liveIcon: [false],
     focusBuddy: [false],
     bigTimer: [false],

@@ -681,6 +681,32 @@ describe('TimerView', () => {
     });
   });
 
+  describe('blob timer', () => {
+    it('shows blobs in place of the digits, with the time below, inside or hidden', async () => {
+      const { el, fixture, store } = await setup();
+      expect(el.querySelector('app-blob-timer')).toBeNull();
+      store.settings.update((s) => ({ ...s, blobTimer: true }));
+      await fixture.whenStable();
+      const clock = () => el.querySelector('.clock.blobs')!;
+      expect(clock().querySelector('app-blob-timer')).toBeTruthy();
+      expect(clock().querySelector('.digit')).toBeNull();
+      expect(clock().getAttribute('role')).toBe('timer');
+      expect(clock().getAttribute('aria-label')).toBe('25 of 25 minutes left');
+      expect(clock().querySelector('.blob-time')?.textContent?.trim()).toBe('25:00');
+      expect(clock().classList).not.toContain('inside');
+
+      store.settings.update((s) => ({ ...s, blobClock: 'inside', calmClock: true }));
+      await fixture.whenStable();
+      expect(clock().classList).toContain('inside');
+      expect(clock().querySelector('.blob-time')?.textContent?.trim()).toBe('25 min');
+
+      store.settings.update((s) => ({ ...s, blobClock: 'hidden' }));
+      await fixture.whenStable();
+      expect(clock().querySelector('.blob-time')).toBeNull();
+      expect(clock().getAttribute('aria-label')).toBe('25 of 25 minutes left');
+    });
+  });
+
   it('offers the big timer from the clock corner when it is turned on', async () => {
     const { el, fixture, store } = await setup();
     expect(el.querySelector('.big-btn')).toBeNull();

@@ -11,6 +11,12 @@ export type ThemeId = 'system' | 'light' | 'dark';
 export type TextSizeId = 'normal' | 'large' | 'xlarge';
 /** A quiet sound that plays during focus sessions, or 'off'. */
 export type FocusSoundId = 'off' | 'tick' | 'brown' | 'rain' | 'waves';
+/** The blob timer's look: a grid of minute dots, the same in many colors, or drifting blobs. */
+export type BlobStyleId = 'dots' | 'mosaic' | 'drift';
+/** Where the blob timer shows the time, if at all. */
+export type BlobClockId = 'below' | 'inside' | 'hidden';
+/** How quickly the blobs move, from the gentlest pace up. */
+export type BlobSpeedId = 'gentle' | 'lively' | 'brisk' | 'speedy';
 
 export interface Settings {
   workMinutes: number;
@@ -57,6 +63,11 @@ export interface Settings {
   calmClock: boolean;
   /** A shrinking disc in place of the digits, so time left reads at a glance. */
   visualTimer: boolean;
+  /** Soft blobs that join and part in place of the digits, filling in as time passes. */
+  blobTimer: boolean;
+  blobStyle: BlobStyleId;
+  blobClock: BlobClockId;
+  blobSpeed: BlobSpeedId;
   /** The toolbar icon becomes a ring that empties as the timer runs (extension only). */
   liveIcon: boolean;
   /** A little cat beside the clock that works while you focus and naps on breaks. */
@@ -194,6 +205,10 @@ export const DEFAULT_SETTINGS: Settings = {
   calmClock: false,
   dailyIntention: false,
   visualTimer: false,
+  blobTimer: false,
+  blobStyle: 'dots',
+  blobClock: 'below',
+  blobSpeed: 'gentle',
   liveIcon: false,
   focusBuddy: false,
   bigTimer: false,
@@ -325,6 +340,25 @@ export const FOCUS_SOUND_LABELS: Record<FocusSoundId, string> = {
   brown: 'Brown noise',
   rain: 'Rain',
   waves: 'Ocean waves',
+};
+
+export const BLOB_STYLE_LABELS: Record<BlobStyleId, string> = {
+  dots: 'Dots',
+  mosaic: 'Mosaic',
+  drift: 'Drift',
+};
+
+export const BLOB_CLOCK_LABELS: Record<BlobClockId, string> = {
+  below: 'Below the blobs',
+  inside: 'Inside the blobs',
+  hidden: 'Hidden',
+};
+
+export const BLOB_SPEED_LABELS: Record<BlobSpeedId, string> = {
+  gentle: 'Gentle',
+  lively: 'Lively',
+  brisk: 'Brisk',
+  speedy: 'Speedy',
 };
 
 export const TEXT_SIZE_LABELS: Record<TextSizeId, string> = {
@@ -773,6 +807,13 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
     calmClock: input.calmClock ?? d.calmClock,
     dailyIntention: input.dailyIntention ?? d.dailyIntention,
     visualTimer: input.visualTimer ?? d.visualTimer,
+    blobTimer: input.blobTimer ?? d.blobTimer,
+    blobStyle:
+      input.blobStyle && input.blobStyle in BLOB_STYLE_LABELS ? input.blobStyle : d.blobStyle,
+    blobClock:
+      input.blobClock && input.blobClock in BLOB_CLOCK_LABELS ? input.blobClock : d.blobClock,
+    blobSpeed:
+      input.blobSpeed && input.blobSpeed in BLOB_SPEED_LABELS ? input.blobSpeed : d.blobSpeed,
     liveIcon: input.liveIcon ?? d.liveIcon,
     focusBuddy: input.focusBuddy ?? d.focusBuddy,
     bigTimer: input.bigTimer ?? d.bigTimer,

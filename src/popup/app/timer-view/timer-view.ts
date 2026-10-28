@@ -12,6 +12,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { BlobTimer } from '../blob-timer/blob-timer';
 import { formatTime, isAfterToday, planSchedule } from '../../../shared/plan';
 import { breakIdea } from '../../../shared/break-ideas';
 import { MAX_THOUGHT_LENGTH, thoughtsText, wrapUpDue } from '../../../shared/parking';
@@ -55,7 +56,7 @@ import { PomodoroStore } from '../pomodoro-store';
 @Component({
   selector: 'app-timer-view',
   host: { '[class.minimal]': 'minimal()' },
-  imports: [VisualTimer, BreathCircle, FocusBuddy],
+  imports: [VisualTimer, BlobTimer, BreathCircle, FocusBuddy],
   templateUrl: './timer-view.html',
   styleUrl: './timer-view.css',
 })
@@ -340,6 +341,16 @@ export class TimerView {
     return `${n} ${n === 1 ? 'minute' : 'minutes'}`;
   }
   protected readonly visualTimer = computed(() => this.store.settings().visualTimer);
+  /** The blob timer's settings when it's on, or null. */
+  protected readonly blobTimer = computed(() => {
+    const { blobTimer, blobStyle, blobClock, blobSpeed } = this.store.settings();
+    return blobTimer ? { style: blobStyle, clock: blobClock, speed: blobSpeed } : null;
+  });
+  protected readonly phaseMinutes = computed(() => this.store.totalMs() / 60_000);
+  /** Reduced motion, asked for by Settings or by the device: the blobs hold still. */
+  private readonly deviceStill =
+    globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  protected readonly still = computed(() => this.store.settings().reduceMotion || this.deviceStill);
 
   /** The sticker book: a card for the newest sticker not seen yet, never while focus runs. */
   private readonly seenStickers = signal(readSeenStickers());

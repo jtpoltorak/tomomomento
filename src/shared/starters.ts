@@ -46,6 +46,7 @@ export const STARTERS: readonly Starter[] = [
       calmClock: true,
       reduceMotion: true,
       lavaLamp: false,
+      blobTimer: false,
       animateDigits: false,
       showQuotes: false,
     },
